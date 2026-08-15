@@ -199,7 +199,7 @@ export default function DrivableCar() {
           ref={leftTrailRef}
           width={TRAIL_WIDTH}
           length={trailLength}
-          color="#00e5ff"
+          color="#8aadf4"
           attenuation={(t) => t * t}
         >
           <mesh>
@@ -214,7 +214,7 @@ export default function DrivableCar() {
           ref={rightTrailRef}
           width={TRAIL_WIDTH}
           length={trailLength}
-          color="#00e5ff"
+          color="#8aadf4"
           attenuation={(t) => t * t}
         >
           <mesh>

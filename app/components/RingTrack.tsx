@@ -173,9 +173,9 @@ export default function RingTrack() {
       >
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial
-          color="#00ff41"
-          emissive="#00ff41"
-          emissiveIntensity={1}
+          color="#94e2d5"
+          emissive="#94e2d5"
+          emissiveIntensity={0.6}
         />
       </instancedMesh>
 
@@ -193,10 +193,10 @@ export default function RingTrack() {
             geometry={icosahedronGeometry}
           >
             <meshStandardMaterial
-              color="#00ff41"
+              color="#b4befe"
               wireframe
-              emissive="#00ff41"
-              emissiveIntensity={2}
+              emissive="#b4befe"
+              emissiveIntensity={1.2}
             />
           </mesh>
           <CuboidCollider
