@@ -7,10 +7,15 @@ import { RigidBody } from "@react-three/rapier";
 import { createNoise2D } from "simplex-noise";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 
-const TERRAIN_SIZE = 200;
-const TERRAIN_SEGMENTS = 96;
+const TERRAIN_WIDTH = 200;
+const TERRAIN_DEPTH = 640;
+const TERRAIN_SEGMENTS_X = 96;
+const TERRAIN_SEGMENTS_Z = 128;
 const NOISE_FREQUENCY = 0.04;
-const NOISE_AMPLITUDE = 4;
+const NOISE_AMPLITUDE = 6;
+const FBM_OCTAVES = 3;
+const HIGHWAY_FALLOFF = 18;
+const MIN_ELEVATION = 0.08;
 
 export default function ProceduralTerrain() {
   const materialRef = useRef<THREE.MeshStandardMaterial>(null);
@@ -19,10 +24,10 @@ export default function ProceduralTerrain() {
   const geometry = useMemo(() => {
     const noise2D = createNoise2D();
     const geo = new THREE.PlaneGeometry(
-      TERRAIN_SIZE,
-      TERRAIN_SIZE,
-      TERRAIN_SEGMENTS,
-      TERRAIN_SEGMENTS,
+      TERRAIN_WIDTH,
+      TERRAIN_DEPTH,
+      TERRAIN_SEGMENTS_X,
+      TERRAIN_SEGMENTS_Z,
     );
     geo.rotateX(-Math.PI / 2);
 
@@ -30,7 +35,23 @@ export default function ProceduralTerrain() {
     for (let i = 0; i < positions.length; i += 3) {
       const x = positions[i];
       const z = positions[i + 2];
-      positions[i + 1] = noise2D(x * NOISE_FREQUENCY, z * NOISE_FREQUENCY) * NOISE_AMPLITUDE;
+
+      let height = 0;
+      let maxAmplitude = 0;
+      let amplitude = 1;
+      let frequency = NOISE_FREQUENCY;
+      for (let octave = 0; octave < FBM_OCTAVES; octave++) {
+        height += noise2D(x * frequency, z * frequency) * amplitude;
+        maxAmplitude += amplitude;
+        frequency *= 2;
+        amplitude *= 0.5;
+      }
+      const normalized = height / maxAmplitude;
+
+      const highwayFalloff = 1 - Math.exp(-Math.abs(x) / HIGHWAY_FALLOFF);
+      const elevation = MIN_ELEVATION + (1 - MIN_ELEVATION) * highwayFalloff;
+
+      positions[i + 1] = normalized * NOISE_AMPLITUDE * elevation;
     }
 
     geo.computeVertexNormals();
@@ -51,12 +72,18 @@ export default function ProceduralTerrain() {
   return (
     <RigidBody type="fixed" colliders="trimesh">
       <mesh geometry={geometry}>
+        <meshStandardMaterial color="#05010d" roughness={0.8} />
+      </mesh>
+      <mesh geometry={geometry} userData={{ r3RapierType: "MeshCollider" }}>
         <meshStandardMaterial
           ref={materialRef}
           color="#ff2d95"
           wireframe
           emissive="#ff2d95"
           emissiveIntensity={0.5}
+          depthWrite={false}
+          polygonOffset
+          polygonOffsetFactor={-1}
         />
       </mesh>
     </RigidBody>

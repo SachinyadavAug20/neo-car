@@ -38,7 +38,7 @@ export default function Portal() {
       });
     }
 
-    timeline.call(() => triggerFade(), 0.15);
+    timeline.call(() => triggerFade(), [], 0.15);
   };
 
   return (

@@ -22,10 +22,12 @@ export const controlsMap: { name: Controls; keys: string[] }[] = [
 const CAR_FORWARD = new THREE.Vector3(0, 0, -1);
 const CAMERA_OFFSET = 15;
 const CAMERA_HEIGHT = 7;
-const THROTTLE = 26;
+const THROTTLE = 60;
 const MAX_SPEED = 65;
-const STEER_POWER = 9;
-const BRAKE_POWER = 3;
+const BRAKE_POWER = 90;
+const STEER_SPEED = 2.5;
+const GRIP_FACTOR = 0.8;
+const MIN_STEER_SPEED = 1;
 const HIGH_SPEED_THRESHOLD = MAX_SPEED * 0.8;
 
 const LEFT_TAIL_POSITION: [number, number, number] = [-0.8, 0.5, 2];
@@ -50,6 +52,10 @@ export default function DrivableCar() {
   const tmpRight = useMemo(() => new THREE.Vector3(), []);
   const tmpCamera = useMemo(() => new THREE.Vector3(), []);
   const tmpLook = useMemo(() => new THREE.Vector3(), []);
+
+  useEffect(() => {
+    window.focus();
+  }, []);
 
   useEffect(() => {
     const cam = introCamera as THREE.PerspectiveCamera;
@@ -89,23 +95,44 @@ export default function DrivableCar() {
     const forwardVelocity = tmpForward.dot(linvel);
     const throttle = (keys.forward ? 1 : 0) - (keys.back ? 1 : 0);
     const accel = throttle > 0 && forwardVelocity > MAX_SPEED ? 0 : throttle;
+    const mass = body.mass();
 
     body.applyImpulse(
       {
-        x: tmpForward.x * accel * THROTTLE,
+        x: tmpForward.x * accel * THROTTLE * mass,
         y: 0,
-        z: tmpForward.z * accel * THROTTLE,
+        z: tmpForward.z * accel * THROTTLE * mass,
+      },
+      true,
+    );
+
+    const lateralSpeed = tmpRight.dot(linvel);
+    body.applyImpulse(
+      {
+        x: -tmpRight.x * lateralSpeed * GRIP_FACTOR * mass,
+        y: 0,
+        z: -tmpRight.z * lateralSpeed * GRIP_FACTOR * mass,
       },
       true,
     );
 
     const steer = (keys.left ? 1 : 0) - (keys.right ? 1 : 0);
-    const steerScale = 0.25 + Math.min(1, Math.abs(speed) / 30);
-    body.applyTorqueImpulse({ x: 0, y: steer * STEER_POWER * steerScale, z: 0 }, true);
+    if (Math.abs(speed) > MIN_STEER_SPEED) {
+      body.setAngvel(
+        {
+          x: 0,
+          y: steer * STEER_SPEED * Math.sign(forwardVelocity),
+          z: 0,
+        },
+        true,
+      );
+    } else {
+      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+    }
 
     if (keys.brake) {
       body.applyImpulse(
-        { x: -linvel.x * BRAKE_POWER, y: 0, z: -linvel.z * BRAKE_POWER },
+        { x: -linvel.x * BRAKE_POWER * mass, y: 0, z: -linvel.z * BRAKE_POWER * mass },
         true,
       );
     }
@@ -161,7 +188,7 @@ export default function DrivableCar() {
       ccd
       canSleep={false}
     >
-      <CuboidCollider args={[5, 2.75, 10]} position={[0, 1.8, 0]} />
+      <CuboidCollider args={[4, 1, 9]} position={[0, -0.5, 0]} />
 
       <group position={LEFT_TAIL_POSITION}>
         <Trail

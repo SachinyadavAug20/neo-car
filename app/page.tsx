@@ -3,6 +3,7 @@
 import { Canvas } from "@react-three/fiber";
 import Scene from "./components/Scene";
 import HUD from "./components/HUD";
+import PortalFade from "./components/PortalFade";
 
 export default function Home() {
   return (
@@ -15,6 +16,7 @@ export default function Home() {
         <Scene />
       </Canvas>
       <HUD />
+      <PortalFade />
     </main>
   );
 }
