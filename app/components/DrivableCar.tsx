@@ -4,19 +4,21 @@ import { useEffect, useMemo, useRef, useState, type ElementRef } from "react";
 import * as THREE from "three";
 import gsap from "gsap";
 import { useFrame, useThree } from "@react-three/fiber";
-import { useKeyboardControls, Trail } from "@react-three/drei";
+import { useKeyboardControls, Trail, Text } from "@react-three/drei";
 import { RigidBody, CuboidCollider, type RapierRigidBody } from "@react-three/rapier";
 import { Model as Car } from "./Car";
 import { registerCamera } from "../lib/cameraStore";
+import { gameStore } from "../store/gameStore";
 
-export type Controls = "forward" | "back" | "left" | "right" | "brake";
+export type Controls = "forward" | "back" | "left" | "right" | "up" | "down";
 
 export const controlsMap: { name: Controls; keys: string[] }[] = [
   { name: "forward", keys: ["KeyW", "ArrowUp"] },
   { name: "back", keys: ["KeyS", "ArrowDown"] },
   { name: "left", keys: ["KeyA", "ArrowLeft"] },
   { name: "right", keys: ["KeyD", "ArrowRight"] },
-  { name: "brake", keys: ["Space"] },
+  { name: "up", keys: ["Space"] },
+  { name: "down", keys: ["ShiftLeft", "ShiftRight"] },
 ];
 
 const CAR_FORWARD = new THREE.Vector3(0, 0, -1);
@@ -24,10 +26,8 @@ const CAMERA_OFFSET = 15;
 const CAMERA_HEIGHT = 7;
 const THROTTLE = 60;
 const MAX_SPEED = 65;
-const BRAKE_POWER = 90;
-const STEER_SPEED = 2.5;
-const GRIP_FACTOR = 0.8;
-const MIN_STEER_SPEED = 1;
+const VERTICAL_POWER = 50;
+const YAW_POWER = 2.5;
 const HIGH_SPEED_THRESHOLD = MAX_SPEED * 0.8;
 
 const LEFT_TAIL_POSITION: [number, number, number] = [-0.8, 0.5, 2];
@@ -36,6 +36,10 @@ const TRAIL_WIDTH = 0.2;
 const TRAIL_BASE_LENGTH = 2;
 const TRAIL_MAX_LENGTH = 8;
 
+const SCORE_TEXT_POSITION: [number, number, number] = [0, 2.5, 3];
+const SCORE_FONT =
+  "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@master/fonts/ttf/JetBrainsMono-Regular.ttf";
+
 type TrailMaterial = THREE.ShaderMaterial & { lineWidth: number; opacity: number };
 
 export default function DrivableCar() {
@@ -43,8 +47,10 @@ export default function DrivableCar() {
   const bodyRef = useRef<RapierRigidBody>(null);
   const leftTrailRef = useRef<ElementRef<typeof Trail>>(null);
   const rightTrailRef = useRef<ElementRef<typeof Trail>>(null);
+  const scoreTextRef = useRef<ElementRef<typeof Text>>(null);
   const introActive = useRef(true);
   const lastTrailLengthRef = useRef(TRAIL_BASE_LENGTH);
+  const lastScoreRef = useRef(0);
   const [trailLength, setTrailLength] = useState(TRAIL_BASE_LENGTH);
   const [, getKeys] = useKeyboardControls<Controls>();
 
@@ -90,7 +96,7 @@ export default function DrivableCar() {
     tmpForward.copy(CAR_FORWARD).applyQuaternion(quat);
     tmpRight.set(1, 0, 0).applyQuaternion(quat);
 
-    const speed = Math.hypot(linvel.x, linvel.z);
+    const speed = Math.hypot(linvel.x, linvel.y, linvel.z);
     const speedRatio = Math.min(1, speed / MAX_SPEED);
     const forwardVelocity = tmpForward.dot(linvel);
     const throttle = (keys.forward ? 1 : 0) - (keys.back ? 1 : 0);
@@ -106,35 +112,19 @@ export default function DrivableCar() {
       true,
     );
 
-    const lateralSpeed = tmpRight.dot(linvel);
-    body.applyImpulse(
-      {
-        x: -tmpRight.x * lateralSpeed * GRIP_FACTOR * mass,
-        y: 0,
-        z: -tmpRight.z * lateralSpeed * GRIP_FACTOR * mass,
-      },
+    const vertical = (keys.up ? 1 : 0) - (keys.down ? 1 : 0);
+    body.applyImpulse({ x: 0, y: vertical * VERTICAL_POWER * mass, z: 0 }, true);
+
+    const steer = (keys.left ? 1 : 0) - (keys.right ? 1 : 0);
+    body.applyTorqueImpulse(
+      { x: 0, y: steer * YAW_POWER * mass, z: 0 },
       true,
     );
 
-    const steer = (keys.left ? 1 : 0) - (keys.right ? 1 : 0);
-    if (Math.abs(speed) > MIN_STEER_SPEED) {
-      body.setAngvel(
-        {
-          x: 0,
-          y: steer * STEER_SPEED * Math.sign(forwardVelocity),
-          z: 0,
-        },
-        true,
-      );
-    } else {
-      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
-    }
-
-    if (keys.brake) {
-      body.applyImpulse(
-        { x: -linvel.x * BRAKE_POWER * mass, y: 0, z: -linvel.z * BRAKE_POWER * mass },
-        true,
-      );
+    const score = gameStore.getState().score;
+    if (score !== lastScoreRef.current) {
+      lastScoreRef.current = score;
+      if (scoreTextRef.current) scoreTextRef.current.text = `> MEOW_TUI::SCORE = ${score}`;
     }
 
     const desiredLength = Math.round(
@@ -179,16 +169,30 @@ export default function DrivableCar() {
     <RigidBody
       ref={bodyRef}
       type="dynamic"
-      position={[0, 10, 0]}
+      position={[0, 15, 0]}
       colliders={false}
+      gravityScale={0}
       friction={1.2}
       restitution={0}
-      linearDamping={0.6}
-      angularDamping={3}
+      linearDamping={2.5}
+      angularDamping={4.0}
       ccd
       canSleep={false}
     >
       <CuboidCollider args={[4, 1, 9]} position={[0, -0.5, 0]} />
+
+      <Text
+        ref={scoreTextRef}
+        position={SCORE_TEXT_POSITION}
+        fontSize={1.1}
+        color="#00e5ff"
+        anchorX="center"
+        anchorY="middle"
+        outlineWidth={0.02}
+        outlineColor="#ffffff"
+      >
+        SCORE: 0
+      </Text>
 
       <group position={LEFT_TAIL_POSITION}>
         <Trail

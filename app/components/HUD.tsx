@@ -3,20 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
-import {
-  Play,
-  Pause,
-  SkipBack,
-  SkipForward,
-  Volume2,
-  Gauge,
-  Zap,
-} from "lucide-react";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 import { getCamera } from "../lib/cameraStore";
 
 type PlayState = "playing" | "paused";
 type DriveMode = "CRUISE" | "TURBO";
+
+const TERMINAL_FONT =
+  "var(--font-geist-mono), 'Fira Code', 'JetBrains Mono', monospace";
 
 export default function HUD() {
   const router = useRouter();
@@ -54,8 +48,8 @@ export default function HUD() {
     if (flash) {
       timeline.fromTo(
         flash,
-        { opacity: 0, scale: 0.6 },
-        { opacity: 1, scale: 1.6, duration: 0.6, ease: "power2.in" },
+        { opacity: 0 },
+        { opacity: 1, duration: 0.6, ease: "power2.in" },
         0,
       );
     }
@@ -73,79 +67,79 @@ export default function HUD() {
   const isTurbo = driveMode === "TURBO";
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-6 text-white sm:p-10">
+    <div
+      className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-4 sm:p-6"
+      style={{
+        fontFamily: TERMINAL_FONT,
+        color: "#00ff41",
+        backgroundColor: "#050505",
+      }}
+    >
       <header className="flex items-start justify-between">
         <div>
-          <p className="mb-1 text-[10px] font-semibold tracking-[0.5em] text-cyan-300/80 sm:text-xs">
-            SYNTHWAVE · AUDIO-REACTIVE
+          <p className="mb-1 text-[10px] font-bold tracking-[0.2em] text-[#ffb000] sm:text-xs">
+            +---[ MEOW_TUI v0.1 ]---+
           </p>
-          <h1 className="bg-gradient-to-r from-fuchsia-400 via-pink-400 to-cyan-300 bg-clip-text text-4xl font-black tracking-[0.25em] text-transparent drop-shadow-[0_0_14px_rgba(255,45,149,0.7)] sm:text-6xl">
-            NEON DRIVE
+          <h1 className="text-3xl font-bold tracking-[0.15em] text-[#00ff41] drop-shadow-[0_0_12px_rgba(0,255,65,0.5)] sm:text-5xl">
+            &gt; NEON_DRIVE<span className="animate-pulse">_</span>
           </h1>
         </div>
 
         <div className="pointer-events-auto flex flex-col items-end gap-3">
-          <span className="rounded-full border border-fuchsia-400/40 bg-fuchsia-950/40 px-3 py-1 text-[10px] font-semibold tracking-[0.3em] text-fuchsia-300 backdrop-blur-sm sm:text-xs">
-            {playState === "playing" ? "LIVE" : "STANDBY"}
+          <span className="rounded border border-[#00ff41]/40 bg-black px-3 py-1 text-[10px] font-bold tracking-[0.2em] text-[#00ff41] sm:text-xs">
+            {playState === "playing" ? "[LIVE]" : "[STANDBY]"}
           </span>
           <button
             type="button"
             onClick={enterTheGrid}
-            className="flex items-center gap-2 rounded-full border border-cyan-300/50 bg-cyan-500/10 px-5 py-2.5 text-xs font-bold tracking-[0.25em] text-cyan-300 shadow-[0_0_20px_rgba(0,229,255,0.35)] backdrop-blur-md transition hover:scale-105 active:scale-95 sm:text-sm"
+            className="border border-[#ffb000]/60 bg-black px-4 py-2 text-xs font-bold tracking-[0.15em] text-[#ffb000] shadow-[0_0_18px_rgba(255,176,0,0.35)] transition hover:bg-[#ffb000] hover:text-black active:scale-95 sm:text-sm"
           >
-            <Zap className="h-4 w-4" />
-            ENTER THE GRID
+            &gt; ./execute_warp.sh
           </button>
         </div>
       </header>
 
       <footer className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <section className="pointer-events-auto w-full max-w-md rounded-2xl border border-white/10 bg-black/40 p-4 shadow-[0_0_30px_rgba(255,45,149,0.15)] backdrop-blur-md">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="text-[10px] font-semibold tracking-[0.3em] text-white/50">
-              NIGHT CRUISER RADIO
-            </span>
-            <Volume2 className="h-4 w-4 text-cyan-300" />
+        <section className="pointer-events-auto w-full max-w-md rounded border border-[#00ff41]/30 bg-black/80 p-4 shadow-[0_0_24px_rgba(0,255,65,0.12)]">
+          <div className="mb-3 flex items-center justify-between text-[10px] font-bold tracking-[0.2em] text-[#ffb000]">
+            <span>NIGHT_CRUISER_RADIO.EXE</span>
+            <span>{playState === "playing" ? "● RUNNING" : "● PAUSED"}</span>
           </div>
 
-          <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+          <div className="mb-4 h-1.5 w-full overflow-hidden rounded border border-[#00ff41]/40 bg-black">
             <div
               className={
                 playState === "playing"
-                  ? "h-full w-2/3 rounded-full bg-gradient-to-r from-fuchsia-500 to-cyan-400"
-                  : "h-full w-1/3 rounded-full bg-white/30"
+                  ? "h-full w-2/3 rounded bg-[#00ff41]"
+                  : "h-full w-1/3 rounded bg-[#ffb000]"
               }
             />
           </div>
 
-          <div className="flex items-center justify-center gap-5">
+          <div className="flex items-center justify-center gap-4 text-sm">
             <button
               type="button"
               aria-label="Previous track"
-              className="rounded-full p-2 text-white/60 transition hover:text-cyan-300"
+              className="rounded border border-[#00ff41]/30 px-2 py-1 text-[#00ff41]/60 transition hover:border-[#00ff41] hover:text-[#00ff41]"
             >
-              <SkipBack className="h-5 w-5" />
+              &lt;&lt;
             </button>
 
             <button
               type="button"
               onClick={togglePlay}
               aria-label={playState === "playing" ? "Pause" : "Play"}
-              className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-fuchsia-500 to-pink-600 text-white shadow-[0_0_24px_rgba(255,45,149,0.6)] transition hover:scale-105 active:scale-95"
+              className="rounded border border-[#00ff41]/60 bg-black px-4 py-1.5 font-bold text-[#00ff41] shadow-[0_0_14px_rgba(0,255,65,0.35)] transition hover:bg-[#00ff41] hover:text-black active:scale-95"
             >
-              {playState === "playing" ? (
-                <Pause className="h-6 w-6" />
-              ) : (
-                <Play className="ml-0.5 h-6 w-6" />
-              )}
+              {playState === "playing" ? "[II PAUSE]" : "[&gt; PLAY]"}
             </button>
 
             <button
               type="button"
               aria-label="Next track"
-              className="rounded-full p-2 text-white/60 transition hover:text-cyan-300"
+              className="rounded border border-[#00ff41]/30 px-2 py-1 text-[#00ff41]/60 transition hover:border-[#00ff41] hover:text-[#00ff41]"
             >
-              <SkipForward className="h-5 w-5" />
+              &gt;&gt;
             </button>
           </div>
         </section>
@@ -155,24 +149,23 @@ export default function HUD() {
             type="button"
             onClick={toggleMode}
             aria-pressed={isTurbo}
-            className={`flex items-center gap-2 rounded-full border px-5 py-2.5 font-bold tracking-[0.2em] backdrop-blur-md transition hover:scale-105 active:scale-95 ${
+            className={`border px-4 py-2 text-xs font-bold tracking-[0.15em] transition hover:scale-105 active:scale-95 sm:text-sm ${
               isTurbo
-                ? "border-pink-400/60 bg-pink-500/20 text-pink-300 shadow-[0_0_20px_rgba(255,45,149,0.5)]"
-                : "border-cyan-400/50 bg-cyan-500/10 text-cyan-300 shadow-[0_0_20px_rgba(0,229,255,0.35)]"
+                ? "border-[#ffb000]/70 bg-black text-[#ffb000] shadow-[0_0_18px_rgba(255,176,0,0.4)]"
+                : "border-[#00ff41]/50 bg-black text-[#00ff41] shadow-[0_0_18px_rgba(0,255,65,0.3)]"
             }`}
           >
-            <Gauge className="h-4 w-4" />
-            {driveMode}
+            {isTurbo ? "&gt; ./set_mode TURBO" : "&gt; ./set_mode CRUISE"}
           </button>
         </section>
       </footer>
 
       <div
         ref={flashRef}
-        className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-fuchsia-600 via-pink-500 to-cyan-400 opacity-0"
+        className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center bg-black opacity-0"
       >
-        <span className="text-5xl font-black tracking-[0.4em] text-white sm:text-7xl">
-          WARP
+        <span className="text-4xl font-bold tracking-[0.3em] text-[#00ff41] drop-shadow-[0_0_20px_rgba(0,255,65,0.8)] sm:text-6xl">
+          MEOW_TUI::WARP_EXEC
         </span>
       </div>
     </div>

@@ -11,6 +11,7 @@ import DrivableCar, { controlsMap } from "./DrivableCar";
 import ProceduralTerrain from "./ProceduralTerrain";
 import Portal from "./Portal";
 import RetroSun from "./RetroSun";
+import RingTrack from "./RingTrack";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 
 export default function Scene() {
@@ -47,6 +48,7 @@ export default function Scene() {
         <DrivableCar />
         <ProceduralTerrain />
         <Portal />
+        <RingTrack />
       </Physics>
 
       <EffectComposer>

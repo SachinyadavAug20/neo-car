@@ -8,9 +8,10 @@ import { createNoise2D } from "simplex-noise";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 
 const TERRAIN_WIDTH = 200;
-const TERRAIN_DEPTH = 640;
+const TERRAIN_DEPTH = 1600;
 const TERRAIN_SEGMENTS_X = 96;
-const TERRAIN_SEGMENTS_Z = 128;
+const TERRAIN_SEGMENTS_Z = 160;
+const TERRAIN_CENTER_Z = -800;
 const NOISE_FREQUENCY = 0.04;
 const NOISE_AMPLITUDE = 6;
 const FBM_OCTAVES = 3;
@@ -70,11 +71,15 @@ export default function ProceduralTerrain() {
   });
 
   return (
-    <RigidBody type="fixed" colliders="trimesh">
-      <mesh geometry={geometry}>
+    <RigidBody type="fixed" colliders={false}>
+      <mesh geometry={geometry} position={[0, 0, TERRAIN_CENTER_Z]}>
         <meshStandardMaterial color="#05010d" roughness={0.8} />
       </mesh>
-      <mesh geometry={geometry} userData={{ r3RapierType: "MeshCollider" }}>
+      <mesh
+        geometry={geometry}
+        position={[0, 0, TERRAIN_CENTER_Z]}
+        userData={{ r3RapierType: "MeshCollider" }}
+      >
         <meshStandardMaterial
           ref={materialRef}
           color="#ff2d95"
