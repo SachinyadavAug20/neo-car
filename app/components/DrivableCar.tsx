@@ -21,7 +21,7 @@ export const controlsMap: { name: Controls; keys: string[] }[] = [
   { name: "down", keys: ["ShiftLeft", "ShiftRight"] },
 ];
 
-const CAR_FORWARD = new THREE.Vector3(0, 0, -1);
+const CAR_FORWARD = new THREE.Vector3(0, 0, 1);
 const CAMERA_OFFSET = 25;
 const CAMERA_HEIGHT = 15;
 const THROTTLE = 60;
@@ -30,8 +30,8 @@ const VERTICAL_POWER = 50;
 const YAW_POWER = 2.5;
 const HIGH_SPEED_THRESHOLD = MAX_SPEED * 0.8;
 
-const LEFT_TAIL_POSITION: [number, number, number] = [-0.8, 0.5, 2];
-const RIGHT_TAIL_POSITION: [number, number, number] = [0.8, 0.5, 2];
+const LEFT_TAIL_POSITION: [number, number, number] = [-0.8, 0.5, -2];
+const RIGHT_TAIL_POSITION: [number, number, number] = [0.8, 0.5, -2];
 const TRAIL_WIDTH = 0.2;
 const TRAIL_BASE_LENGTH = 2;
 const TRAIL_MAX_LENGTH = 8;
@@ -72,7 +72,7 @@ export default function DrivableCar() {
     timeline.to(cam.position, {
       x: 0,
       y: CAMERA_HEIGHT + 10,
-      z: CAMERA_OFFSET + 4,
+      z: -(CAMERA_OFFSET + 4),
       onComplete: () => {
         introActive.current = false;
       },
@@ -150,7 +150,7 @@ export default function DrivableCar() {
 
     tmpCamera
       .set(pos.x, pos.y, pos.z)
-      .addScaledVector(tmpForward, CAMERA_OFFSET)
+      .addScaledVector(tmpForward, -CAMERA_OFFSET)
       .addScaledVector(tmpRight, state.pointer.x * 3)
       .add({ x: 0, y: CAMERA_HEIGHT - state.pointer.y * 2, z: 0 });
 
@@ -185,6 +185,7 @@ export default function DrivableCar() {
       <Text
         ref={scoreTextRef}
         position={SCORE_TEXT_POSITION}
+        rotation={[0, Math.PI, 0]}
         fontSize={1.1}
         color="#b4befe"
         font={SCORE_FONT}

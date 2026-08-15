@@ -11,7 +11,7 @@ import {
 import { getCamera } from "../lib/cameraStore";
 import { triggerFade } from "../lib/fadeStore";
 
-const PORTAL_POSITION: [number, number, number] = [0, 10, -300];
+const PORTAL_POSITION: [number, number, number] = [0, 10, 300];
 const PORTAL_FOV = 150;
 const WARP_DURATION = 1.5;
 

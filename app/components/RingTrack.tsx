@@ -6,17 +6,20 @@ import { useFrame } from "@react-three/fiber";
 import {
   RigidBody,
   CuboidCollider,
+  type RapierRigidBody,
   type IntersectionEnterPayload,
 } from "@react-three/rapier";
 import { gameStore } from "../store/gameStore";
 
 const RING_COUNT = 30;
-const RING_START_Z = -50;
-const RING_END_Z = -1500;
+const RING_START_Z = 50;
+const RING_END_Z = 1500;
 const RING_X_SPREAD = 55;
 const RING_Y_MIN = 8;
 const RING_Y_MAX = 38;
 const RING_SPACING = (RING_END_Z - RING_START_Z) / (RING_COUNT - 1);
+const RING_RESPAWN_MARGIN = 20;
+const RING_LOOP_AHEAD = 1500;
 const PARTICLE_POOL_SIZE = 300;
 const VOXELS_PER_RING = 24;
 const PARTICLE_SPEED_MIN = 8;
@@ -56,9 +59,16 @@ function createParticlePool(size: number): ParticleState[] {
   return pool;
 }
 
+function pseudoRandom(seed: number): number {
+  const x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+  return x - Math.floor(x);
+}
+
 export default function RingTrack() {
   const collectedRef = useRef(new Set<number>());
   const ringMeshRefs = useRef<(THREE.Mesh | null)[]>([]);
+  const ringBodyRefs = useRef<(RapierRigidBody | null)[]>([]);
+  const teleportCountRef = useRef<number[]>([]);
   const instancedRef = useRef<THREE.InstancedMesh>(null);
   const freeIndicesRef = useRef<number[] | null>(null);
   const particlesRef = useRef<ParticleState[] | null>(null);
@@ -127,6 +137,27 @@ export default function RingTrack() {
   };
 
   useFrame((state, delta) => {
+    const cameraZ = state.camera.position.z;
+    for (let i = 0; i < RING_COUNT; i++) {
+      const body = ringBodyRefs.current[i];
+      if (!body) continue;
+      if (body.translation().z < cameraZ - RING_RESPAWN_MARGIN) {
+        teleportCountRef.current[i] = (teleportCountRef.current[i] ?? 0) + 1;
+        const seed = i * 1000 + teleportCountRef.current[i];
+        const randomX = (pseudoRandom(seed) * 2 - 1) * RING_X_SPREAD;
+        const randomY =
+          RING_Y_MIN + pseudoRandom(seed + 0.5) * (RING_Y_MAX - RING_Y_MIN);
+        body.setNextKinematicTranslation({
+          x: randomX,
+          y: randomY,
+          z: cameraZ + RING_LOOP_AHEAD,
+        });
+        collectedRef.current.delete(i);
+        const mesh = ringMeshRefs.current[i];
+        if (mesh) mesh.visible = true;
+      }
+    }
+
     const instanced = instancedRef.current;
     if (!instanced) return;
     const pool = particlesRef.current;
@@ -182,9 +213,12 @@ export default function RingTrack() {
       {RINGS.map((ring, index) => (
         <RigidBody
           key={index}
-          type="fixed"
+          type="kinematicPosition"
           colliders={false}
           position={ring.position}
+          ref={(node) => {
+            ringBodyRefs.current[index] = node;
+          }}
         >
           <mesh
             ref={(node) => {

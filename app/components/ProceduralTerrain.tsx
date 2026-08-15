@@ -3,29 +3,115 @@
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
-import { RigidBody } from "@react-three/rapier";
-import { createNoise2D } from "simplex-noise";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 
 const TERRAIN_WIDTH = 200;
 const TERRAIN_DEPTH = 1600;
 const TERRAIN_SEGMENTS_X = 96;
 const TERRAIN_SEGMENTS_Z = 160;
-const TERRAIN_CENTER_Z = -800;
-const NOISE_FREQUENCY = 0.04;
-const NOISE_AMPLITUDE = 6;
-const FBM_OCTAVES = 3;
-const HIGHWAY_FALLOFF = 18;
-const MIN_ELEVATION = 0.08;
-const AUDIO_AMPLITUDE = 4;
-const MAX_BYTE = 255;
+
+const TERRAIN_VERTEX_SHADER = `
+  uniform float uTime;
+  uniform float uZOffset;
+  uniform float uAmplitude;
+
+  varying float vElevation;
+
+  #include <fog_pars_vertex>
+
+  float hash(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+  }
+
+  float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(
+      mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+      mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.y),
+      u.y
+    );
+  }
+
+  float fbm(vec2 p) {
+    float value = 0.0;
+    float amplitude = 0.5;
+    for (int i = 0; i < 3; i++) {
+      value += amplitude * noise(p);
+      p = p * 2.02 + vec2(17.0, 13.0);
+      amplitude *= 0.5;
+    }
+    return value;
+  }
+
+  void main() {
+    vec3 pos = position;
+
+    float worldZ = pos.z + uZOffset;
+    vec2 coord = vec2(pos.x * 0.04, worldZ * 0.04);
+    coord += vec2(uTime * 0.03, uTime * 0.018);
+
+    float h = fbm(coord);
+    float amp = 3.0 + uAmplitude * 3.5;
+    pos.y += (h - 0.45) * amp;
+
+    vElevation = h;
+
+    vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+    gl_Position = projectionMatrix * mvPosition;
+
+    #include <fog_vertex>
+  }
+`;
+
+const TERRAIN_BASE_FRAGMENT = `
+  uniform vec3 uBaseColor;
+
+  varying float vElevation;
+
+  #include <fog_pars_fragment>
+
+  void main() {
+    vec3 color = uBaseColor * (0.92 + vElevation * 0.18);
+    gl_FragColor = vec4(color, 1.0);
+    #include <fog_fragment>
+  }
+`;
+
+const TERRAIN_WIRE_FRAGMENT = `
+  uniform vec3 uColor;
+
+  varying float vElevation;
+
+  #include <fog_pars_fragment>
+
+  void main() {
+    float glow = 0.55 + vElevation * 0.9;
+    gl_FragColor = vec4(uColor * glow, 1.0);
+    #include <fog_fragment>
+  }
+`;
+
+const TERRAIN_UNIFORMS = {
+  uTime: { value: 0 },
+  uZOffset: { value: 0 },
+  uAmplitude: { value: 0.35 },
+  uColor: { value: new THREE.Color("#8aadf4") },
+  uBaseColor: { value: new THREE.Color("#0b0f19") },
+  fogColor: { value: new THREE.Color("#0b0f19") },
+  fogDensity: { value: 0.003 },
+  fogNear: { value: 1 },
+  fogFar: { value: 2000 },
+};
 
 export default function ProceduralTerrain() {
-  const materialRef = useRef<THREE.MeshStandardMaterial>(null);
-  const { getFrequencies, getSpectrum } = useAudioAnalyzer();
+  const groupRef = useRef<THREE.Group>(null);
+  const { getFrequencies } = useAudioAnalyzer();
 
-  const { geometry, baseHeights, columnFreqIndices } = useMemo(() => {
-    const noise2D = createNoise2D();
+  const geometry = useMemo(() => {
     const geo = new THREE.PlaneGeometry(
       TERRAIN_WIDTH,
       TERRAIN_DEPTH,
@@ -33,97 +119,49 @@ export default function ProceduralTerrain() {
       TERRAIN_SEGMENTS_Z,
     );
     geo.rotateX(-Math.PI / 2);
-
-    const positions = geo.attributes.position.array as Float32Array;
-    const vertexCount = positions.length / 3;
-    const base = new Float32Array(vertexCount);
-
-    for (let v = 0, i = 0; i < positions.length; i += 3, v++) {
-      const x = positions[i];
-      const z = positions[i + 2];
-
-      let height = 0;
-      let maxAmplitude = 0;
-      let amplitude = 1;
-      let frequency = NOISE_FREQUENCY;
-      for (let octave = 0; octave < FBM_OCTAVES; octave++) {
-        height += noise2D(x * frequency, z * frequency) * amplitude;
-        maxAmplitude += amplitude;
-        frequency *= 2;
-        amplitude *= 0.5;
-      }
-      const normalized = height / maxAmplitude;
-
-      const highwayFalloff = 1 - Math.exp(-Math.abs(x) / HIGHWAY_FALLOFF);
-      const elevation = MIN_ELEVATION + (1 - MIN_ELEVATION) * highwayFalloff;
-
-      const y = normalized * NOISE_AMPLITUDE * elevation;
-      positions[i + 1] = y;
-      base[v] = y;
-    }
-
-    geo.computeVertexNormals();
-
-    const cols = TERRAIN_SEGMENTS_X + 1;
-    const freqIndices = new Uint16Array(cols);
-    for (let col = 0; col < cols; col++) {
-      freqIndices[col] = Math.round((col / TERRAIN_SEGMENTS_X) * MAX_BYTE);
-    }
-
-    return {
-      geometry: geo,
-      baseHeights: base,
-      columnFreqIndices: freqIndices,
-    };
+    return geo;
   }, []);
 
-  useFrame(() => {
-    const spectrum = getSpectrum();
+  useFrame((state) => {
+    const group = groupRef.current;
+    if (group) group.position.z = state.camera.position.z;
+
+    TERRAIN_UNIFORMS.uTime.value = state.clock.elapsedTime;
+    TERRAIN_UNIFORMS.uZOffset.value = state.camera.position.z;
     const [bass] = getFrequencies();
-
-    if (materialRef.current) {
-      const target = 0.15 + bass * 1.2;
-      materialRef.current.emissiveIntensity = THREE.MathUtils.lerp(
-        materialRef.current.emissiveIntensity,
-        target,
-        0.15,
-      );
-    }
-
-    const positions = geometry.attributes.position.array as Float32Array;
-    const bins = spectrum.length;
-    const cols = TERRAIN_SEGMENTS_X + 1;
-    for (let v = 0, i = 0; i < positions.length; i += 3, v++) {
-      const col = v % cols;
-      const freqIndex =
-        columnFreqIndices[col] < bins ? columnFreqIndices[col] : bins - 1;
-      const amp = spectrum[freqIndex] / MAX_BYTE;
-      positions[i + 1] = baseHeights[v] + amp * AUDIO_AMPLITUDE;
-    }
-    geometry.attributes.position.needsUpdate = true;
+    TERRAIN_UNIFORMS.uAmplitude.value = 0.3 + bass * 1.4;
   });
 
   return (
-    <RigidBody type="fixed" colliders={false}>
-      <mesh geometry={geometry} position={[0, 0, TERRAIN_CENTER_Z]}>
-        <meshStandardMaterial color="#0b0f19" roughness={0.8} />
-      </mesh>
-      <mesh
-        geometry={geometry}
-        position={[0, 0, TERRAIN_CENTER_Z]}
-        userData={{ r3RapierType: "MeshCollider" }}
-      >
-        <meshStandardMaterial
-          ref={materialRef}
-          color="#8aadf4"
-          wireframe
-          emissive="#8aadf4"
-          emissiveIntensity={0.2}
-          depthWrite={false}
-          polygonOffset
-          polygonOffsetFactor={-1}
+    <group ref={groupRef}>
+      <mesh geometry={geometry}>
+        <shaderMaterial
+          args={[
+            {
+              uniforms: TERRAIN_UNIFORMS,
+              vertexShader: TERRAIN_VERTEX_SHADER,
+              fragmentShader: TERRAIN_BASE_FRAGMENT,
+              fog: true,
+            },
+          ]}
         />
       </mesh>
-    </RigidBody>
+      <mesh geometry={geometry}>
+        <shaderMaterial
+          args={[
+            {
+              uniforms: TERRAIN_UNIFORMS,
+              vertexShader: TERRAIN_VERTEX_SHADER,
+              fragmentShader: TERRAIN_WIRE_FRAGMENT,
+              wireframe: true,
+              fog: true,
+              polygonOffset: true,
+              polygonOffsetFactor: -1,
+              polygonOffsetUnits: -1,
+            },
+          ]}
+        />
+      </mesh>
+    </group>
   );
 }

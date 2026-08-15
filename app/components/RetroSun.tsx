@@ -46,7 +46,7 @@ export default function RetroSun() {
   });
 
   return (
-    <mesh position={[0, 40, -450]}>
+    <mesh position={[0, 40, 450]}>
       <circleGeometry args={[120, 64]} />
       <shaderMaterial
         ref={materialRef}
