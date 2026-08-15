@@ -17,7 +17,7 @@ const NOISE_AMPLITUDE = 6;
 const FBM_OCTAVES = 3;
 const HIGHWAY_FALLOFF = 18;
 const MIN_ELEVATION = 0.08;
-const AUDIO_AMPLITUDE = 14;
+const AUDIO_AMPLITUDE = 4;
 const MAX_BYTE = 255;
 
 export default function ProceduralTerrain() {
@@ -82,7 +82,7 @@ export default function ProceduralTerrain() {
     const [bass] = getFrequencies();
 
     if (materialRef.current) {
-      const target = 0.5 + bass * 3.5;
+      const target = 0.15 + bass * 1.2;
       materialRef.current.emissiveIntensity = THREE.MathUtils.lerp(
         materialRef.current.emissiveIntensity,
         target,
@@ -106,7 +106,7 @@ export default function ProceduralTerrain() {
   return (
     <RigidBody type="fixed" colliders={false}>
       <mesh geometry={geometry} position={[0, 0, TERRAIN_CENTER_Z]}>
-        <meshStandardMaterial color="#05010d" roughness={0.8} />
+        <meshStandardMaterial color="#0b0f19" roughness={0.8} />
       </mesh>
       <mesh
         geometry={geometry}
@@ -115,10 +115,10 @@ export default function ProceduralTerrain() {
       >
         <meshStandardMaterial
           ref={materialRef}
-          color="#ff2d95"
+          color="#8aadf4"
           wireframe
-          emissive="#ff2d95"
-          emissiveIntensity={0.5}
+          emissive="#8aadf4"
+          emissiveIntensity={0.2}
           depthWrite={false}
           polygonOffset
           polygonOffsetFactor={-1}

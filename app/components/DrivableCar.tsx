@@ -186,7 +186,7 @@ export default function DrivableCar() {
         ref={scoreTextRef}
         position={SCORE_TEXT_POSITION}
         fontSize={1.1}
-        color="#00ff41"
+        color="#b4befe"
         font={SCORE_FONT}
         anchorX="center"
         anchorY="middle"

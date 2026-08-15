@@ -93,40 +93,46 @@ export default function HUD() {
       className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-4 sm:p-6"
       style={{
         fontFamily: TERMINAL_FONT,
-        color: "#00ff41",
-        backgroundColor: "#050505",
+        color: "#cad3f5",
       }}
     >
       <header className="flex items-start justify-between">
-        <div>
-          <p className="mb-1 text-[10px] font-bold tracking-[0.2em] text-[#ffb000] sm:text-xs">
-            +---[ MEOW_TUI v0.1 ]---+
-          </p>
-          <h1 className="text-3xl font-bold tracking-[0.15em] text-[#00ff41] drop-shadow-[0_0_12px_rgba(0,255,65,0.5)] sm:text-5xl">
-            &gt; NEON_DRIVE<span className="animate-pulse">_</span>
-          </h1>
-        </div>
+        <div className="pointer-events-auto rounded border border-[#8aadf4]/30 bg-[#1e2030]/70 p-3 backdrop-blur-sm">
+          <div className="flex items-start justify-between gap-6">
+            <div>
+              <p className="mb-1 text-[10px] font-bold tracking-[0.2em] text-[#cba6f7] sm:text-xs">
+                +---[ MEOW_TUI v0.1 ]---+
+              </p>
+              <h1 className="text-3xl font-bold tracking-[0.15em] text-[#b4befe] drop-shadow-[0_0_12px_rgba(180,190,254,0.45)] sm:text-5xl">
+                &gt; NEON_DRIVE_
+              </h1>
+            </div>
 
-        <div className="pointer-events-auto flex flex-col items-end gap-3">
-          <span className="rounded border border-[#00ff41]/40 bg-black px-3 py-1 text-[10px] font-bold tracking-[0.2em] text-[#00ff41] sm:text-xs">
-            {playState === "playing" ? "[LIVE]" : "[STANDBY]"}
-          </span>
-          <button
-            type="button"
-            onClick={enterTheGrid}
-            className="border border-[#ffb000]/60 bg-black px-4 py-2 text-xs font-bold tracking-[0.15em] text-[#ffb000] shadow-[0_0_18px_rgba(255,176,0,0.35)] transition hover:bg-[#ffb000] hover:text-black active:scale-95 sm:text-sm"
-          >
-            &gt; ./execute_warp.sh
-          </button>
+            <div className="flex flex-col items-end gap-3">
+              <span className="rounded border border-[#8aadf4]/40 bg-[#1e2030] px-3 py-1 text-[10px] font-bold tracking-[0.2em] text-[#b4befe] sm:text-xs">
+                {playState === "playing" ? "[LIVE]" : "[STANDBY]"}
+              </span>
+              <button
+                type="button"
+                onClick={enterTheGrid}
+                className="border border-[#cba6f7]/60 bg-[#1e2030] px-4 py-2 text-xs font-bold tracking-[0.15em] text-[#cba6f7] shadow-[0_0_18px_rgba(203,166,247,0.3)] transition hover:bg-[#cba6f7] hover:text-[#1e2030] active:scale-95 sm:text-sm"
+              >
+                &gt; ./execute_warp.sh
+              </button>
+            </div>
+          </div>
         </div>
       </header>
 
       <section className="flex w-full justify-end">
-        <aside className="pointer-events-auto w-full max-w-xs rounded border border-[#00ff41]/30 bg-black/80 p-3 shadow-[0_0_24px_rgba(0,255,65,0.1)]">
-          <p className="mb-2 text-[10px] font-bold tracking-[0.2em] text-[#ffb000]">
+        <aside className="pointer-events-auto w-full max-w-xs rounded border border-[#8aadf4]/30 bg-[#1e2030]/80 p-3 shadow-[0_0_24px_rgba(138,173,244,0.12)] backdrop-blur-md">
+          <p className="mb-2 text-[10px] font-bold tracking-[0.2em] text-[#cba6f7]">
             +--[ STDOUT ]--+
           </p>
-          <div className="max-h-36 overflow-hidden text-[11px] leading-relaxed text-[#00ff41]">
+          <div
+            className="max-h-36 overflow-hidden text-[11px] leading-relaxed text-[#a5adcb]"
+            style={{ textShadow: "1px 1px 2px black" }}
+          >
             {log.map((line, index) => (
               <p key={`${line}-${index}`} className="whitespace-pre-wrap break-all">
                 {line}
@@ -134,19 +140,19 @@ export default function HUD() {
             ))}
           </div>
 
-          <div className="mt-3 border-t border-[#00ff41]/20 pt-2 text-[10px] text-[#ffb000]">
+          <div className="mt-3 border-t border-[#8aadf4]/20 pt-2 text-[10px] text-[#cba6f7]">
             <p className="mb-1 tracking-[0.15em]">
               CPU {Math.round(cpu)}%&nbsp;&nbsp;MEM {Math.round(memory)}%
             </p>
-            <div className="mb-1 h-1.5 w-full overflow-hidden rounded border border-[#00ff41]/40 bg-black">
+            <div className="mb-1 h-1.5 w-full overflow-hidden rounded border border-[#cba6f7]/40 bg-[#1e2030]">
               <div
-                className="h-full bg-[#ffb000] transition-all duration-700"
+                className="h-full bg-[#cba6f7] transition-all duration-700"
                 style={{ width: `${cpu}%` }}
               />
             </div>
-            <div className="h-1.5 w-full overflow-hidden rounded border border-[#ff003c]/50 bg-black">
+            <div className="h-1.5 w-full overflow-hidden rounded border border-[#f38ba8]/50 bg-[#1e2030]">
               <div
-                className="h-full bg-[#ff003c] transition-all duration-700"
+                className="h-full bg-[#f38ba8] transition-all duration-700"
                 style={{ width: `${memory}%` }}
               />
             </div>
@@ -155,18 +161,18 @@ export default function HUD() {
       </section>
 
       <footer className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <section className="pointer-events-auto w-full max-w-md rounded border border-[#00ff41]/30 bg-black/80 p-4 shadow-[0_0_24px_rgba(0,255,65,0.12)]">
-          <div className="mb-3 flex items-center justify-between text-[10px] font-bold tracking-[0.2em] text-[#ffb000]">
+        <section className="pointer-events-auto w-full max-w-md rounded border border-[#8aadf4]/30 bg-[#1e2030]/80 p-4 shadow-[0_0_24px_rgba(138,173,244,0.12)] backdrop-blur-md">
+          <div className="mb-3 flex items-center justify-between text-[10px] font-bold tracking-[0.2em] text-[#cba6f7]">
             <span>NIGHT_CRUISER_RADIO.EXE</span>
             <span>{playState === "playing" ? "● RUNNING" : "● PAUSED"}</span>
           </div>
 
-          <div className="mb-4 h-1.5 w-full overflow-hidden rounded border border-[#00ff41]/40 bg-black">
+          <div className="mb-4 h-1.5 w-full overflow-hidden rounded border border-[#8aadf4]/40 bg-[#1e2030]">
             <div
               className={
                 playState === "playing"
-                  ? "h-full w-2/3 rounded bg-[#00ff41]"
-                  : "h-full w-1/3 rounded bg-[#ffb000]"
+                  ? "h-full w-2/3 rounded bg-[#b4befe]"
+                  : "h-full w-1/3 rounded bg-[#cba6f7]"
               }
             />
           </div>
@@ -175,7 +181,7 @@ export default function HUD() {
             <button
               type="button"
               aria-label="Previous track"
-              className="rounded border border-[#00ff41]/30 px-2 py-1 text-[#00ff41]/60 transition hover:border-[#00ff41] hover:text-[#00ff41]"
+              className="rounded border border-[#8aadf4]/30 px-2 py-1 text-[#cad3f5]/60 transition hover:border-[#8aadf4] hover:text-[#cad3f5]"
             >
               &lt;&lt;
             </button>
@@ -184,7 +190,7 @@ export default function HUD() {
               type="button"
               onClick={togglePlay}
               aria-label={playState === "playing" ? "Pause" : "Play"}
-              className="rounded border border-[#00ff41]/60 bg-black px-4 py-1.5 font-bold text-[#00ff41] shadow-[0_0_14px_rgba(0,255,65,0.35)] transition hover:bg-[#00ff41] hover:text-black active:scale-95"
+              className="rounded border border-[#8aadf4]/60 bg-[#1e2030] px-4 py-1.5 font-bold text-[#cad3f5] shadow-[0_0_14px_rgba(138,173,244,0.3)] transition hover:bg-[#8aadf4] hover:text-[#1e2030] active:scale-95"
             >
               {playState === "playing" ? "[II PAUSE]" : "[&gt; PLAY]"}
             </button>
@@ -192,7 +198,7 @@ export default function HUD() {
             <button
               type="button"
               aria-label="Next track"
-              className="rounded border border-[#00ff41]/30 px-2 py-1 text-[#00ff41]/60 transition hover:border-[#00ff41] hover:text-[#00ff41]"
+              className="rounded border border-[#8aadf4]/30 px-2 py-1 text-[#cad3f5]/60 transition hover:border-[#8aadf4] hover:text-[#cad3f5]"
             >
               &gt;&gt;
             </button>
@@ -206,8 +212,8 @@ export default function HUD() {
             aria-pressed={isTurbo}
             className={`border px-4 py-2 text-xs font-bold tracking-[0.15em] transition hover:scale-105 active:scale-95 sm:text-sm ${
               isTurbo
-                ? "border-[#ffb000]/70 bg-black text-[#ffb000] shadow-[0_0_18px_rgba(255,176,0,0.4)]"
-                : "border-[#00ff41]/50 bg-black text-[#00ff41] shadow-[0_0_18px_rgba(0,255,65,0.3)]"
+                ? "border-[#f5bde6]/70 bg-[#1e2030] text-[#f5bde6] shadow-[0_0_18px_rgba(245,189,230,0.35)]"
+                : "border-[#8aadf4]/50 bg-[#1e2030] text-[#8aadf4] shadow-[0_0_18px_rgba(138,173,244,0.25)]"
             }`}
           >
             {isTurbo ? "&gt; ./set_mode TURBO" : "&gt; ./set_mode CRUISE"}
@@ -219,7 +225,7 @@ export default function HUD() {
         ref={flashRef}
         className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center bg-black opacity-0"
       >
-        <span className="text-4xl font-bold tracking-[0.3em] text-[#00ff41] drop-shadow-[0_0_20px_rgba(0,255,65,0.8)] sm:text-6xl">
+        <span className="text-4xl font-bold tracking-[0.3em] text-[#b4befe] drop-shadow-[0_0_20px_rgba(180,190,254,0.7)] sm:text-6xl">
           MEOW_TUI::WARP_EXEC
         </span>
       </div>
