@@ -28,7 +28,6 @@ const THROTTLE = 60;
 const MAX_SPEED = 65;
 const VERTICAL_POWER = 50;
 const YAW_POWER = 2.5;
-const HIGH_SPEED_THRESHOLD = MAX_SPEED * 0.8;
 
 const LEFT_TAIL_POSITION: [number, number, number] = [-0.8, 0.5, -2];
 const RIGHT_TAIL_POSITION: [number, number, number] = [0.8, 0.5, -2];
@@ -51,6 +50,7 @@ export default function DrivableCar() {
   const introActive = useRef(true);
   const lastTrailLengthRef = useRef(TRAIL_BASE_LENGTH);
   const lastScoreRef = useRef(0);
+  const throttleRef = useRef(0);
   const [trailLength, setTrailLength] = useState(TRAIL_BASE_LENGTH);
   const [, getKeys] = useKeyboardControls<Controls>();
 
@@ -83,7 +83,7 @@ export default function DrivableCar() {
     };
   }, [introCamera]);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const body = bodyRef.current;
     const camera = state.camera;
     if (!body) return;
@@ -100,7 +100,14 @@ export default function DrivableCar() {
     const speed = Math.hypot(linvel.x, linvel.y, linvel.z);
     const speedRatio = Math.min(1, speed / MAX_SPEED);
     const forwardVelocity = tmpForward.dot(linvel);
-    const throttle = (keys.forward ? 1 : 0) - (keys.back ? 1 : 0);
+
+    const targetThrottle = (keys.forward ? 1 : 0) - (keys.back ? 1 : 0);
+    throttleRef.current = THREE.MathUtils.lerp(
+      throttleRef.current,
+      targetThrottle,
+      1 - Math.exp(-5 * delta),
+    );
+    const throttle = throttleRef.current;
     const accel = throttle > 0 && forwardVelocity > MAX_SPEED ? 0 : throttle;
     const mass = body.mass();
 
@@ -154,15 +161,12 @@ export default function DrivableCar() {
       .addScaledVector(tmpRight, state.pointer.x * 3)
       .add({ x: 0, y: CAMERA_HEIGHT - state.pointer.y * 2, z: 0 });
 
-    camera.position.x = THREE.MathUtils.lerp(camera.position.x, tmpCamera.x, 0.09);
-    camera.position.y = THREE.MathUtils.lerp(camera.position.y, tmpCamera.y, 0.09);
-    camera.position.z = THREE.MathUtils.lerp(camera.position.z, tmpCamera.z, 0.09);
+    const damp = 1 - Math.exp(-8 * delta);
+    camera.position.lerp(tmpCamera, damp);
 
-    if (speed > HIGH_SPEED_THRESHOLD) {
-      camera.position.y += Math.sin(state.clock.elapsedTime * 60) * 0.04;
-    }
-
-    tmpLook.set(pos.x, pos.y + 2.5, pos.z);
+    tmpLook
+      .set(pos.x, pos.y + 2.5, pos.z)
+      .addScaledVector(tmpForward, speedRatio * 6);
     camera.lookAt(tmpLook);
   });
 

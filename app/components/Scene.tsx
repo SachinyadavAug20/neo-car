@@ -50,11 +50,11 @@ export default function Scene() {
       <pointLight position={[20, 10, -30]} intensity={200} distance={90} color="#7dc4e4" />
 
       <Physics gravity={[0, -30, 0]} paused={panicked}>
-        <DrivableCar key={sessionId} />
+        <DrivableCar key={`car-${sessionId}`} />
         <ProceduralTerrain />
         <Portal />
-        <RingTrack key={sessionId} />
-        <RogueDaemons key={sessionId} />
+        <RingTrack key={`rings-${sessionId}`} />
+        <RogueDaemons key={`daemons-${sessionId}`} />
       </Physics>
 
       <EffectComposer>
