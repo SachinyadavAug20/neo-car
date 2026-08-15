@@ -21,6 +21,7 @@ const DAEMON_DRIFT_RADIUS = 18;
 const DAEMON_DRIFT_SPEED = 0.4;
 const DAEMON_SPIN_SPEED = 1.2;
 const SCORE_PENALTY = 5;
+const MEMORY_DRAIN = 20;
 
 interface DaemonData {
   position: [number, number, number];
@@ -51,6 +52,7 @@ export default function RogueDaemons() {
 
     gameStore.getState().addLog("[WARN] ROGUE_PID_COLLISION! SCORE_DUMP");
     gameStore.getState().subtractScore(SCORE_PENALTY);
+    gameStore.getState().damageMemory(MEMORY_DRAIN);
     triggerGlitch();
   };
 

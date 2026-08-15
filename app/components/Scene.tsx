@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import gsap from "gsap";
+import { useStore } from "zustand";
 import { useFrame } from "@react-three/fiber";
 import { KeyboardControls, Stars } from "@react-three/drei";
 import { Physics } from "@react-three/rapier";
@@ -16,6 +17,7 @@ import RingTrack from "./RingTrack";
 import RogueDaemons from "./RogueDaemons";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 import { onGlitch } from "../lib/glitchStore";
+import { gameStore } from "../store/gameStore";
 
 const CA_OFFSET = new THREE.Vector2(0.002, 0.002);
 const GLITCH_DELAY = new THREE.Vector2(1.5, 3.5);
@@ -24,6 +26,8 @@ const GLITCH_DURATION = new THREE.Vector2(0.1, 0.3);
 export default function Scene() {
   const bloomRef = useRef<BloomEffect>(null);
   const glitchRef = useRef<GlitchEffect>(null);
+  const sessionId = useStore(gameStore, (state) => state.sessionId);
+  const panicked = useStore(gameStore, (state) => state.panicked);
   const { getFrequencies } = useAudioAnalyzer();
 
   useEffect(() => {
@@ -65,12 +69,12 @@ export default function Scene() {
       <pointLight position={[-20, 10, -30]} intensity={200} distance={90} color="#ff2d95" />
       <pointLight position={[20, 10, -30]} intensity={200} distance={90} color="#00e5ff" />
 
-      <Physics gravity={[0, -30, 0]}>
-        <DrivableCar />
+      <Physics gravity={[0, -30, 0]} paused={panicked}>
+        <DrivableCar key={sessionId} />
         <ProceduralTerrain />
         <Portal />
-        <RingTrack />
-        <RogueDaemons />
+        <RingTrack key={sessionId} />
+        <RogueDaemons key={sessionId} />
       </Physics>
 
       <EffectComposer>

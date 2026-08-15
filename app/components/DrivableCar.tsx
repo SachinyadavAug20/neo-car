@@ -87,6 +87,7 @@ export default function DrivableCar() {
     const body = bodyRef.current;
     const camera = state.camera;
     if (!body) return;
+    if (gameStore.getState().panicked) return;
 
     const keys = getKeys();
     const linvel = body.linvel();

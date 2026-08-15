@@ -20,10 +20,10 @@ export default function HUD() {
   const flashRef = useRef<HTMLDivElement>(null);
   const bootedRef = useRef(false);
   const log = useStore(gameStore, (state) => state.log);
+  const memory = useStore(gameStore, (state) => state.memory);
   const [playState, setPlayState] = useState<PlayState>("paused");
   const [driveMode, setDriveMode] = useState<DriveMode>("CRUISE");
   const [cpu, setCpu] = useState(34);
-  const [ram, setRam] = useState(48);
 
   useEffect(() => {
     return subscribe(setPlayState);
@@ -41,7 +41,6 @@ export default function HUD() {
   useEffect(() => {
     const id = setInterval(() => {
       setCpu(18 + Math.random() * 82);
-      setRam(35 + Math.random() * 60);
     }, 1200);
     return () => clearInterval(id);
   }, []);
@@ -137,7 +136,7 @@ export default function HUD() {
 
           <div className="mt-3 border-t border-[#00ff41]/20 pt-2 text-[10px] text-[#ffb000]">
             <p className="mb-1 tracking-[0.15em]">
-              CPU {Math.round(cpu)}%&nbsp;&nbsp;MEM {Math.round(ram)}%
+              CPU {Math.round(cpu)}%&nbsp;&nbsp;MEM {Math.round(memory)}%
             </p>
             <div className="mb-1 h-1.5 w-full overflow-hidden rounded border border-[#00ff41]/40 bg-black">
               <div
@@ -145,10 +144,10 @@ export default function HUD() {
                 style={{ width: `${cpu}%` }}
               />
             </div>
-            <div className="h-1.5 w-full overflow-hidden rounded border border-[#00ff41]/40 bg-black">
+            <div className="h-1.5 w-full overflow-hidden rounded border border-[#ff003c]/50 bg-black">
               <div
-                className="h-full bg-[#00ff41] transition-all duration-700"
-                style={{ width: `${ram}%` }}
+                className="h-full bg-[#ff003c] transition-all duration-700"
+                style={{ width: `${memory}%` }}
               />
             </div>
           </div>

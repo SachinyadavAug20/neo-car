@@ -4,6 +4,7 @@ import { Canvas } from "@react-three/fiber";
 import Scene from "./components/Scene";
 import HUD from "./components/HUD";
 import PortalFade from "./components/PortalFade";
+import KernelPanic from "./components/KernelPanic";
 
 export default function Home() {
   return (
@@ -17,6 +18,7 @@ export default function Home() {
       </Canvas>
       <HUD />
       <PortalFade />
+      <KernelPanic />
     </main>
   );
 }
