@@ -6,7 +6,8 @@ type PlayState = "playing" | "paused";
 type FrequencyTuple = [number, number, number];
 type StateListener = (state: PlayState) => void;
 
-const AUDIO_SRC = "/audio/track.mp3";
+const AUDIO_SRC =
+  "/audio/desifreemusic-free-music-for-youtube-videosfree-to-use-music-233909.mp3";
 const FFT_SIZE = 512;
 const MAX_BYTE = 255;
 

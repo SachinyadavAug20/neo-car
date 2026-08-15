@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import gsap from "gsap";
 import {
   Play,
   Pause,
@@ -8,14 +10,18 @@ import {
   SkipForward,
   Volume2,
   Gauge,
+  Zap,
 } from "lucide-react";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
+import { getCamera } from "../lib/cameraStore";
 
 type PlayState = "playing" | "paused";
 type DriveMode = "CRUISE" | "TURBO";
 
 export default function HUD() {
+  const router = useRouter();
   const { play, pause, getState, subscribe } = useAudioAnalyzer();
+  const flashRef = useRef<HTMLDivElement>(null);
   const [playState, setPlayState] = useState<PlayState>("paused");
   const [driveMode, setDriveMode] = useState<DriveMode>("CRUISE");
 
@@ -31,6 +37,39 @@ export default function HUD() {
   const toggleMode = () =>
     setDriveMode((prev) => (prev === "CRUISE" ? "TURBO" : "CRUISE"));
 
+  const enterTheGrid = () => {
+    const camera = getCamera();
+    const flash = flashRef.current;
+    const timeline = gsap.timeline();
+
+    if (camera) {
+      timeline.to(camera, {
+        fov: 150,
+        duration: 0.9,
+        ease: "expo.in",
+        onUpdate: () => camera.updateProjectionMatrix(),
+      });
+    }
+
+    if (flash) {
+      timeline.fromTo(
+        flash,
+        { opacity: 0, scale: 0.6 },
+        { opacity: 1, scale: 1.6, duration: 0.6, ease: "power2.in" },
+        0,
+      );
+    }
+
+    timeline.call(() => {
+      if (camera) {
+        camera.fov = 50;
+        camera.updateProjectionMatrix();
+      }
+    });
+
+    timeline.add(() => router.push("/explore"), 0.65);
+  };
+
   const isTurbo = driveMode === "TURBO";
 
   return (
@@ -45,9 +84,19 @@ export default function HUD() {
           </h1>
         </div>
 
-        <span className="rounded-full border border-fuchsia-400/40 bg-fuchsia-950/40 px-3 py-1 text-[10px] font-semibold tracking-[0.3em] text-fuchsia-300 backdrop-blur-sm sm:text-xs">
-          {playState === "playing" ? "LIVE" : "STANDBY"}
-        </span>
+        <div className="pointer-events-auto flex flex-col items-end gap-3">
+          <span className="rounded-full border border-fuchsia-400/40 bg-fuchsia-950/40 px-3 py-1 text-[10px] font-semibold tracking-[0.3em] text-fuchsia-300 backdrop-blur-sm sm:text-xs">
+            {playState === "playing" ? "LIVE" : "STANDBY"}
+          </span>
+          <button
+            type="button"
+            onClick={enterTheGrid}
+            className="flex items-center gap-2 rounded-full border border-cyan-300/50 bg-cyan-500/10 px-5 py-2.5 text-xs font-bold tracking-[0.25em] text-cyan-300 shadow-[0_0_20px_rgba(0,229,255,0.35)] backdrop-blur-md transition hover:scale-105 active:scale-95 sm:text-sm"
+          >
+            <Zap className="h-4 w-4" />
+            ENTER THE GRID
+          </button>
+        </div>
       </header>
 
       <footer className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -117,6 +166,15 @@ export default function HUD() {
           </button>
         </section>
       </footer>
+
+      <div
+        ref={flashRef}
+        className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-fuchsia-600 via-pink-500 to-cyan-400 opacity-0"
+      >
+        <span className="text-5xl font-black tracking-[0.4em] text-white sm:text-7xl">
+          WARP
+        </span>
+      </div>
     </div>
   );
 }

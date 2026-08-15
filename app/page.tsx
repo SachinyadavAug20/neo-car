@@ -10,7 +10,7 @@ export default function Home() {
       <Canvas
         className="absolute inset-0"
         dpr={[1, 2]}
-        camera={{ position: [0, 8, 26], fov: 50, near: 0.1, far: 200 }}
+        camera={{ position: [0, 8, 26], fov: 50, near: 0.1, far: 500 }}
       >
         <Scene />
       </Canvas>
