@@ -9,7 +9,7 @@ Title: Low Poly 80's Sports Car
 
 import * as THREE from 'three'
 import React from 'react'
-import { useGLTF } from '@react-three/drei'
+import { useGLTF, useTexture } from '@react-three/drei'
 import { GLTF } from 'three-stdlib'
 
 type GLTFResult = GLTF & {
@@ -25,10 +25,19 @@ type GLTFResult = GLTF & {
 
 export function Model(props: React.JSX.IntrinsicElements['group']) {
   const { nodes, materials } = useGLTF('/models/low_poly_80s_sports_car/scene.gltf') as unknown as GLTFResult
+  const texture = useTexture(
+    '/models/low_poly_80s_sports_car/textures/BaseColor_diffuse.png',
+    (tex) => {
+      tex.flipY = false
+      tex.colorSpace = THREE.SRGBColorSpace
+      tex.needsUpdate = true
+    },
+  )
+
   return (
     <group {...props} dispose={null}>
       <group name="Car" rotation={[-Math.PI / 2, 0, 0]} scale={100}>
-        <mesh name="Car_BaseColor_0" geometry={nodes.Car_BaseColor_0.geometry} material={materials.BaseColor} />
+        <mesh name="Car_BaseColor_0" geometry={nodes.Car_BaseColor_0.geometry} material={materials.BaseColor} material-map={texture} material-needsUpdate />
         <mesh name="Car_Emission_0" geometry={nodes.Car_Emission_0.geometry} material={materials.Emission} />
       </group>
     </group>

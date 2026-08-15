@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Play,
   Pause,
@@ -9,16 +9,24 @@ import {
   Volume2,
   Gauge,
 } from "lucide-react";
+import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 
 type PlayState = "playing" | "paused";
 type DriveMode = "CRUISE" | "TURBO";
 
 export default function HUD() {
+  const { play, pause, getState, subscribe } = useAudioAnalyzer();
   const [playState, setPlayState] = useState<PlayState>("paused");
   const [driveMode, setDriveMode] = useState<DriveMode>("CRUISE");
 
-  const togglePlay = () =>
-    setPlayState((prev) => (prev === "paused" ? "playing" : "paused"));
+  useEffect(() => {
+    return subscribe(setPlayState);
+  }, [subscribe]);
+
+  const togglePlay = () => {
+    if (getState() === "playing") pause();
+    else play();
+  };
 
   const toggleMode = () =>
     setDriveMode((prev) => (prev === "CRUISE" ? "TURBO" : "CRUISE"));
