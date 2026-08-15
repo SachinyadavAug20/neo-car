@@ -1,0 +1,11 @@
+Model Information:
+* title:	Low Poly 80's Sports Car
+* source:	https://sketchfab.com/3d-models/low-poly-80s-sports-car-eaf8991e95604532803a954c3fd3d5cb
+* author:	ville.eriksen (https://sketchfab.com/ville.eriksen)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Low Poly 80's Sports Car" (https://sketchfab.com/3d-models/low-poly-80s-sports-car-eaf8991e95604532803a954c3fd3d5cb) by ville.eriksen (https://sketchfab.com/ville.eriksen) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
