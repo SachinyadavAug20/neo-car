@@ -16,6 +16,7 @@ const MIDS_BINS: readonly [number, number] = [5, 21];
 const HIGHS_BINS: readonly [number, number] = [21, 65];
 
 const IDLE_FREQUENCIES: FrequencyTuple = [0, 0, 0];
+const IDLE_SPECTRUM = new Uint8Array(256);
 
 class AudioEngine {
   private audio: HTMLAudioElement | null = null;
@@ -95,6 +96,14 @@ class AudioEngine {
     return this.result;
   }
 
+  getSpectrum(): Uint8Array<ArrayBuffer> {
+    if (!this.ctx || !this.analyser || !this.freqData || this.state === "paused") {
+      return IDLE_SPECTRUM;
+    }
+    this.analyser.getByteFrequencyData(this.freqData);
+    return this.freqData;
+  }
+
   getState(): PlayState {
     return this.state;
   }
@@ -118,6 +127,7 @@ export interface AudioAnalyzerApi {
   play: () => void;
   pause: () => void;
   getFrequencies: () => FrequencyTuple;
+  getSpectrum: () => Uint8Array<ArrayBuffer>;
   getState: () => PlayState;
   subscribe: (listener: StateListener) => () => void;
 }
@@ -133,6 +143,10 @@ export function useAudioAnalyzer(): AudioAnalyzerApi {
     pause: useCallback(() => engine?.pause(), [engine]),
     getFrequencies: useCallback(
       () => engine?.getFrequencies() ?? IDLE_FREQUENCIES,
+      [engine],
+    ),
+    getSpectrum: useCallback(
+      () => engine?.getSpectrum() ?? IDLE_SPECTRUM,
       [engine],
     ),
     getState: useCallback(() => engine?.getState() ?? "paused", [engine]),

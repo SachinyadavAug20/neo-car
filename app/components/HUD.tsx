@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
+import { useStore } from "zustand";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 import { getCamera } from "../lib/cameraStore";
+import { gameStore } from "../store/gameStore";
 
 type PlayState = "playing" | "paused";
 type DriveMode = "CRUISE" | "TURBO";
@@ -16,12 +18,33 @@ export default function HUD() {
   const router = useRouter();
   const { play, pause, getState, subscribe } = useAudioAnalyzer();
   const flashRef = useRef<HTMLDivElement>(null);
+  const bootedRef = useRef(false);
+  const log = useStore(gameStore, (state) => state.log);
   const [playState, setPlayState] = useState<PlayState>("paused");
   const [driveMode, setDriveMode] = useState<DriveMode>("CRUISE");
+  const [cpu, setCpu] = useState(34);
+  const [ram, setRam] = useState(48);
 
   useEffect(() => {
     return subscribe(setPlayState);
   }, [subscribe]);
+
+  useEffect(() => {
+    if (bootedRef.current) return;
+    bootedRef.current = true;
+    const { addLog } = gameStore.getState();
+    addLog("[SYS] MEOW_TUI_OS v0.1 BOOT");
+    addLog("[SYS] HYPR_WM WM_LOADED");
+    addLog("[SYS] AUDIO_STREAM READY");
+  }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setCpu(18 + Math.random() * 82);
+      setRam(35 + Math.random() * 60);
+    }, 1200);
+    return () => clearInterval(id);
+  }, []);
 
   const togglePlay = () => {
     if (getState() === "playing") pause();
@@ -98,6 +121,39 @@ export default function HUD() {
           </button>
         </div>
       </header>
+
+      <section className="flex w-full justify-end">
+        <aside className="pointer-events-auto w-full max-w-xs rounded border border-[#00ff41]/30 bg-black/80 p-3 shadow-[0_0_24px_rgba(0,255,65,0.1)]">
+          <p className="mb-2 text-[10px] font-bold tracking-[0.2em] text-[#ffb000]">
+            +--[ STDOUT ]--+
+          </p>
+          <div className="max-h-36 overflow-hidden text-[11px] leading-relaxed text-[#00ff41]">
+            {log.map((line, index) => (
+              <p key={`${line}-${index}`} className="whitespace-pre-wrap break-all">
+                {line}
+              </p>
+            ))}
+          </div>
+
+          <div className="mt-3 border-t border-[#00ff41]/20 pt-2 text-[10px] text-[#ffb000]">
+            <p className="mb-1 tracking-[0.15em]">
+              CPU {Math.round(cpu)}%&nbsp;&nbsp;MEM {Math.round(ram)}%
+            </p>
+            <div className="mb-1 h-1.5 w-full overflow-hidden rounded border border-[#00ff41]/40 bg-black">
+              <div
+                className="h-full bg-[#ffb000] transition-all duration-700"
+                style={{ width: `${cpu}%` }}
+              />
+            </div>
+            <div className="h-1.5 w-full overflow-hidden rounded border border-[#00ff41]/40 bg-black">
+              <div
+                className="h-full bg-[#00ff41] transition-all duration-700"
+                style={{ width: `${ram}%` }}
+              />
+            </div>
+          </div>
+        </aside>
+      </section>
 
       <footer className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <section className="pointer-events-auto w-full max-w-md rounded border border-[#00ff41]/30 bg-black/80 p-4 shadow-[0_0_24px_rgba(0,255,65,0.12)]">

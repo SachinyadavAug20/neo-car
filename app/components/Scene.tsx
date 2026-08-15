@@ -1,22 +1,43 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import gsap from "gsap";
 import { useFrame } from "@react-three/fiber";
 import { KeyboardControls, Stars } from "@react-three/drei";
 import { Physics } from "@react-three/rapier";
-import { EffectComposer, Bloom } from "@react-three/postprocessing";
-import type { BloomEffect } from "postprocessing";
+import { EffectComposer, Bloom, Scanline, ChromaticAberration, Noise, Glitch } from "@react-three/postprocessing";
+import type { BloomEffect, GlitchEffect } from "postprocessing";
 import DrivableCar, { controlsMap } from "./DrivableCar";
 import ProceduralTerrain from "./ProceduralTerrain";
 import Portal from "./Portal";
 import RetroSun from "./RetroSun";
 import RingTrack from "./RingTrack";
+import RogueDaemons from "./RogueDaemons";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
+import { onGlitch } from "../lib/glitchStore";
+
+const CA_OFFSET = new THREE.Vector2(0.002, 0.002);
+const GLITCH_DELAY = new THREE.Vector2(1.5, 3.5);
+const GLITCH_DURATION = new THREE.Vector2(0.1, 0.3);
 
 export default function Scene() {
   const bloomRef = useRef<BloomEffect>(null);
+  const glitchRef = useRef<GlitchEffect>(null);
   const { getFrequencies } = useAudioAnalyzer();
+
+  useEffect(() => {
+    const unsubscribe = onGlitch(() => {
+      const glitch = glitchRef.current;
+      if (!glitch) return;
+      gsap.fromTo(
+        glitch.strength,
+        { x: 0.3, y: 0.3 },
+        { x: 1.0, y: 1.0, duration: 0.14, ease: "power2.out", yoyo: true, repeat: 1 },
+      );
+    });
+    return unsubscribe;
+  }, []);
 
   useFrame(() => {
     const [bass] = getFrequencies();
@@ -49,6 +70,7 @@ export default function Scene() {
         <ProceduralTerrain />
         <Portal />
         <RingTrack />
+        <RogueDaemons />
       </Physics>
 
       <EffectComposer>
@@ -59,6 +81,10 @@ export default function Scene() {
           luminanceThreshold={0.15}
           luminanceSmoothing={0.9}
         />
+        <Scanline density={1.5} opacity={0.5} />
+        <ChromaticAberration offset={CA_OFFSET} />
+        <Noise opacity={0.1} />
+        <Glitch ref={glitchRef} delay={GLITCH_DELAY} duration={GLITCH_DURATION} />
       </EffectComposer>
     </KeyboardControls>
   );

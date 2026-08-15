@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import gsap from "gsap";
+import { useFrame } from "@react-three/fiber";
 import {
   RigidBody,
   CuboidCollider,
@@ -17,9 +17,22 @@ const RING_X_SPREAD = 55;
 const RING_Y_MIN = 8;
 const RING_Y_MAX = 38;
 const RING_SPACING = (RING_END_Z - RING_START_Z) / (RING_COUNT - 1);
+const PARTICLE_POOL_SIZE = 300;
+const VOXELS_PER_RING = 24;
+const PARTICLE_SPEED_MIN = 8;
+const PARTICLE_SPEED_MAX = 22;
+const PARTICLE_DECAY = 2.0;
+const PARTICLE_DEATH_SCALE = 0.05;
 
 interface RingData {
   position: [number, number, number];
+}
+
+interface ParticleState {
+  alive: boolean;
+  position: THREE.Vector3;
+  velocity: THREE.Vector3;
+  scale: number;
 }
 
 const RINGS: RingData[] = Array.from({ length: RING_COUNT }, (_, i) => ({
@@ -30,11 +43,50 @@ const RINGS: RingData[] = Array.from({ length: RING_COUNT }, (_, i) => ({
   ],
 }));
 
+function createParticlePool(size: number): ParticleState[] {
+  const pool: ParticleState[] = [];
+  for (let i = 0; i < size; i++) {
+    pool.push({
+      alive: false,
+      position: new THREE.Vector3(),
+      velocity: new THREE.Vector3(),
+      scale: 0,
+    });
+  }
+  return pool;
+}
+
 export default function RingTrack() {
   const collectedRef = useRef(new Set<number>());
   const ringMeshRefs = useRef<(THREE.Mesh | null)[]>([]);
+  const instancedRef = useRef<THREE.InstancedMesh>(null);
+  const freeIndicesRef = useRef<number[] | null>(null);
+  const particlesRef = useRef<ParticleState[] | null>(null);
 
-  const torusGeometry = useMemo(() => new THREE.TorusGeometry(8, 0.4, 16, 64), []);
+  const icosahedronGeometry = useMemo(
+    () => new THREE.IcosahedronGeometry(6, 0),
+    [],
+  );
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  const tmpDirection = useMemo(() => new THREE.Vector3(), []);
+
+  useLayoutEffect(() => {
+    particlesRef.current = createParticlePool(PARTICLE_POOL_SIZE);
+    freeIndicesRef.current = Array.from(
+      { length: PARTICLE_POOL_SIZE },
+      (_, i) => i,
+    );
+
+    const instanced = instancedRef.current;
+    if (!instanced) return;
+    dummy.position.set(0, 0, 0);
+    dummy.scale.setScalar(0);
+    dummy.updateMatrix();
+    for (let i = 0; i < PARTICLE_POOL_SIZE; i++) {
+      instanced.setMatrixAt(i, dummy.matrix);
+    }
+    instanced.instanceMatrix.needsUpdate = true;
+  }, [dummy]);
 
   const collectRing = (index: number) => (payload: IntersectionEnterPayload) => {
     if (collectedRef.current.has(index)) return;
@@ -42,23 +94,91 @@ export default function RingTrack() {
     collectedRef.current.add(index);
 
     gameStore.getState().incrementScore();
+    const address = 0x4f000 + index * 0x1000;
+    gameStore.getState().addLog(
+      `[SYS] RING_COLLECTED at 0x${address.toString(16).toUpperCase()}`,
+    );
 
     const mesh = ringMeshRefs.current[index];
-    if (mesh) {
-      gsap.to(mesh.scale, {
-        x: 1.4,
-        y: 1.4,
-        z: 1.4,
-        duration: 0.25,
-        ease: "power2.out",
-        yoyo: true,
-        repeat: 1,
-      });
+    if (mesh) mesh.visible = false;
+
+    const [ringX, ringY, ringZ] = RINGS[index].position;
+    const free = freeIndicesRef.current;
+    const pool = particlesRef.current;
+    if (!free || !pool) return;
+    let spawned = 0;
+    while (spawned < VOXELS_PER_RING && free.length > 0) {
+      const particleIndex = free.pop();
+      if (particleIndex === undefined) break;
+      const particle = pool[particleIndex];
+      tmpDirection
+        .set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5)
+        .normalize();
+      particle.position.set(ringX, ringY, ringZ);
+      particle.velocity
+        .copy(tmpDirection)
+        .multiplyScalar(
+          PARTICLE_SPEED_MIN + Math.random() * (PARTICLE_SPEED_MAX - PARTICLE_SPEED_MIN),
+        );
+      particle.scale = 0.8 + Math.random() * 1.4;
+      particle.alive = true;
+      spawned++;
     }
   };
 
+  useFrame((state, delta) => {
+    const instanced = instancedRef.current;
+    if (!instanced) return;
+    const pool = particlesRef.current;
+    const free = freeIndicesRef.current;
+    if (!pool || !free) return;
+
+    const elapsed = state.clock.elapsedTime;
+    for (let i = 0; i < pool.length; i++) {
+      const particle = pool[i];
+      if (particle.alive) {
+        particle.position.addScaledVector(particle.velocity, delta);
+        particle.velocity.multiplyScalar(0.97);
+        particle.scale -= PARTICLE_DECAY * delta;
+        if (particle.scale <= PARTICLE_DEATH_SCALE) {
+          particle.alive = false;
+          particle.scale = 0;
+          free.push(i);
+        }
+        dummy.position.copy(particle.position);
+        dummy.scale.setScalar(particle.scale);
+        if (particle.alive && Math.sin(elapsed * 14 + i * 5.3) > 0.988) {
+          dummy.scale.setScalar(0);
+        }
+        dummy.updateMatrix();
+        instanced.setMatrixAt(i, dummy.matrix);
+      } else if (particle.scale !== 0) {
+        particle.scale = 0;
+        dummy.position.set(0, 0, 0);
+        dummy.scale.setScalar(0);
+        dummy.updateMatrix();
+        instanced.setMatrixAt(i, dummy.matrix);
+      }
+    }
+
+    instanced.instanceMatrix.needsUpdate = true;
+  });
+
   return (
     <>
+      <instancedMesh
+        ref={instancedRef}
+        args={[undefined, undefined, PARTICLE_POOL_SIZE]}
+        frustumCulled={false}
+      >
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial
+          color="#00ff41"
+          emissive="#00ff41"
+          emissiveIntensity={1}
+        />
+      </instancedMesh>
+
       {RINGS.map((ring, index) => (
         <RigidBody
           key={index}
@@ -70,12 +190,13 @@ export default function RingTrack() {
             ref={(node) => {
               ringMeshRefs.current[index] = node;
             }}
-            geometry={torusGeometry}
+            geometry={icosahedronGeometry}
           >
             <meshStandardMaterial
-              color="#00e5ff"
-              emissive="#00e5ff"
-              emissiveIntensity={3}
+              color="#00ff41"
+              wireframe
+              emissive="#00ff41"
+              emissiveIntensity={2}
             />
           </mesh>
           <CuboidCollider

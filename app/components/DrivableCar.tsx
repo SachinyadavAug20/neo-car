@@ -22,8 +22,8 @@ export const controlsMap: { name: Controls; keys: string[] }[] = [
 ];
 
 const CAR_FORWARD = new THREE.Vector3(0, 0, -1);
-const CAMERA_OFFSET = 15;
-const CAMERA_HEIGHT = 7;
+const CAMERA_OFFSET = 25;
+const CAMERA_HEIGHT = 15;
 const THROTTLE = 60;
 const MAX_SPEED = 65;
 const VERTICAL_POWER = 50;
@@ -185,13 +185,12 @@ export default function DrivableCar() {
         ref={scoreTextRef}
         position={SCORE_TEXT_POSITION}
         fontSize={1.1}
-        color="#00e5ff"
+        color="#00ff41"
+        font={SCORE_FONT}
         anchorX="center"
         anchorY="middle"
-        outlineWidth={0.02}
-        outlineColor="#ffffff"
       >
-        SCORE: 0
+        &gt; MEOW_TUI::SCORE = 0
       </Text>
 
       <group position={LEFT_TAIL_POSITION}>

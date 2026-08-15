@@ -17,12 +17,14 @@ const NOISE_AMPLITUDE = 6;
 const FBM_OCTAVES = 3;
 const HIGHWAY_FALLOFF = 18;
 const MIN_ELEVATION = 0.08;
+const AUDIO_AMPLITUDE = 14;
+const MAX_BYTE = 255;
 
 export default function ProceduralTerrain() {
   const materialRef = useRef<THREE.MeshStandardMaterial>(null);
-  const { getFrequencies } = useAudioAnalyzer();
+  const { getFrequencies, getSpectrum } = useAudioAnalyzer();
 
-  const geometry = useMemo(() => {
+  const { geometry, baseHeights, columnFreqIndices } = useMemo(() => {
     const noise2D = createNoise2D();
     const geo = new THREE.PlaneGeometry(
       TERRAIN_WIDTH,
@@ -33,7 +35,10 @@ export default function ProceduralTerrain() {
     geo.rotateX(-Math.PI / 2);
 
     const positions = geo.attributes.position.array as Float32Array;
-    for (let i = 0; i < positions.length; i += 3) {
+    const vertexCount = positions.length / 3;
+    const base = new Float32Array(vertexCount);
+
+    for (let v = 0, i = 0; i < positions.length; i += 3, v++) {
       const x = positions[i];
       const z = positions[i + 2];
 
@@ -52,22 +57,50 @@ export default function ProceduralTerrain() {
       const highwayFalloff = 1 - Math.exp(-Math.abs(x) / HIGHWAY_FALLOFF);
       const elevation = MIN_ELEVATION + (1 - MIN_ELEVATION) * highwayFalloff;
 
-      positions[i + 1] = normalized * NOISE_AMPLITUDE * elevation;
+      const y = normalized * NOISE_AMPLITUDE * elevation;
+      positions[i + 1] = y;
+      base[v] = y;
     }
 
     geo.computeVertexNormals();
-    return geo;
+
+    const cols = TERRAIN_SEGMENTS_X + 1;
+    const freqIndices = new Uint16Array(cols);
+    for (let col = 0; col < cols; col++) {
+      freqIndices[col] = Math.round((col / TERRAIN_SEGMENTS_X) * MAX_BYTE);
+    }
+
+    return {
+      geometry: geo,
+      baseHeights: base,
+      columnFreqIndices: freqIndices,
+    };
   }, []);
 
   useFrame(() => {
+    const spectrum = getSpectrum();
     const [bass] = getFrequencies();
-    if (!materialRef.current) return;
-    const target = 0.5 + bass * 3.5;
-    materialRef.current.emissiveIntensity = THREE.MathUtils.lerp(
-      materialRef.current.emissiveIntensity,
-      target,
-      0.15,
-    );
+
+    if (materialRef.current) {
+      const target = 0.5 + bass * 3.5;
+      materialRef.current.emissiveIntensity = THREE.MathUtils.lerp(
+        materialRef.current.emissiveIntensity,
+        target,
+        0.15,
+      );
+    }
+
+    const positions = geometry.attributes.position.array as Float32Array;
+    const bins = spectrum.length;
+    const cols = TERRAIN_SEGMENTS_X + 1;
+    for (let v = 0, i = 0; i < positions.length; i += 3, v++) {
+      const col = v % cols;
+      const freqIndex =
+        columnFreqIndices[col] < bins ? columnFreqIndices[col] : bins - 1;
+      const amp = spectrum[freqIndex] / MAX_BYTE;
+      positions[i + 1] = baseHeights[v] + amp * AUDIO_AMPLITUDE;
+    }
+    geometry.attributes.position.needsUpdate = true;
   });
 
   return (
