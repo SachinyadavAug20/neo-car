@@ -192,7 +192,7 @@ export default function HUD() {
               aria-label={playState === "playing" ? "Pause" : "Play"}
               className="rounded border border-[#8aadf4]/60 bg-[#1e2030] px-4 py-1.5 font-bold text-[#cad3f5] shadow-[0_0_14px_rgba(138,173,244,0.3)] transition hover:bg-[#8aadf4] hover:text-[#1e2030] active:scale-95"
             >
-              {playState === "playing" ? "[II PAUSE]" : "[&gt; PLAY]"}
+              {playState === "playing" ? "[II PAUSE]" : "[> PLAY]"}
             </button>
 
             <button
@@ -216,7 +216,7 @@ export default function HUD() {
                 : "border-[#8aadf4]/50 bg-[#1e2030] text-[#8aadf4] shadow-[0_0_18px_rgba(138,173,244,0.25)]"
             }`}
           >
-            {isTurbo ? "&gt; ./set_mode TURBO" : "&gt; ./set_mode CRUISE"}
+            {isTurbo ? "> ./set_mode TURBO" : "> ./set_mode CRUISE"}
           </button>
         </section>
       </footer>

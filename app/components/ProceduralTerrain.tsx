@@ -9,6 +9,7 @@ const TERRAIN_WIDTH = 200;
 const TERRAIN_DEPTH = 1600;
 const TERRAIN_SEGMENTS_X = 96;
 const TERRAIN_SEGMENTS_Z = 160;
+const TERRAIN_CHUNK = 400;
 
 const TERRAIN_VERTEX_SHADER = `
   uniform float uTime;
@@ -109,6 +110,7 @@ const TERRAIN_UNIFORMS = {
 
 export default function ProceduralTerrain() {
   const groupRef = useRef<THREE.Group>(null);
+  const lastChunkRef = useRef<number | null>(null);
   const { getFrequencies } = useAudioAnalyzer();
 
   const geometry = useMemo(() => {
@@ -124,10 +126,17 @@ export default function ProceduralTerrain() {
 
   useFrame((state) => {
     const group = groupRef.current;
-    if (group) group.position.z = state.camera.position.z;
+    const cameraZ = state.camera.position.z;
+    if (group) {
+      const chunk = Math.round(cameraZ / TERRAIN_CHUNK);
+      if (lastChunkRef.current !== chunk) {
+        lastChunkRef.current = chunk;
+        group.position.z = chunk * TERRAIN_CHUNK;
+      }
+      TERRAIN_UNIFORMS.uZOffset.value = group.position.z;
+    }
 
     TERRAIN_UNIFORMS.uTime.value = state.clock.elapsedTime;
-    TERRAIN_UNIFORMS.uZOffset.value = state.camera.position.z;
     const [bass] = getFrequencies();
     TERRAIN_UNIFORMS.uAmplitude.value = 0.3 + bass * 1.4;
   });

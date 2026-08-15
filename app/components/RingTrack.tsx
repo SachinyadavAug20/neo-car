@@ -165,9 +165,11 @@ export default function RingTrack() {
     if (!pool || !free) return;
 
     const elapsed = state.clock.elapsedTime;
+    let dirty = false;
     for (let i = 0; i < pool.length; i++) {
       const particle = pool[i];
       if (particle.alive) {
+        dirty = true;
         particle.position.addScaledVector(particle.velocity, delta);
         particle.velocity.multiplyScalar(0.97);
         particle.scale -= PARTICLE_DECAY * delta;
@@ -184,6 +186,7 @@ export default function RingTrack() {
         dummy.updateMatrix();
         instanced.setMatrixAt(i, dummy.matrix);
       } else if (particle.scale !== 0) {
+        dirty = true;
         particle.scale = 0;
         dummy.position.set(0, 0, 0);
         dummy.scale.setScalar(0);
@@ -192,7 +195,7 @@ export default function RingTrack() {
       }
     }
 
-    instanced.instanceMatrix.needsUpdate = true;
+    if (dirty) instanced.instanceMatrix.needsUpdate = true;
   });
 
   return (
