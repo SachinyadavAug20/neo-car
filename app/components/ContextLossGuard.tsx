@@ -24,6 +24,23 @@ export default function ContextLossGuard() {
   }, [gl]);
 
   useEffect(() => {
+    const release = (event: PageTransitionEvent) => {
+      if (event.persisted) return;
+      try {
+        const ctx = gl.getContext() as
+          | WebGLRenderingContext
+          | WebGL2RenderingContext
+          | null;
+        ctx?.getExtension("WEBGL_lose_context")?.loseContext();
+      } catch {
+        // ignore
+      }
+    };
+    window.addEventListener("pagehide", release);
+    return () => window.removeEventListener("pagehide", release);
+  }, [gl]);
+
+  useEffect(() => {
     if (!lost || reloadHandled.current) return;
     reloadHandled.current = true;
     if (sessionStorage.getItem(RELOADED_KEY)) {
