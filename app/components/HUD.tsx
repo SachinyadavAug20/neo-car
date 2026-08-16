@@ -268,7 +268,7 @@ export default function HUD() {
         className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center bg-black opacity-0"
       >
         <span className="text-4xl font-bold tracking-[0.3em] text-[#b4befe] drop-shadow-[0_0_20px_rgba(180,190,254,0.7)] sm:text-6xl">
-          MEOW_TUI::WARP_EXEC
+          NEON_DRIVE::WARP_ACTIVE
         </span>
       </div>
     </div>

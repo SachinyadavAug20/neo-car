@@ -24,7 +24,7 @@ export default function Portal() {
   return (
     <RigidBody type="fixed" colliders="trimesh" position={PORTAL_POSITION}>
       <mesh>
-        <torusGeometry args={[15, 0.5, 16, 100]} />
+        <torusGeometry args={[15, 0.5, 16, 40]} />
         <meshStandardMaterial
           color="#12021f"
           emissive={PORTAL_COLOR}

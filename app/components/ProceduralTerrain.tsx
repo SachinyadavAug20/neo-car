@@ -7,8 +7,8 @@ import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 
 const TERRAIN_WIDTH = 200;
 const TERRAIN_DEPTH = 1600;
-const TERRAIN_SEGMENTS_X = 96;
-const TERRAIN_SEGMENTS_Z = 160;
+const TERRAIN_SEGMENTS_X = 64;
+const TERRAIN_SEGMENTS_Z = 100;
 const TERRAIN_CHUNK = 400;
 
 const TERRAIN_VERTEX_SHADER = `
@@ -40,7 +40,7 @@ const TERRAIN_VERTEX_SHADER = `
   float fbm(vec2 p) {
     float value = 0.0;
     float amplitude = 0.5;
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 2; i++) {
       value += amplitude * noise(p);
       p = p * 2.02 + vec2(17.0, 13.0);
       amplitude *= 0.5;
@@ -84,6 +84,7 @@ const TERRAIN_BASE_FRAGMENT = `
 
 const TERRAIN_WIRE_FRAGMENT = `
   uniform vec3 uColor;
+  uniform float uKick;
 
   varying float vElevation;
 
@@ -91,7 +92,9 @@ const TERRAIN_WIRE_FRAGMENT = `
 
   void main() {
     float glow = 0.55 + vElevation * 0.9;
-    gl_FragColor = vec4(uColor * glow, 1.0);
+    float kickBoost = uKick * 2.5;
+    vec3 finalColor = uColor * glow + vec3(kickBoost);
+    gl_FragColor = vec4(finalColor, 1.0);
     #include <fog_fragment>
   }
 `;
@@ -100,6 +103,7 @@ const TERRAIN_UNIFORMS = {
   uTime: { value: 0 },
   uZOffset: { value: 0 },
   uAmplitude: { value: 0.35 },
+  uKick: { value: 0 },
   uColor: { value: new THREE.Color("#8aadf4") },
   uBaseColor: { value: new THREE.Color("#0b0f19") },
   fogColor: { value: new THREE.Color("#0b0f19") },
@@ -124,6 +128,32 @@ export default function ProceduralTerrain() {
     return geo;
   }, []);
 
+  const solidMaterial = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        uniforms: TERRAIN_UNIFORMS,
+        vertexShader: TERRAIN_VERTEX_SHADER,
+        fragmentShader: TERRAIN_BASE_FRAGMENT,
+        fog: true,
+      }),
+    [],
+  );
+
+  const wireMaterial = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        uniforms: TERRAIN_UNIFORMS,
+        vertexShader: TERRAIN_VERTEX_SHADER,
+        fragmentShader: TERRAIN_WIRE_FRAGMENT,
+        wireframe: true,
+        fog: true,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1,
+      }),
+    [],
+  );
+
   useFrame((state) => {
     const group = groupRef.current;
     const cameraZ = state.camera.position.z;
@@ -139,38 +169,13 @@ export default function ProceduralTerrain() {
     TERRAIN_UNIFORMS.uTime.value = state.clock.elapsedTime;
     const [bass] = getFrequencies();
     TERRAIN_UNIFORMS.uAmplitude.value = 0.3 + bass * 1.4;
+    TERRAIN_UNIFORMS.uKick.value = bass;
   });
 
   return (
     <group ref={groupRef}>
-      <mesh geometry={geometry}>
-        <shaderMaterial
-          args={[
-            {
-              uniforms: TERRAIN_UNIFORMS,
-              vertexShader: TERRAIN_VERTEX_SHADER,
-              fragmentShader: TERRAIN_BASE_FRAGMENT,
-              fog: true,
-            },
-          ]}
-        />
-      </mesh>
-      <mesh geometry={geometry}>
-        <shaderMaterial
-          args={[
-            {
-              uniforms: TERRAIN_UNIFORMS,
-              vertexShader: TERRAIN_VERTEX_SHADER,
-              fragmentShader: TERRAIN_WIRE_FRAGMENT,
-              wireframe: true,
-              fog: true,
-              polygonOffset: true,
-              polygonOffsetFactor: -1,
-              polygonOffsetUnits: -1,
-            },
-          ]}
-        />
-      </mesh>
+      <mesh geometry={geometry} material={solidMaterial} />
+      <mesh geometry={geometry} material={wireMaterial} />
     </group>
   );
 }

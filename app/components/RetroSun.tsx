@@ -47,7 +47,7 @@ export default function RetroSun() {
 
   return (
     <mesh position={[0, 40, 450]}>
-      <circleGeometry args={[120, 64]} />
+      <circleGeometry args={[120, 40]} />
       <shaderMaterial
         ref={materialRef}
         vertexShader={VERTEX_SHADER}

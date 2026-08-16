@@ -24,14 +24,17 @@ export const controlsMap: { name: Controls; keys: string[] }[] = [
 ];
 
 const CAR_FORWARD = new THREE.Vector3(0, 0, 1);
-const CAMERA_OFFSET = -25;
-const CAMERA_HEIGHT = 12;
-const THROTTLE = 140;
-const MAX_SPEED = 180;
+const CAMERA_OFFSET = -20;
+const CAMERA_HEIGHT = 10;
+const THROTTLE = 95;
+const MAX_SPEED = 135;
 const VERTICAL_POWER = 50;
 const YAW_POWER = 2.5;
 const MAX_BANK = 0.4;
-const CAMERA_SMOOTH_TIME = 0.2;
+const CAMERA_SMOOTH_TIME = 0.18;
+const LOOKAHEAD_BASE = 30;
+const LOOKAHEAD_SPEED = 20;
+const POINTER_DEAD_ZONE = 0.05;
 const BANK_SMOOTH_TIME = 0.15;
 const THROTTLE_RAMP = 2.5;
 const VERTICAL_RAMP = 4;
@@ -88,7 +91,7 @@ export default function DrivableCar() {
     timeline.to(cam.position, {
       x: 0,
       y: CAMERA_HEIGHT + 10,
-      z: CAMERA_OFFSET - 4,
+      z: CAMERA_OFFSET - 2,
       onComplete: () => {
         introActive.current = false;
       },
@@ -160,7 +163,9 @@ export default function DrivableCar() {
 
     const isOOB = Math.abs(pos.x) > LANE_BOUNDARY;
     const gs = gameStore.getState();
-    if (isOOB) {
+    if (isOOB && !gs.outOfBounds) {
+      gs.setOutOfBounds(true);
+    } else if (isOOB) {
       gs.updateOobTimer(delta);
     } else if (gs.outOfBounds) {
       gs.setOutOfBounds(false);
@@ -175,7 +180,7 @@ export default function DrivableCar() {
     const score = gameStore.getState().score;
     if (score !== lastScoreRef.current) {
       lastScoreRef.current = score;
-      if (scoreTextRef.current) scoreTextRef.current.text = `> MEOW_TUI::SCORE = ${score}`;
+      if (scoreTextRef.current) scoreTextRef.current.text = `SCORE: ${score}`;
     }
 
     const desiredLength = Math.round(
@@ -198,14 +203,25 @@ export default function DrivableCar() {
 
     if (introActive.current) return;
 
+    const pointerX = Math.abs(state.pointer.x) < POINTER_DEAD_ZONE ? 0 : state.pointer.x;
+    const pointerY = Math.abs(state.pointer.y) < POINTER_DEAD_ZONE ? 0 : state.pointer.y;
+    const lookAheadDistance = LOOKAHEAD_BASE + speedRatio * LOOKAHEAD_SPEED;
+
     tmpCamera
       .set(pos.x, pos.y, pos.z)
       .addScaledVector(tmpForward, CAMERA_OFFSET)
-      .addScaledVector(tmpRight, state.pointer.x * 3)
-      .add({ x: 0, y: CAMERA_HEIGHT - state.pointer.y * 2, z: 0 });
+      .addScaledVector(tmpRight, pointerX * 3)
+      .add({ x: 0, y: CAMERA_HEIGHT - pointerY * 2, z: 0 });
 
     easing.damp3(camera.position, tmpCamera, CAMERA_SMOOTH_TIME, delta);
-    easing.dampLookAt(camera, tmpLook.set(pos.x, pos.y + 2.5, pos.z).addScaledVector(tmpForward, speedRatio * 6), CAMERA_SMOOTH_TIME, delta);
+    easing.dampLookAt(
+      camera,
+      tmpLook
+        .set(pos.x, pos.y + 1, pos.z)
+        .addScaledVector(tmpForward, lookAheadDistance),
+      CAMERA_SMOOTH_TIME,
+      delta,
+    );
   });
 
   return (
@@ -234,7 +250,7 @@ export default function DrivableCar() {
         anchorX="center"
         anchorY="middle"
       >
-        &gt; MEOW_TUI::SCORE = 0
+        SCORE: 0
       </Text>
 
       <group position={LEFT_TAIL_POSITION}>

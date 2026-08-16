@@ -110,6 +110,16 @@ export default function LevelManager() {
     () => new THREE.IcosahedronGeometry(6, 0),
     [],
   );
+  const ringMaterial = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: "#b4befe",
+        wireframe: true,
+        emissive: "#b4befe",
+        emissiveIntensity: 1.2,
+      }),
+    [],
+  );
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const tmpDirection = useMemo(() => new THREE.Vector3(), []);
 
@@ -271,14 +281,8 @@ export default function LevelManager() {
               ringMeshRefs.current[index] = node;
             }}
             geometry={icosahedronGeometry}
-          >
-            <meshStandardMaterial
-              color="#b4befe"
-              wireframe
-              emissive="#b4befe"
-              emissiveIntensity={1.2}
-            />
-          </mesh>
+            material={ringMaterial}
+          />
           <CuboidCollider
             sensor
             args={[8, 8, 1]}

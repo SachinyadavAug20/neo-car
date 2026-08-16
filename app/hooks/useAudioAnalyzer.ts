@@ -13,6 +13,7 @@ const PLAYLIST: readonly string[] = [
 ];
 const FFT_SIZE = 512;
 const MAX_BYTE = 255;
+const FRAME_BUCKET_MS = 16;
 
 const BASS_BINS: readonly [number, number] = [1, 5];
 const MIDS_BINS: readonly [number, number] = [5, 21];
@@ -30,6 +31,7 @@ class AudioEngine {
   private state: PlayState = "paused";
   private currentTrackIndex = 0;
   private readonly listeners = new Set<StateListener>();
+  private lastFrameId = -1;
 
   private average(data: Uint8Array, [start, end]: readonly [number, number]): number {
     let sum = 0;
@@ -123,7 +125,11 @@ class AudioEngine {
   }
 
   getFrequencies(): FrequencyTuple {
-    this.refresh();
+    const frameId = Math.floor(performance.now() / FRAME_BUCKET_MS);
+    if (frameId !== this.lastFrameId) {
+      this.lastFrameId = frameId;
+      this.refresh();
+    }
     return this.result;
   }
 

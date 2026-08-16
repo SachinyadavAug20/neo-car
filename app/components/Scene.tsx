@@ -24,14 +24,15 @@ export default function Scene() {
   const gameState = useStore(gameStore, (state) => state.gameState);
   const { getFrequencies } = useAudioAnalyzer();
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     const [bass] = getFrequencies();
     if (!bloomRef.current) return;
     const target = 0.8 + bass * 1.5;
+    const bloomSmoothing = 1 - Math.exp(-6 * delta);
     bloomRef.current.intensity = THREE.MathUtils.lerp(
       bloomRef.current.intensity,
       target,
-      0.2,
+      bloomSmoothing,
     );
   });
 
@@ -40,7 +41,7 @@ export default function Scene() {
       <color attach="background" args={["#0b0f19"]} />
       <fogExp2 attach="fog" args={["#0b0f19", 0.003]} />
 
-      <Stars radius={300} depth={80} count={5000} factor={4} saturation={0} fade speed={0.5} />
+      <Stars radius={300} depth={80} count={3000} factor={4} saturation={0} fade speed={0.5} />
 
       <RetroSun />
 
@@ -55,7 +56,7 @@ export default function Scene() {
       <Physics gravity={[0, -30, 0]} paused={gameState !== "playing"}>
         <DrivableCar key={`car-${sessionId}`} />
         <ProceduralTerrain />
-        <Portal />
+        <Portal key={`portal-${sessionId}`} />
         <LevelManager key={`rings-${sessionId}`} />
         <RogueDaemons key={`daemons-${sessionId}`} />
       </Physics>

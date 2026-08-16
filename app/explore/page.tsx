@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef } from "react";
+import { Suspense } from "react";
+import { useRef, useMemo } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Sparkles } from "@react-three/drei";
@@ -10,6 +11,30 @@ import { useRouter } from "next/navigation";
 function FloatingCore() {
   const inner = useRef<THREE.Mesh>(null);
   const outer = useRef<THREE.Group>(null);
+
+  const icoGeometry = useMemo(() => new THREE.IcosahedronGeometry(4, 1), []);
+
+  const innerMaterial = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: "#12021f",
+        wireframe: true,
+        emissive: "#00e5ff",
+        emissiveIntensity: 1.4,
+      }),
+    [],
+  );
+
+  const outerMaterial = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        wireframe: true,
+        color: "#ff2d95",
+        transparent: true,
+        opacity: 0.3,
+      }),
+    [],
+  );
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
@@ -26,19 +51,8 @@ function FloatingCore() {
 
   return (
     <group ref={outer}>
-      <mesh ref={inner}>
-        <icosahedronGeometry args={[4, 1]} />
-        <meshStandardMaterial
-          color="#12021f"
-          wireframe
-          emissive="#00e5ff"
-          emissiveIntensity={1.4}
-        />
-      </mesh>
-      <mesh scale={1.7}>
-        <icosahedronGeometry args={[4, 1]} />
-        <meshBasicMaterial wireframe color="#ff2d95" transparent opacity={0.3} />
-      </mesh>
+      <mesh ref={inner} geometry={icoGeometry} material={innerMaterial} />
+      <mesh scale={1.7} geometry={icoGeometry} material={outerMaterial} />
     </group>
   );
 }
@@ -48,7 +62,8 @@ export default function ExplorePage() {
 
   return (
     <main className="relative h-screen w-screen overflow-hidden bg-[#0a0118]">
-      <Canvas camera={{ position: [0, 3, 14], fov: 60, near: 0.1, far: 200 }} dpr={[1, 2]}>
+      <Suspense fallback={<div className="h-screen w-screen bg-[#0a0118]" />}>
+        <Canvas camera={{ position: [0, 3, 14], fov: 60, near: 0.1, far: 200 }} dpr={[1, 2]}>
         <color attach="background" args={["#0a0118"]} />
         <ambientLight intensity={1.1} />
         <pointLight position={[0, 10, 0]} intensity={120} distance={60} color="#00e5ff" />
@@ -58,7 +73,8 @@ export default function ExplorePage() {
         <EffectComposer>
           <Bloom mipmapBlur intensity={1.8} luminanceThreshold={0.1} luminanceSmoothing={0.9} />
         </EffectComposer>
-      </Canvas>
+        </Canvas>
+      </Suspense>
 
       <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-end gap-6 p-10">
         <h1 className="text-4xl font-black tracking-[0.3em] text-transparent sm:text-6xl">

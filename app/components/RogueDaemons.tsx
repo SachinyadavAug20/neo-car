@@ -7,13 +7,14 @@ import {
   RigidBody,
   CuboidCollider,
   type IntersectionEnterPayload,
+  type RapierRigidBody,
 } from "@react-three/rapier";
 import { gameStore } from "../store/gameStore";
 import { triggerGlitch } from "../lib/glitchStore";
 
 const DAEMON_COUNT = 15;
-const TRACK_START_Z = -120;
-const TRACK_END_Z = -1450;
+const TRACK_START_Z = 80;
+const TRACK_END_Z = 1450;
 const DAEMON_X_SPREAD = 55;
 const DAEMON_Y_MIN = 12;
 const DAEMON_Y_MAX = 40;
@@ -39,9 +40,14 @@ const DAEMONS: DaemonData[] = Array.from({ length: DAEMON_COUNT }, (_, i) => ({
 
 export default function RogueDaemons() {
   const meshRefs = useRef<(THREE.Mesh | null)[]>([]);
+  const bodyRefs = useRef<(RapierRigidBody | null)[]>([]);
   const hitRef = useRef(new Set<number>());
   const octahedronGeometry = useMemo(
     () => new THREE.OctahedronGeometry(4, 0),
+    [],
+  );
+  const daemonMaterial = useMemo(
+    () => new THREE.MeshStandardMaterial({ color: "#ff003c", wireframe: true }),
     [],
   );
 
@@ -60,13 +66,20 @@ export default function RogueDaemons() {
     const elapsed = state.clock.elapsedTime;
     for (let i = 0; i < DAEMONS.length; i++) {
       const mesh = meshRefs.current[i];
-      if (!mesh) continue;
+      const body = bodyRefs.current[i];
+      if (!mesh || !body) continue;
       const daemon = DAEMONS[i];
-      mesh.position.x =
+      const driftX =
         daemon.position[0] +
         Math.sin(elapsed * DAEMON_DRIFT_SPEED + daemon.phase) * DAEMON_DRIFT_RADIUS;
       mesh.rotation.x += delta * DAEMON_SPIN_SPEED;
       mesh.rotation.y += delta * DAEMON_SPIN_SPEED * 0.8;
+      body.setNextKinematicTranslation({
+        x: driftX,
+        y: daemon.position[1],
+        z: daemon.position[2],
+      });
+      body.setNextKinematicRotation(mesh.quaternion);
     }
   });
 
@@ -78,15 +91,17 @@ export default function RogueDaemons() {
           type="kinematicPosition"
           colliders={false}
           position={daemon.position}
+          ref={(node) => {
+            bodyRefs.current[index] = node;
+          }}
         >
           <mesh
             ref={(node) => {
               meshRefs.current[index] = node;
             }}
             geometry={octahedronGeometry}
-          >
-            <meshStandardMaterial color="#ff003c" wireframe />
-          </mesh>
+            material={daemonMaterial}
+          />
           <CuboidCollider
             sensor
             args={[6, 6, 6]}

@@ -3,6 +3,7 @@
 import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
+import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 
 const PILLAR_COUNT = 120;
 const PILLAR_X_MIN = 65;
@@ -59,15 +60,12 @@ const BLUE_MATERIAL = new THREE.MeshStandardMaterial({
 });
 
 export default function EnvironmentProps() {
+  const { getFrequencies } = useAudioAnalyzer();
   const purpleRef = useRef<THREE.InstancedMesh>(null);
   const blueRef = useRef<THREE.InstancedMesh>(null);
   const dummy = useMemo(() => new THREE.Object3D(), []);
 
-  const purpleGeometry = useMemo(
-    () => new THREE.BoxGeometry(PILLAR_WIDTH, 1, PILLAR_DEPTH),
-    [],
-  );
-  const blueGeometry = useMemo(
+  const pillarGeometry = useMemo(
     () => new THREE.BoxGeometry(PILLAR_WIDTH, 1, PILLAR_DEPTH),
     [],
   );
@@ -107,21 +105,47 @@ export default function EnvironmentProps() {
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
-    const pulse = 0.12 + Math.sin(t * 0.3) * 0.05;
-    PURPLE_MATERIAL.emissiveIntensity = pulse;
-    BLUE_MATERIAL.emissiveIntensity = pulse;
+    const [bass, mids] = getFrequencies();
+
+    const basePulse = 0.12 + Math.sin(t * 0.3) * 0.05;
+    const bassSpike = bass * 0.8;
+    const intensity = Math.min(1.2, basePulse + bassSpike);
+    PURPLE_MATERIAL.emissiveIntensity = intensity;
+    BLUE_MATERIAL.emissiveIntensity = intensity;
+
+    const purple = purpleRef.current;
+    const blue = blueRef.current;
+    if (purple && blue) {
+      const scaleY = 1 + bass * 1.5 + mids * 0.5;
+      for (let i = 0; i < PURPLE_PILLARS.length; i++) {
+        const pillar = PURPLE_PILLARS[i];
+        dummy.position.set(pillar.position[0], pillar.position[1], pillar.position[2]);
+        dummy.scale.set(1, pillar.height * scaleY, 1);
+        dummy.updateMatrix();
+        purple.setMatrixAt(i, dummy.matrix);
+      }
+      for (let i = 0; i < BLUE_PILLARS.length; i++) {
+        const pillar = BLUE_PILLARS[i];
+        dummy.position.set(pillar.position[0], pillar.position[1], pillar.position[2]);
+        dummy.scale.set(1, pillar.height * scaleY, 1);
+        dummy.updateMatrix();
+        blue.setMatrixAt(i, dummy.matrix);
+      }
+      purple.instanceMatrix.needsUpdate = true;
+      blue.instanceMatrix.needsUpdate = true;
+    }
   });
 
   return (
     <group>
       <instancedMesh
         ref={purpleRef}
-        args={[purpleGeometry, PURPLE_MATERIAL, PURPLE_PILLARS.length]}
+        args={[pillarGeometry, PURPLE_MATERIAL, PURPLE_PILLARS.length]}
         frustumCulled={false}
       />
       <instancedMesh
         ref={blueRef}
-        args={[blueGeometry, BLUE_MATERIAL, BLUE_PILLARS.length]}
+        args={[pillarGeometry, BLUE_MATERIAL, BLUE_PILLARS.length]}
         frustumCulled={false}
       />
     </group>
