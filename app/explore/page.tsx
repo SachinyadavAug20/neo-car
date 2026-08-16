@@ -6,9 +6,7 @@ import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Sparkles } from "@react-three/drei";
 import { useRouter } from "next/navigation";
-import ContextLossGuard from "../components/ContextLossGuard";
 import EffectBoundary from "../components/EffectBoundary";
-import GraphicsOverlay from "../components/GraphicsOverlay";
 
 function FloatingCore() {
   const inner = useRef<THREE.Mesh>(null);
@@ -78,7 +76,6 @@ export default function ExplorePage() {
           }}
         >
         <color attach="background" args={["#0a0118"]} />
-        <ContextLossGuard />
         <ambientLight intensity={1.1} />
         <pointLight position={[0, 10, 0]} intensity={120} distance={60} color="#00e5ff" />
         <pointLight position={[0, -6, 0]} intensity={120} distance={60} color="#ff2d95" />
@@ -106,7 +103,6 @@ export default function ExplorePage() {
           RETURN TO THE GRID
         </button>
       </div>
-      <GraphicsOverlay />
     </main>
   );
 }

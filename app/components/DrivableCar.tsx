@@ -2,43 +2,40 @@
 
 import { useEffect, useMemo, useRef, useState, type ElementRef } from "react";
 import * as THREE from "three";
-import gsap from "gsap";
 import { easing } from "maath";
 import { useFrame, useThree } from "@react-three/fiber";
-import { useKeyboardControls, Trail } from "@react-three/drei";
+import { Trail } from "@react-three/drei";
 import { RigidBody, CuboidCollider, type RapierRigidBody } from "@react-three/rapier";
 import { registerCamera } from "../lib/cameraStore";
-import { gameStore } from "../store/gameStore";
+import { setCarStatus, type CarStatus } from "../lib/carStateStore";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
-
-export type Controls = "forward" | "back" | "left" | "right" | "up" | "down";
-
-export const controlsMap: { name: Controls; keys: string[] }[] = [
-  { name: "forward", keys: ["KeyW", "ArrowUp"] },
-  { name: "back", keys: ["KeyS", "ArrowDown"] },
-  { name: "left", keys: ["KeyA", "ArrowLeft"] },
-  { name: "right", keys: ["KeyD", "ArrowRight"] },
-  { name: "up", keys: ["Space"] },
-  { name: "down", keys: ["ShiftLeft", "ShiftRight"] },
-];
+import { useKeyboard } from "../hooks/useKeyboard";
+import Car from "./Car";
 
 const CAR_FORWARD = new THREE.Vector3(0, 0, 1);
-const CAMERA_OFFSET = -20;
-const CAMERA_HEIGHT = 10;
-const THROTTLE = 95;
-const MAX_SPEED = 135;
-const VERTICAL_POWER = 50;
-const YAW_POWER = 2.5;
-const MAX_BANK = 0.4;
-const CAMERA_SMOOTH_TIME = 0.18;
-const LOOKAHEAD_BASE = 30;
-const LOOKAHEAD_SPEED = 20;
-const POINTER_DEAD_ZONE = 0.05;
+const CAMERA_BEHIND = 28;
+const CAMERA_HEIGHT = 12;
+const CAMERA_LOOK_AHEAD = 15;
+const CAMERA_LOOK_HEIGHT = 3;
+const CAMERA_POS_SMOOTH = 0.08;
+const CAMERA_LOOK_SMOOTH = 0.06;
+const MAX_SPEED = 42;
+const BASE_FOV = 55;
+const MAX_FOV = 70;
+const FOV_SMOOTH = 0.2;
 const BANK_SMOOTH_TIME = 0.15;
-const THROTTLE_RAMP = 2.5;
-const VERTICAL_RAMP = 4;
-const STEER_RAMP = 5;
-const LANE_BOUNDARY = 40;
+const MAX_BANK = 0.4;
+const INITIAL_CAM_POS: [number, number, number] = [0, 18, -30];
+
+const THROTTLE_SPEED = 40;
+const REVERSE_SPEED = -10;
+const OFF_ROAD_FACTOR = 0.45;
+const ROAD_HALF_WIDTH = 11;
+
+const STEER_RATE = 2.2;
+const BANK_GAIN = 0.5;
+const WRAP_TRIGGER = 5000;
+const WRAP_OFFSET = 4000;
 
 const LEFT_TAIL_POSITION: [number, number, number] = [-0.8, 0.5, -2];
 const RIGHT_TAIL_POSITION: [number, number, number] = [0.8, 0.5, -2];
@@ -46,142 +43,132 @@ const TRAIL_WIDTH = 0.2;
 const TRAIL_BASE_LENGTH = 2;
 const TRAIL_MAX_LENGTH = 8;
 
-const WHEEL_POSITIONS: [number, number, number][] = [
-  [-1.7, 0.4, 2.2],
-  [1.7, 0.4, 2.2],
-  [-1.7, 0.4, -2.2],
-  [1.7, 0.4, -2.2],
-];
-
-
-
 type TrailMaterial = THREE.ShaderMaterial & { lineWidth: number; opacity: number };
 
 const IMPULSE: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 };
-const TORQUE: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 };
 const tmpOffset = new THREE.Vector3();
+const tmpLookTarget = new THREE.Vector3();
+const tmpShake = new THREE.Vector3();
 const quadraticAtten = (t: number) => t * t;
+const CAR_STATUS: CarStatus = {
+  kmh: 0,
+  gear: "D",
+  onRoad: true,
+  throttle: false,
+};
 
 export default function DrivableCar() {
   const introCamera = useThree((state) => state.camera);
+  const keys = useKeyboard();
   const { getFrequencies } = useAudioAnalyzer();
   const bodyRef = useRef<RapierRigidBody>(null);
   const carGroupRef = useRef<THREE.Group>(null);
+  const carLightRef = useRef<THREE.PointLight>(null);
+  const underglowRef = useRef<THREE.PointLight>(null);
+  const exhaustRef = useRef<THREE.Mesh>(null);
   const leftTrailRef = useRef<ElementRef<typeof Trail>>(null);
   const rightTrailRef = useRef<ElementRef<typeof Trail>>(null);
-  
-  const introActive = useRef(true);
+
   const lastTrailLengthRef = useRef(TRAIL_BASE_LENGTH);
   const frameCountRef = useRef(0);
-  const throttleRef = useRef(0);
-  const verticalRef = useRef(0);
-  const steerRef = useRef(0);
   const [trailLength, setTrailLength] = useState(TRAIL_BASE_LENGTH);
-  const [, getKeys] = useKeyboardControls<Controls>();
 
   const tmpForward = useMemo(() => new THREE.Vector3(), []);
-  const tmpRight = useMemo(() => new THREE.Vector3(), []);
-  const tmpCamera = useMemo(() => new THREE.Vector3(), []);
   const tmpLook = useMemo(() => new THREE.Vector3(), []);
-
-  useEffect(() => {
-    window.focus();
-  }, []);
 
   useEffect(() => {
     const cam = introCamera as THREE.PerspectiveCamera;
     registerCamera(cam);
-    cam.position.set(0, 50, -50);
-
-    const timeline = gsap.timeline({ defaults: { ease: "expo.out", duration: 3 } });
-    timeline.to(cam.position, {
-      x: 0,
-      y: CAMERA_HEIGHT + 10,
-      z: CAMERA_OFFSET - 2,
-      onComplete: () => {
-        introActive.current = false;
-      },
-    });
-
-    return () => {
-      timeline.kill();
-    };
+    cam.position.set(...INITIAL_CAM_POS);
+    cam.lookAt(0, CAMERA_LOOK_HEIGHT, CAMERA_LOOK_AHEAD);
   }, [introCamera]);
 
   useFrame((state, delta) => {
     const body = bodyRef.current;
     const camera = state.camera;
     if (!body) return;
-    if (gameStore.getState().panicked) return;
 
-    const [, , highs] = getFrequencies();
-    const keys = getKeys();
+    const [bass, , highs] = getFrequencies();
     const pos = body.translation();
     const quat = body.rotation();
-
-    tmpForward.copy(CAR_FORWARD).applyQuaternion(quat);
-    tmpRight.set(1, 0, 0).applyQuaternion(quat);
-
-    const targetThrottle = (keys.forward ? 1 : 0) - (keys.back ? 1 : 0);
-    throttleRef.current = THREE.MathUtils.lerp(
-      throttleRef.current,
-      targetThrottle,
-      1 - Math.exp(-THROTTLE_RAMP * delta),
-    );
-    const throttle = throttleRef.current;
     const mass = body.mass();
 
-    const targetVertical = (keys.up ? 1 : 0) - (keys.down ? 1 : 0);
-    verticalRef.current = THREE.MathUtils.lerp(
-      verticalRef.current,
-      targetVertical,
-      1 - Math.exp(-VERTICAL_RAMP * delta),
-    );
-    const vertical = verticalRef.current;
+    tmpForward.copy(CAR_FORWARD).applyQuaternion(quat);
 
-    const targetSteer = (keys.left ? 1 : 0) - (keys.right ? 1 : 0);
-    steerRef.current = THREE.MathUtils.lerp(
-      steerRef.current,
-      targetSteer,
-      1 - Math.exp(-STEER_RAMP * delta),
-    );
-    const steer = steerRef.current;
-    TORQUE.x = 0;
-    TORQUE.y = steer * YAW_POWER * mass;
-    TORQUE.z = 0;
-    body.applyTorqueImpulse(TORQUE, true);
+    const throttle = keys.current.has("KeyW") || keys.current.has("ArrowUp");
+    const brake = keys.current.has("KeyS") || keys.current.has("ArrowDown");
+    const steerLeft = keys.current.has("KeyA") || keys.current.has("ArrowLeft");
+    const steerRight = keys.current.has("KeyD") || keys.current.has("ArrowRight");
+    const steer = (steerRight ? 1 : 0) - (steerLeft ? 1 : 0);
+
+    const onRoad = Math.abs(pos.x) <= ROAD_HALF_WIDTH;
+    let targetSpeed = throttle ? THROTTLE_SPEED : brake ? REVERSE_SPEED : 0;
+    if (!onRoad) targetSpeed *= OFF_ROAD_FACTOR;
+
+    IMPULSE.x = tmpForward.x * targetSpeed * mass;
+    IMPULSE.y = 0;
+    IMPULSE.z = tmpForward.z * targetSpeed * mass;
+    body.applyImpulse(IMPULSE, true);
+
+    const linvel = body.linvel();
+    let speed = Math.hypot(linvel.x, linvel.y, linvel.z);
+    if (speed > MAX_SPEED) {
+      const k = MAX_SPEED / speed;
+      body.setLinvel({ x: linvel.x * k, y: linvel.y * k, z: linvel.z * k }, true);
+      speed = MAX_SPEED;
+    }
+    const speedRatio = Math.min(1, speed / MAX_SPEED);
+
+    const angvel = body.angvel();
+    const steerPower = -steer * STEER_RATE * (0.2 + speedRatio * 0.8);
+    body.setAngvel({ x: angvel.x, y: steerPower, z: angvel.z }, true);
+
+    CAR_STATUS.kmh = Math.abs(speed) * 3.6;
+    CAR_STATUS.gear =
+      tmpForward.x * linvel.x + tmpForward.y * linvel.y + tmpForward.z * linvel.z < 0
+        ? "R"
+        : "D";
+    CAR_STATUS.onRoad = onRoad;
+    CAR_STATUS.throttle = throttle;
+    setCarStatus(CAR_STATUS);
+
+    if (pos.z > WRAP_TRIGGER) {
+      body.setTranslation({ x: pos.x, y: pos.y, z: pos.z - WRAP_OFFSET }, true);
+    }
 
     const carGroup = carGroupRef.current;
     if (carGroup) {
-      easing.damp(carGroup.rotation, "z", steer * MAX_BANK, BANK_SMOOTH_TIME, delta);
+      const bank = THREE.MathUtils.clamp(
+        -steer * speedRatio * BANK_GAIN,
+        -MAX_BANK,
+        MAX_BANK,
+      );
+      easing.damp(carGroup.rotation, "z", bank, BANK_SMOOTH_TIME, delta);
     }
 
-    const reverseMultiplier = throttle < 0 ? 0.5 : 1;
-    IMPULSE.x = tmpForward.x * throttle * THROTTLE * mass * reverseMultiplier;
-    IMPULSE.y = 0;
-    IMPULSE.z = tmpForward.z * throttle * THROTTLE * mass * reverseMultiplier;
-    body.applyImpulse(IMPULSE, true);
-
-    IMPULSE.x = 0;
-    IMPULSE.y = vertical * VERTICAL_POWER * mass;
-    IMPULSE.z = 0;
-    body.applyImpulse(IMPULSE, true);
-
-    const isOOB = Math.abs(pos.x) > LANE_BOUNDARY;
-    const gs = gameStore.getState();
-    if (isOOB && !gs.outOfBounds) {
-      gs.setOutOfBounds(true);
-    } else if (isOOB) {
-      gs.updateOobTimer(delta);
-    } else if (gs.outOfBounds) {
-      gs.setOutOfBounds(false);
-    } else {
-      gs.resetOobTimer();
+    const underglow = underglowRef.current;
+    if (underglow) {
+      underglow.intensity = 3 + bass * 14 + (throttle ? 2.5 : 0);
     }
 
-    const linvel = body.linvel();
-    const speed = Math.hypot(linvel.x, linvel.y, linvel.z);
-    const speedRatio = Math.min(1, speed / MAX_SPEED);
+    const exhaust = exhaustRef.current;
+    if (exhaust) {
+      const pulse = throttle ? 1 + bass * 1.8 : 0.3 + bass * 0.5;
+      const exMat = exhaust.material as THREE.MeshBasicMaterial | undefined;
+      if (exMat) exMat.opacity = Math.min(0.9, 0.2 + pulse * 0.3);
+      exhaust.scale.set(1, 1, 0.5 + pulse * 1.5);
+    }
+
+    const carLight = carLightRef.current;
+    if (carLight) {
+      if (brake) {
+        carLight.intensity = 55;
+        carLight.color.set("#ff7a9e");
+      } else {
+        carLight.intensity = 40;
+        carLight.color.set("#e8f0ff");
+      }
+    }
 
     const desiredLength = Math.round(
       THREE.MathUtils.clamp(
@@ -199,33 +186,33 @@ export default function DrivableCar() {
       setTrailLength(desiredLength);
     }
 
-    const lineWidth = 0.1 * TRAIL_WIDTH * (0.5 + speedRatio * 0.9 + highs * 1.5);
+    const lineWidth = 0.1 * TRAIL_WIDTH * (0.5 + speedRatio * 0.8 + highs * 0.6);
     const leftMat = leftTrailRef.current?.material as TrailMaterial | undefined;
     if (leftMat) leftMat.lineWidth = lineWidth;
     const rightMat = rightTrailRef.current?.material as TrailMaterial | undefined;
     if (rightMat) rightMat.lineWidth = lineWidth;
 
-    if (introActive.current) return;
-
-    const pointerX = Math.abs(state.pointer.x) < POINTER_DEAD_ZONE ? 0 : state.pointer.x;
-    const pointerY = Math.abs(state.pointer.y) < POINTER_DEAD_ZONE ? 0 : state.pointer.y;
-    const lookAheadDistance = LOOKAHEAD_BASE + speedRatio * LOOKAHEAD_SPEED;
-
-    tmpCamera
+    tmpShake
       .set(pos.x, pos.y, pos.z)
-      .addScaledVector(tmpForward, CAMERA_OFFSET)
-      .addScaledVector(tmpRight, pointerX * 3)
-      .add(tmpOffset.set(0, CAMERA_HEIGHT - pointerY * 2, 0));
+      .addScaledVector(tmpForward, -CAMERA_BEHIND)
+      .add(tmpOffset.set(0, CAMERA_HEIGHT, 0));
 
-    easing.damp3(camera.position, tmpCamera, CAMERA_SMOOTH_TIME, delta);
-    easing.dampLookAt(
-      camera,
-      tmpLook
-        .set(pos.x, pos.y + 1, pos.z)
-        .addScaledVector(tmpForward, lookAheadDistance),
-      CAMERA_SMOOTH_TIME,
-      delta,
-    );
+    const shake = bass * 0.25;
+    tmpShake.x += (Math.random() - 0.5) * shake;
+    tmpShake.y += (Math.random() - 0.5) * shake;
+
+    easing.damp3(camera.position, tmpShake, CAMERA_POS_SMOOTH, delta);
+
+    tmpLook
+      .set(pos.x, pos.y + CAMERA_LOOK_HEIGHT, pos.z)
+      .addScaledVector(tmpForward, CAMERA_LOOK_AHEAD);
+
+    easing.damp3(tmpLookTarget, tmpLook, CAMERA_LOOK_SMOOTH, delta);
+    camera.lookAt(tmpLookTarget);
+
+    const targetFov = BASE_FOV + speedRatio * (MAX_FOV - BASE_FOV);
+    easing.damp(camera, "fov", targetFov, FOV_SMOOTH, delta);
+    camera.updateProjectionMatrix();
   });
 
   return (
@@ -275,32 +262,13 @@ export default function DrivableCar() {
       </group>
 
       <group ref={carGroupRef} position={[0, -0.5, 0]}>
-        <mesh position={[0, 1.2, 0]}>
-          <boxGeometry args={[3.2, 1.2, 6]} />
-          <meshStandardMaterial
-            color="#1e1a2e"
-            emissive="#8aadf4"
-            emissiveIntensity={0.8}
-            metalness={0.3}
-            roughness={0.4}
-          />
-        </mesh>
-        <mesh position={[0, 2.1, -0.5]}>
-          <boxGeometry args={[2, 1, 2.6]} />
-          <meshStandardMaterial
-            color="#12021f"
-            emissive="#cba6f7"
-            emissiveIntensity={0.6}
-            metalness={0.2}
-            roughness={0.5}
-          />
-        </mesh>
-        {WHEEL_POSITIONS.map((position, index) => (
-          <mesh key={index} position={position} rotation={[0, 0, Math.PI / 2]}>
-            <cylinderGeometry args={[0.6, 0.6, 0.4, 10]} />
-            <meshStandardMaterial color="#0b0f19" metalness={0.4} roughness={0.8} />
-          </mesh>
-        ))}
+        <pointLight
+          position={[0, 5, 0]}
+          intensity={40}
+          distance={50}
+          color="#e8f0ff"
+        />
+        <Car />
       </group>
     </RigidBody>
   );

@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NEON_DRIVE — Infinite Runner",
-  description: "An audio-reactive flying car runner built with React Three Fiber",
+  title: "NEON_DRIVE — Ambient Visualizer",
+  description: "A calming 3D audio-reactive music visualizer built with React Three Fiber",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

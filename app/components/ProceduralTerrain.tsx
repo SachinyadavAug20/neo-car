@@ -17,6 +17,7 @@ const TERRAIN_VERTEX_SHADER = `
   uniform float uAmplitude;
 
   varying float vElevation;
+  varying vec2 vUv;
 
   #include <fog_pars_vertex>
 
@@ -50,6 +51,7 @@ const TERRAIN_VERTEX_SHADER = `
 
   void main() {
     vec3 pos = position;
+    vUv = uv;
 
     float worldZ = pos.z + uZOffset;
     vec2 coord = vec2(pos.x * 0.04, worldZ * 0.04);
@@ -87,13 +89,19 @@ const TERRAIN_WIRE_FRAGMENT = `
   uniform float uKick;
 
   varying float vElevation;
+  varying vec2 vUv;
 
   #include <fog_pars_fragment>
 
   void main() {
     float glow = 0.55 + vElevation * 0.9;
     float kickBoost = uKick * 2.5;
-    vec3 finalColor = uColor * glow + vec3(kickBoost);
+
+    float gx = abs(fract(vUv.x * 40.0 - 0.5) - 0.5) / fwidth(vUv.x * 40.0);
+    float gy = abs(fract(vUv.y * 60.0 - 0.5) - 0.5) / fwidth(vUv.y * 60.0);
+    float grid = (1.0 - min(gx, 1.0)) + (1.0 - min(gy, 1.0));
+
+    vec3 finalColor = uColor * (glow + grid * 0.25) + vec3(kickBoost);
     gl_FragColor = vec4(finalColor, 1.0);
     #include <fog_fragment>
   }

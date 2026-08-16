@@ -115,16 +115,16 @@ export default function EnvironmentProps() {
     const t = state.clock.elapsedTime;
     const [bass, mids] = getFrequencies();
 
-    const basePulse = 0.12 + Math.sin(t * 0.3) * 0.05;
-    const bassSpike = bass * 0.8;
-    const intensity = Math.min(1.2, basePulse + bassSpike);
+    const basePulse = 0.1 + Math.sin(t * 0.25) * 0.03;
+    const bassSpike = bass * 0.45;
+    const intensity = Math.min(1.0, basePulse + bassSpike);
     PURPLE_MATERIAL.emissiveIntensity = intensity;
     BLUE_MATERIAL.emissiveIntensity = intensity;
 
     const purple = purpleRef.current;
     const blue = blueRef.current;
     if (purple && blue) {
-      const scaleY = 1 + bass * 1.5 + mids * 0.5;
+      const scaleY = 1 + bass * 0.7 + mids * 0.25;
       for (let i = 0; i < PURPLE_PILLARS.length; i++) {
         const pillar = PURPLE_PILLARS[i];
         dummy.position.set(pillar.position[0], pillar.position[1], pillar.position[2]);
