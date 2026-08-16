@@ -7,7 +7,6 @@ import { easing } from "maath";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useKeyboardControls, Trail } from "@react-three/drei";
 import { RigidBody, CuboidCollider, type RapierRigidBody } from "@react-three/rapier";
-import { Model as Car } from "./Car";
 import { registerCamera } from "../lib/cameraStore";
 import { gameStore } from "../store/gameStore";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
@@ -47,12 +46,21 @@ const TRAIL_WIDTH = 0.2;
 const TRAIL_BASE_LENGTH = 2;
 const TRAIL_MAX_LENGTH = 8;
 
+const WHEEL_POSITIONS: [number, number, number][] = [
+  [-1.7, 0.4, 2.2],
+  [1.7, 0.4, 2.2],
+  [-1.7, 0.4, -2.2],
+  [1.7, 0.4, -2.2],
+];
+
 
 
 type TrailMaterial = THREE.ShaderMaterial & { lineWidth: number; opacity: number };
 
 const IMPULSE: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 };
 const TORQUE: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 };
+const tmpOffset = new THREE.Vector3();
+const quadraticAtten = (t: number) => t * t;
 
 export default function DrivableCar() {
   const introCamera = useThree((state) => state.camera);
@@ -64,6 +72,7 @@ export default function DrivableCar() {
   
   const introActive = useRef(true);
   const lastTrailLengthRef = useRef(TRAIL_BASE_LENGTH);
+  const frameCountRef = useRef(0);
   const throttleRef = useRef(0);
   const verticalRef = useRef(0);
   const steerRef = useRef(0);
@@ -181,7 +190,11 @@ export default function DrivableCar() {
         TRAIL_MAX_LENGTH,
       ),
     );
-    if (desiredLength !== lastTrailLengthRef.current) {
+    frameCountRef.current++;
+    if (
+      frameCountRef.current % 6 === 0 &&
+      desiredLength !== lastTrailLengthRef.current
+    ) {
       lastTrailLengthRef.current = desiredLength;
       setTrailLength(desiredLength);
     }
@@ -202,7 +215,7 @@ export default function DrivableCar() {
       .set(pos.x, pos.y, pos.z)
       .addScaledVector(tmpForward, CAMERA_OFFSET)
       .addScaledVector(tmpRight, pointerX * 3)
-      .add({ x: 0, y: CAMERA_HEIGHT - pointerY * 2, z: 0 });
+      .add(tmpOffset.set(0, CAMERA_HEIGHT - pointerY * 2, 0));
 
     easing.damp3(camera.position, tmpCamera, CAMERA_SMOOTH_TIME, delta);
     easing.dampLookAt(
@@ -237,7 +250,7 @@ export default function DrivableCar() {
           width={TRAIL_WIDTH}
           length={trailLength}
           color="#8aadf4"
-          attenuation={(t) => t * t}
+          attenuation={quadraticAtten}
         >
           <mesh>
             <boxGeometry args={[0.02, 0.02, 0.02]} />
@@ -252,7 +265,7 @@ export default function DrivableCar() {
           width={TRAIL_WIDTH}
           length={trailLength}
           color="#8aadf4"
-          attenuation={(t) => t * t}
+          attenuation={quadraticAtten}
         >
           <mesh>
             <boxGeometry args={[0.02, 0.02, 0.02]} />
@@ -261,8 +274,33 @@ export default function DrivableCar() {
         </Trail>
       </group>
 
-      <group ref={carGroupRef} scale={0.05}>
-        <Car />
+      <group ref={carGroupRef} position={[0, -0.5, 0]}>
+        <mesh position={[0, 1.2, 0]}>
+          <boxGeometry args={[3.2, 1.2, 6]} />
+          <meshStandardMaterial
+            color="#1e1a2e"
+            emissive="#8aadf4"
+            emissiveIntensity={0.8}
+            metalness={0.3}
+            roughness={0.4}
+          />
+        </mesh>
+        <mesh position={[0, 2.1, -0.5]}>
+          <boxGeometry args={[2, 1, 2.6]} />
+          <meshStandardMaterial
+            color="#12021f"
+            emissive="#cba6f7"
+            emissiveIntensity={0.6}
+            metalness={0.2}
+            roughness={0.5}
+          />
+        </mesh>
+        {WHEEL_POSITIONS.map((position, index) => (
+          <mesh key={index} position={position} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.6, 0.6, 0.4, 10]} />
+            <meshStandardMaterial color="#0b0f19" metalness={0.4} roughness={0.8} />
+          </mesh>
+        ))}
       </group>
     </RigidBody>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import {
@@ -12,13 +12,13 @@ import {
 import { gameStore } from "../store/gameStore";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 
-const RING_COUNT = 30;
+const RING_COUNT = 20;
 const RING_START_Z = 80;
 const RING_RESPAWN_MARGIN = 20;
 const CHUNK_LENGTH = 360;
 const CHUNK_REPEAT = 200;
 const PARTICLE_POOL_SIZE = 300;
-const VOXELS_PER_RING = 24;
+const VOXELS_PER_RING = 12;
 const PARTICLE_SPEED_MIN = 8;
 const PARTICLE_SPEED_MAX = 22;
 const PARTICLE_DECAY = 2.0;
@@ -120,8 +120,16 @@ export default function LevelManager() {
       }),
     [],
   );
+  const visibleRings = useMemo(() => PATTERN_RINGS.slice(0, RING_COUNT), []);
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const tmpDirection = useMemo(() => new THREE.Vector3(), []);
+
+  useEffect(() => {
+    return () => {
+      icosahedronGeometry.dispose();
+      ringMaterial.dispose();
+    };
+  }, [icosahedronGeometry, ringMaterial]);
 
   useLayoutEffect(() => {
     particlesRef.current = createParticlePool(PARTICLE_POOL_SIZE);
@@ -224,7 +232,7 @@ export default function LevelManager() {
       if (particle.alive) {
         dirty = true;
         particle.position.addScaledVector(particle.velocity, delta);
-        particle.velocity.multiplyScalar(0.97);
+        particle.velocity.multiplyScalar(Math.pow(0.97, delta * 60));
         particle.scale -= PARTICLE_DECAY * delta;
         if (particle.scale <= PARTICLE_DEATH_SCALE) {
           particle.alive = false;
@@ -233,7 +241,7 @@ export default function LevelManager() {
         }
         dummy.position.copy(particle.position);
         dummy.scale.setScalar(particle.scale);
-        if (particle.alive && Math.sin(elapsed * 14 + i * 5.3) > 0.988) {
+        if (particle.alive && ((i + Math.floor(elapsed * 14)) & 0x7) === 0) {
           dummy.scale.setScalar(0);
         }
         dummy.updateMatrix();
@@ -266,7 +274,7 @@ export default function LevelManager() {
         />
       </instancedMesh>
 
-      {PATTERN_RINGS.slice(0, RING_COUNT).map((position, index) => (
+      {visibleRings.map((position, index) => (
         <RigidBody
           key={index}
           type="kinematicPosition"

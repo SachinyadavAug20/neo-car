@@ -5,10 +5,8 @@ import { useRef, useMemo } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Sparkles } from "@react-three/drei";
-import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { useRouter } from "next/navigation";
 import ContextLossGuard from "../components/ContextLossGuard";
-import ContextHealthGate from "../components/ContextHealthGate";
 import EffectBoundary from "../components/EffectBoundary";
 import GraphicsOverlay from "../components/GraphicsOverlay";
 
@@ -67,21 +65,16 @@ export default function ExplorePage() {
   return (
     <main className="relative h-screen w-screen overflow-hidden bg-[#0a0118]">
       <Suspense fallback={<div className="h-screen w-screen bg-[#0a0118]" />}>
-        <Canvas camera={{ position: [0, 3, 14], fov: 60, near: 0.1, far: 200 }} dpr={[1, 2]}>
+        <Canvas camera={{ position: [0, 3, 14], fov: 60, near: 0.1, far: 200 }} dpr={[1, 1]}>
         <color attach="background" args={["#0a0118"]} />
         <ContextLossGuard />
         <ambientLight intensity={1.1} />
         <pointLight position={[0, 10, 0]} intensity={120} distance={60} color="#00e5ff" />
         <pointLight position={[0, -6, 0]} intensity={120} distance={60} color="#ff2d95" />
-        <FloatingCore />
-        <Sparkles count={400} scale={[30, 24, 30]} size={2.2} speed={0.35} color="#ff2d95" />
-        <ContextHealthGate>
-          <EffectBoundary fallback={null}>
-            <EffectComposer>
-              <Bloom mipmapBlur intensity={1.8} luminanceThreshold={0.1} luminanceSmoothing={0.9} />
-            </EffectComposer>
-          </EffectBoundary>
-        </ContextHealthGate>
+        <EffectBoundary fallback={null}>
+          <FloatingCore />
+          <Sparkles count={150} scale={[30, 24, 30]} size={2.2} speed={0.35} color="#ff2d95" />
+        </EffectBoundary>
         </Canvas>
       </Suspense>
 

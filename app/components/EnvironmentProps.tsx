@@ -1,11 +1,11 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 
-const PILLAR_COUNT = 120;
+const PILLAR_COUNT = 60;
 const PILLAR_X_MIN = 65;
 const PILLAR_X_MAX = 180;
 const PILLAR_Z_MIN = -100;
@@ -43,6 +43,8 @@ const PILLARS: PillarData[] = Array.from({ length: PILLAR_COUNT }, (_, i) => {
 const PURPLE_PILLARS = PILLARS.filter((p) => p.color === "#cba6f7");
 const BLUE_PILLARS = PILLARS.filter((p) => p.color === "#8aadf4");
 
+// Module-level singletons — intentionally NOT disposed on unmount.
+// These persist across component remounts to avoid re-compilation.
 const PURPLE_MATERIAL = new THREE.MeshStandardMaterial({
   color: "#1e1a2e",
   emissive: "#cba6f7",
@@ -69,6 +71,12 @@ export default function EnvironmentProps() {
     () => new THREE.BoxGeometry(PILLAR_WIDTH, 1, PILLAR_DEPTH),
     [],
   );
+
+  useEffect(() => {
+    return () => {
+      pillarGeometry.dispose();
+    };
+  }, [pillarGeometry]);
 
   useLayoutEffect(() => {
     const purple = purpleRef.current;

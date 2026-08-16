@@ -8,7 +8,7 @@ import {
 } from "@react-three/rapier";
 import { gameStore } from "../store/gameStore";
 
-const PORTAL_POSITION: [number, number, number] = [0, 10, 70000];
+const PORTAL_POSITION: [number, number, number] = [0, 10, 3200];
 const PORTAL_COLOR = "#94e2d5";
 
 export default function Portal() {
@@ -24,7 +24,7 @@ export default function Portal() {
   return (
     <RigidBody type="fixed" colliders="trimesh" position={PORTAL_POSITION}>
       <mesh>
-        <torusGeometry args={[15, 0.5, 16, 40]} />
+        <torusGeometry args={[15, 0.5, 16, 20]} />
         <meshStandardMaterial
           color="#12021f"
           emissive={PORTAL_COLOR}

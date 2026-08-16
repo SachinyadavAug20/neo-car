@@ -1,14 +1,14 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 
 const TERRAIN_WIDTH = 200;
 const TERRAIN_DEPTH = 1600;
-const TERRAIN_SEGMENTS_X = 64;
-const TERRAIN_SEGMENTS_Z = 100;
+const TERRAIN_SEGMENTS_X = 32;
+const TERRAIN_SEGMENTS_Z = 48;
 const TERRAIN_CHUNK = 400;
 
 const TERRAIN_VERTEX_SHADER = `
@@ -153,6 +153,14 @@ export default function ProceduralTerrain() {
       }),
     [],
   );
+
+  useEffect(() => {
+    return () => {
+      geometry.dispose();
+      solidMaterial.dispose();
+      wireMaterial.dispose();
+    };
+  }, [geometry, solidMaterial, wireMaterial]);
 
   useFrame((state) => {
     const group = groupRef.current;

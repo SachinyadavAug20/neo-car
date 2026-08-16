@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 
@@ -39,6 +39,14 @@ const FRAGMENT_SHADER = /* glsl */ `
 
 export default function RetroSun() {
   const materialRef = useRef<THREE.ShaderMaterial>(null);
+  const uniforms = useMemo(() => ({ uTime: { value: 0 } }), []);
+
+  useEffect(() => {
+    const material = materialRef.current;
+    return () => {
+      if (material) material.dispose();
+    };
+  }, []);
 
   useFrame((state) => {
     if (!materialRef.current) return;
@@ -47,12 +55,12 @@ export default function RetroSun() {
 
   return (
     <mesh position={[0, 40, 450]}>
-      <circleGeometry args={[120, 40]} />
+      <circleGeometry args={[120, 24]} />
       <shaderMaterial
         ref={materialRef}
         vertexShader={VERTEX_SHADER}
         fragmentShader={FRAGMENT_SHADER}
-        uniforms={{ uTime: { value: 0 } }}
+        uniforms={uniforms}
         depthWrite={false}
       />
     </mesh>

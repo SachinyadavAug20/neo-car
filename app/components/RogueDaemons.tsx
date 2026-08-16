@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import {
@@ -12,7 +12,7 @@ import {
 import { gameStore } from "../store/gameStore";
 import { triggerGlitch } from "../lib/glitchStore";
 
-const DAEMON_COUNT = 15;
+const DAEMON_COUNT = 8;
 const TRACK_START_Z = 80;
 const TRACK_END_Z = 1450;
 const DAEMON_X_SPREAD = 55;
@@ -50,6 +50,13 @@ export default function RogueDaemons() {
     () => new THREE.MeshStandardMaterial({ color: "#ff003c", wireframe: true }),
     [],
   );
+
+  useEffect(() => {
+    return () => {
+      octahedronGeometry.dispose();
+      daemonMaterial.dispose();
+    };
+  }, [octahedronGeometry, daemonMaterial]);
 
   const handleHit = (index: number) => (payload: IntersectionEnterPayload) => {
     if (!payload.other.rigidBody) return;
