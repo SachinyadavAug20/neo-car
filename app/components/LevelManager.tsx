@@ -13,17 +13,10 @@ import { gameStore } from "../store/gameStore";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 
 const RING_COUNT = 30;
-const RING_START_Z = 50;
-const RING_END_Z = 1500;
-const RING_X_SPREAD = 55;
-const RING_Y_MIN = 8;
-const RING_Y_MAX = 38;
-const RING_SPACING = (RING_END_Z - RING_START_Z) / (RING_COUNT - 1);
+const RING_START_Z = 80;
 const RING_RESPAWN_MARGIN = 20;
-const RING_LOOP_AHEAD = 1500;
-const DIFFICULTY_MAX_SCORE = 40;
-const X_SPREAD_GROWTH = 0.5;
-const Y_RANGE_GROWTH = 0.25;
+const CHUNK_LENGTH = 360;
+const CHUNK_REPEAT = 200;
 const PARTICLE_POOL_SIZE = 300;
 const VOXELS_PER_RING = 24;
 const PARTICLE_SPEED_MIN = 8;
@@ -31,8 +24,54 @@ const PARTICLE_SPEED_MAX = 22;
 const PARTICLE_DECAY = 2.0;
 const PARTICLE_DEATH_SCALE = 0.05;
 
-interface RingData {
-  position: [number, number, number];
+type RingPlacement = [number, number, number];
+type Chunk = readonly RingPlacement[];
+
+const CHUNKS: readonly Chunk[] = [
+  [
+    [-25, 22, 0],
+    [-12, 18, 80],
+    [0, 14, 160],
+    [12, 18, 240],
+    [25, 22, 320],
+  ],
+  [
+    [0, 12, 0],
+    [20, 12, 80],
+    [-20, 12, 160],
+    [0, 12, 240],
+    [0, 24, 320],
+  ],
+  [
+    [-30, 16, 0],
+    [0, 14, 80],
+    [30, 18, 160],
+    [0, 24, 240],
+    [-30, 18, 320],
+  ],
+  [
+    [0, 10, 0],
+    [0, 10, 80],
+    [0, 10, 160],
+    [0, 10, 240],
+    [0, 10, 320],
+  ],
+  [
+    [0, 26, 0],
+    [12, 20, 80],
+    [24, 14, 160],
+    [12, 20, 240],
+    [0, 26, 320],
+  ],
+];
+
+const PATTERN_RINGS: RingPlacement[] = [];
+for (let c = 0; c < CHUNK_REPEAT; c++) {
+  const chunk = CHUNKS[c % CHUNKS.length];
+  const chunkZ = RING_START_Z + c * CHUNK_LENGTH;
+  for (const placement of chunk) {
+    PATTERN_RINGS.push([placement[0], placement[1], chunkZ + placement[2]]);
+  }
 }
 
 interface ParticleState {
@@ -41,14 +80,6 @@ interface ParticleState {
   velocity: THREE.Vector3;
   scale: number;
 }
-
-const RINGS: RingData[] = Array.from({ length: RING_COUNT }, (_, i) => ({
-  position: [
-    (Math.random() * 2 - 1) * RING_X_SPREAD,
-    RING_Y_MIN + Math.random() * (RING_Y_MAX - RING_Y_MIN),
-    RING_START_Z + i * RING_SPACING,
-  ],
-}));
 
 function createParticlePool(size: number): ParticleState[] {
   const pool: ParticleState[] = [];
@@ -63,17 +94,14 @@ function createParticlePool(size: number): ParticleState[] {
   return pool;
 }
 
-function pseudoRandom(seed: number): number {
-  const x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
-  return x - Math.floor(x);
-}
-
-export default function RingTrack() {
+export default function LevelManager() {
   const { getFrequencies } = useAudioAnalyzer();
   const collectedRef = useRef(new Set<number>());
   const ringMeshRefs = useRef<(THREE.Mesh | null)[]>([]);
   const ringBodyRefs = useRef<(RapierRigidBody | null)[]>([]);
-  const teleportCountRef = useRef<number[]>([]);
+  const patternIndexRef = useRef<number[]>(
+    Array.from({ length: RING_COUNT }, (_, i) => i),
+  );
   const instancedRef = useRef<THREE.InstancedMesh>(null);
   const freeIndicesRef = useRef<number[] | null>(null);
   const particlesRef = useRef<ParticleState[] | null>(null);
@@ -117,10 +145,15 @@ export default function RingTrack() {
     const mesh = ringMeshRefs.current[index];
     if (mesh) mesh.visible = false;
 
-    const [ringX, ringY, ringZ] = RINGS[index].position;
+    const body = ringBodyRefs.current[index];
     const free = freeIndicesRef.current;
     const pool = particlesRef.current;
-    if (!free || !pool) return;
+    if (!body || !free || !pool) return;
+
+    const translation = body.translation();
+    const ringX = translation.x;
+    const ringY = translation.y;
+    const ringZ = translation.z;
     let spawned = 0;
     while (spawned < VOXELS_PER_RING && free.length > 0) {
       const particleIndex = free.pop();
@@ -143,29 +176,25 @@ export default function RingTrack() {
 
   useFrame((state, delta) => {
     const cameraZ = state.camera.position.z;
-    const score = gameStore.getState().score;
     const [, mids] = getFrequencies();
-    const difficulty = Math.min(1, score / DIFFICULTY_MAX_SCORE);
-    const xSpread = RING_X_SPREAD * (1 + X_SPREAD_GROWTH * difficulty);
-    const yRange = RING_Y_MAX - RING_Y_MIN;
-    const yMin = RING_Y_MIN - yRange * Y_RANGE_GROWTH * difficulty;
-    const yMax = RING_Y_MAX + yRange * Y_RANGE_GROWTH * difficulty;
     for (let i = 0; i < RING_COUNT; i++) {
       const body = ringBodyRefs.current[i];
       const mesh = ringMeshRefs.current[i];
       if (!body) continue;
-      if (body.translation().z < cameraZ - RING_RESPAWN_MARGIN) {
-        teleportCountRef.current[i] = (teleportCountRef.current[i] ?? 0) + 1;
-        const seed = i * 1000 + teleportCountRef.current[i];
-        const randomX = (pseudoRandom(seed) * 2 - 1) * xSpread;
-        const randomY = yMin + pseudoRandom(seed + 0.5) * (yMax - yMin);
-        body.setNextKinematicTranslation({
-          x: randomX,
-          y: randomY,
-          z: cameraZ + RING_LOOP_AHEAD,
-        });
-        collectedRef.current.delete(i);
-        if (mesh) mesh.visible = true;
+      const placement = PATTERN_RINGS[patternIndexRef.current[i]];
+      if (placement[2] < cameraZ - RING_RESPAWN_MARGIN) {
+        const nextIndex = patternIndexRef.current[i] + RING_COUNT;
+        if (nextIndex < PATTERN_RINGS.length) {
+          patternIndexRef.current[i] = nextIndex;
+          const next = PATTERN_RINGS[nextIndex];
+          body.setNextKinematicTranslation({
+            x: next[0],
+            y: next[1],
+            z: next[2],
+          });
+          collectedRef.current.delete(i);
+          if (mesh) mesh.visible = true;
+        }
       }
       if (mesh && mesh.visible) {
         mesh.scale.setScalar(1 + mids * 0.4);
@@ -227,12 +256,12 @@ export default function RingTrack() {
         />
       </instancedMesh>
 
-      {RINGS.map((ring, index) => (
+      {PATTERN_RINGS.slice(0, RING_COUNT).map((position, index) => (
         <RigidBody
           key={index}
           type="kinematicPosition"
           colliders={false}
-          position={ring.position}
+          position={position}
           ref={(node) => {
             ringBodyRefs.current[index] = node;
           }}

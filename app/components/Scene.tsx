@@ -12,8 +12,9 @@ import DrivableCar, { controlsMap } from "./DrivableCar";
 import ProceduralTerrain from "./ProceduralTerrain";
 import Portal from "./Portal";
 import RetroSun from "./RetroSun";
-import RingTrack from "./RingTrack";
+import LevelManager from "./LevelManager";
 import RogueDaemons from "./RogueDaemons";
+import EnvironmentProps from "./EnvironmentProps";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 import { gameStore } from "../store/gameStore";
 
@@ -43,6 +44,8 @@ export default function Scene() {
 
       <RetroSun />
 
+      <EnvironmentProps />
+
       <ambientLight intensity={1.2} color="#9ab6ff" />
       <hemisphereLight intensity={0.75} color="#7dc4e4" groundColor="#cba6f7" />
       <directionalLight position={[20, 40, 10]} intensity={2.5} color="#e8f0ff" />
@@ -53,7 +56,7 @@ export default function Scene() {
         <DrivableCar key={`car-${sessionId}`} />
         <ProceduralTerrain />
         <Portal />
-        <RingTrack key={`rings-${sessionId}`} />
+        <LevelManager key={`rings-${sessionId}`} />
         <RogueDaemons key={`daemons-${sessionId}`} />
       </Physics>
 

@@ -1,13 +1,16 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
+import { useStore } from "zustand";
 import Scene from "./components/Scene";
 import HUD from "./components/HUD";
 import MainMenu from "./components/MainMenu";
 import PortalFade from "./components/PortalFade";
 import KernelPanic from "./components/KernelPanic";
+import { gameStore } from "./store/gameStore";
 
 export default function Home() {
+  const sessionId = useStore(gameStore, (state) => state.sessionId);
   return (
     <main className="relative h-screen w-screen overflow-hidden bg-[#12021f]">
       <Canvas
@@ -17,7 +20,7 @@ export default function Home() {
       >
         <Scene />
       </Canvas>
-      <MainMenu />
+      <MainMenu key={sessionId} />
       <HUD />
       <PortalFade />
       <KernelPanic />

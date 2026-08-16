@@ -24,18 +24,19 @@ export const controlsMap: { name: Controls; keys: string[] }[] = [
 ];
 
 const CAR_FORWARD = new THREE.Vector3(0, 0, 1);
-const CAMERA_OFFSET = -35;
+const CAMERA_OFFSET = -25;
 const CAMERA_HEIGHT = 12;
-const THROTTLE = 60;
-const MAX_SPEED = 65;
+const THROTTLE = 140;
+const MAX_SPEED = 180;
 const VERTICAL_POWER = 50;
 const YAW_POWER = 2.5;
-const MAX_BANK = 0.3;
-const CAMERA_SMOOTH_TIME = 0.3;
-const BANK_SMOOTH_TIME = 0.2;
+const MAX_BANK = 0.4;
+const CAMERA_SMOOTH_TIME = 0.2;
+const BANK_SMOOTH_TIME = 0.15;
 const THROTTLE_RAMP = 2.5;
 const VERTICAL_RAMP = 4;
 const STEER_RAMP = 5;
+const LANE_BOUNDARY = 40;
 
 const LEFT_TAIL_POSITION: [number, number, number] = [-0.8, 0.5, -2];
 const RIGHT_TAIL_POSITION: [number, number, number] = [0.8, 0.5, -2];
@@ -106,16 +107,11 @@ export default function DrivableCar() {
 
     const [, , highs] = getFrequencies();
     const keys = getKeys();
-    const linvel = body.linvel();
     const pos = body.translation();
     const quat = body.rotation();
 
     tmpForward.copy(CAR_FORWARD).applyQuaternion(quat);
     tmpRight.set(1, 0, 0).applyQuaternion(quat);
-
-    const speed = Math.hypot(linvel.x, linvel.y, linvel.z);
-    const speedRatio = Math.min(1, speed / MAX_SPEED);
-    const forwardVelocity = tmpForward.dot(linvel);
 
     const targetThrottle = (keys.forward ? 1 : 0) - (keys.back ? 1 : 0);
     throttleRef.current = THREE.MathUtils.lerp(
@@ -124,7 +120,6 @@ export default function DrivableCar() {
       1 - Math.exp(-THROTTLE_RAMP * delta),
     );
     const throttle = throttleRef.current;
-    const accel = throttle > 0 && forwardVelocity > MAX_SPEED ? 0 : throttle;
     const mass = body.mass();
 
     const targetVertical = (keys.up ? 1 : 0) - (keys.down ? 1 : 0);
@@ -152,15 +147,30 @@ export default function DrivableCar() {
       easing.damp(carGroup.rotation, "z", steer * MAX_BANK, BANK_SMOOTH_TIME, delta);
     }
 
-    IMPULSE.x = tmpForward.x * accel * THROTTLE * mass;
+    const reverseMultiplier = throttle < 0 ? 0.5 : 1;
+    IMPULSE.x = tmpForward.x * throttle * THROTTLE * mass * reverseMultiplier;
     IMPULSE.y = 0;
-    IMPULSE.z = tmpForward.z * accel * THROTTLE * mass;
+    IMPULSE.z = tmpForward.z * throttle * THROTTLE * mass * reverseMultiplier;
     body.applyImpulse(IMPULSE, true);
 
     IMPULSE.x = 0;
     IMPULSE.y = vertical * VERTICAL_POWER * mass;
     IMPULSE.z = 0;
     body.applyImpulse(IMPULSE, true);
+
+    const isOOB = Math.abs(pos.x) > LANE_BOUNDARY;
+    const gs = gameStore.getState();
+    if (isOOB) {
+      gs.updateOobTimer(delta);
+    } else if (gs.outOfBounds) {
+      gs.setOutOfBounds(false);
+    } else {
+      gs.resetOobTimer();
+    }
+
+    const linvel = body.linvel();
+    const speed = Math.hypot(linvel.x, linvel.y, linvel.z);
+    const speedRatio = Math.min(1, speed / MAX_SPEED);
 
     const score = gameStore.getState().score;
     if (score !== lastScoreRef.current) {

@@ -23,6 +23,9 @@ export default function HUD() {
   const log = useStore(gameStore, (state) => state.log);
   const memory = useStore(gameStore, (state) => state.memory);
   const gameState = useStore(gameStore, (state) => state.gameState);
+  const highScore = useStore(gameStore, (state) => state.highScore);
+  const outOfBounds = useStore(gameStore, (state) => state.outOfBounds);
+  const oobTimer = useStore(gameStore, (state) => state.oobTimer);
   const [playState, setPlayState] = useState<PlayState>("paused");
   const [driveMode, setDriveMode] = useState<DriveMode>("CRUISE");
   const [cpu, setCpu] = useState(34);
@@ -174,6 +177,12 @@ export default function HUD() {
               />
             </div>
           </div>
+
+          <div className="mt-2 border-t border-[#8aadf4]/20 pt-2 text-[10px] text-[#94e2d5]">
+            <p className="tracking-[0.15em]">
+              HIGH_SCORE: {highScore.toString().padStart(6, "0")}
+            </p>
+          </div>
         </aside>
       </section>
 
@@ -240,6 +249,22 @@ export default function HUD() {
           </button>
         </section>
       </footer>
+
+      {outOfBounds && (
+        <div className="pointer-events-none fixed inset-0 z-[55] flex items-center justify-center bg-[#ff003c]/15 animate-pulse">
+          <div className="text-center">
+            <p className="mb-4 text-lg font-bold tracking-[0.3em] text-[#ff003c] drop-shadow-[0_0_20px_rgba(255,0,60,0.8)] sm:text-2xl">
+              [ WARNING: SIGNAL DEGRADATION ]
+            </p>
+            <p className="text-3xl font-black tracking-[0.2em] text-[#ff003c] drop-shadow-[0_0_30px_rgba(255,0,60,0.9)] sm:text-5xl">
+              RETURN TO GRID IN: {oobTimer.toFixed(1)}s
+            </p>
+            <p className="mt-4 text-xs tracking-[0.25em] text-[#ff003c]/70 sm:text-sm">
+              LATERAL DRIFT EXCEEDS SAFE CORRIDOR
+            </p>
+          </div>
+        </div>
+      )}
 
       <div
         ref={flashRef}
