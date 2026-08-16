@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useThree } from "@react-three/fiber";
+import { contextStore } from "../store/contextStore";
 
 interface Props {
   children: ReactNode;
@@ -23,6 +24,10 @@ export default function ContextHealthGate({ children }: Props) {
       return false;
     }
   });
+
+  useEffect(() => {
+    if (!healthy) contextStore.getState().setUnavailable();
+  }, [healthy]);
 
   if (!healthy) return null;
   return <>{children}</>;

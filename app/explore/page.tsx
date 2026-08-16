@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import ContextLossGuard from "../components/ContextLossGuard";
 import ContextHealthGate from "../components/ContextHealthGate";
 import EffectBoundary from "../components/EffectBoundary";
+import GraphicsOverlay from "../components/GraphicsOverlay";
 
 function FloatingCore() {
   const inner = useRef<THREE.Mesh>(null);
@@ -101,6 +102,7 @@ export default function ExplorePage() {
           RETURN TO THE GRID
         </button>
       </div>
+      <GraphicsOverlay />
     </main>
   );
 }

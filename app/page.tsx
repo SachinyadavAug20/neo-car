@@ -8,6 +8,7 @@ import HUD from "./components/HUD";
 import MainMenu from "./components/MainMenu";
 import PortalFade from "./components/PortalFade";
 import KernelPanic from "./components/KernelPanic";
+import GraphicsOverlay from "./components/GraphicsOverlay";
 import { gameStore } from "./store/gameStore";
 
 export default function Home() {
@@ -27,6 +28,7 @@ export default function Home() {
       <HUD />
       <PortalFade />
       <KernelPanic />
+      <GraphicsOverlay />
     </main>
   );
 }
