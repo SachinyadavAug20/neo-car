@@ -17,6 +17,8 @@ import RogueDaemons from "./RogueDaemons";
 import EnvironmentProps from "./EnvironmentProps";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 import { gameStore } from "../store/gameStore";
+import ContextLossGuard from "./ContextLossGuard";
+import EffectBoundary from "./EffectBoundary";
 
 export default function Scene() {
   const bloomRef = useRef<BloomEffect>(null);
@@ -41,6 +43,8 @@ export default function Scene() {
       <color attach="background" args={["#0b0f19"]} />
       <fogExp2 attach="fog" args={["#0b0f19", 0.003]} />
 
+      <ContextLossGuard />
+
       <Stars radius={300} depth={80} count={3000} factor={4} saturation={0} fade speed={0.5} />
 
       <RetroSun />
@@ -61,15 +65,17 @@ export default function Scene() {
         <RogueDaemons key={`daemons-${sessionId}`} />
       </Physics>
 
-      <EffectComposer>
-        <Bloom
-          ref={bloomRef}
-          mipmapBlur
-          intensity={0.8}
-          luminanceThreshold={0.4}
-          luminanceSmoothing={0.9}
-        />
-      </EffectComposer>
+      <EffectBoundary fallback={null}>
+        <EffectComposer>
+          <Bloom
+            ref={bloomRef}
+            mipmapBlur
+            intensity={0.8}
+            luminanceThreshold={0.4}
+            luminanceSmoothing={0.9}
+          />
+        </EffectComposer>
+      </EffectBoundary>
     </KeyboardControls>
   );
 }
