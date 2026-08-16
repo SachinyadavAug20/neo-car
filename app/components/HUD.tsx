@@ -39,7 +39,7 @@ export default function HUD() {
     if (bootedRef.current) return;
     bootedRef.current = true;
     const { addLog } = gameStore.getState();
-    addLog("[SYS] MEOW_TUI_OS v0.1 BOOT");
+    addLog("[SYS] NEON_DRIVE_OS v1.0 BOOT");
     addLog("[SYS] HYPR_WM WM_LOADED");
     addLog("[SYS] AUDIO_STREAM READY");
   }, []);
@@ -120,11 +120,8 @@ export default function HUD() {
         <div className="pointer-events-auto rounded border border-[#8aadf4]/30 bg-[#1e2030]/70 p-3 backdrop-blur-sm">
           <div className="flex items-start justify-between gap-6">
             <div>
-              <p className="mb-1 text-[10px] font-bold tracking-[0.2em] text-[#cba6f7] sm:text-xs">
-                +---[ MEOW_TUI v0.1 ]---+
-              </p>
               <h1 className="text-3xl font-bold tracking-[0.15em] text-[#b4befe] drop-shadow-[0_0_12px_rgba(180,190,254,0.45)] sm:text-5xl">
-                &gt; NEON_DRIVE_
+                NEON_DRIVE
               </h1>
             </div>
 
@@ -137,7 +134,7 @@ export default function HUD() {
                 onClick={enterTheGrid}
                 className="border border-[#cba6f7]/60 bg-[#1e2030] px-4 py-2 text-xs font-bold tracking-[0.15em] text-[#cba6f7] shadow-[0_0_18px_rgba(203,166,247,0.3)] transition hover:bg-[#cba6f7] hover:text-[#1e2030] active:scale-95 sm:text-sm"
               >
-                &gt; ./execute_warp.sh
+                &gt; WARP_TO_VAULT
               </button>
             </div>
           </div>
@@ -189,7 +186,7 @@ export default function HUD() {
       <footer className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <section className="pointer-events-auto w-full max-w-md rounded border border-[#8aadf4]/30 bg-[#1e2030]/80 p-4 shadow-[0_0_24px_rgba(138,173,244,0.12)] backdrop-blur-md">
           <div className="mb-3 flex items-center justify-between text-[10px] font-bold tracking-[0.2em] text-[#cba6f7]">
-            <span>NIGHT_CRUISER_RADIO.EXE</span>
+            <span>NEON_DRIVE FM</span>
             <span>{playState === "playing" ? "● RUNNING" : "● PAUSED"}</span>
           </div>
 
@@ -245,7 +242,7 @@ export default function HUD() {
                 : "border-[#8aadf4]/50 bg-[#1e2030] text-[#8aadf4] shadow-[0_0_18px_rgba(138,173,244,0.25)]"
             }`}
           >
-            {isTurbo ? "> ./set_mode TURBO" : "> ./set_mode CRUISE"}
+            {isTurbo ? "> MODE: TURBO" : "> MODE: CRUISE"}
           </button>
         </section>
       </footer>

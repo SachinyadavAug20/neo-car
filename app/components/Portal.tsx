@@ -1,44 +1,24 @@
 "use client";
 
 import { useRef } from "react";
-import gsap from "gsap";
-import { useRouter } from "next/navigation";
 import {
   RigidBody,
   CuboidCollider,
   type IntersectionEnterPayload,
 } from "@react-three/rapier";
-import { getCamera } from "../lib/cameraStore";
-import { triggerFade } from "../lib/fadeStore";
+import { gameStore } from "../store/gameStore";
 
-const PORTAL_POSITION: [number, number, number] = [0, 10, 300];
-const PORTAL_FOV = 150;
-const WARP_DURATION = 1.5;
+const PORTAL_POSITION: [number, number, number] = [0, 10, 70000];
+const PORTAL_COLOR = "#94e2d5";
 
 export default function Portal() {
-  const router = useRouter();
   const entered = useRef(false);
 
   const handleEnter = (payload: IntersectionEnterPayload) => {
     if (entered.current) return;
     if (!payload.other.rigidBody) return;
     entered.current = true;
-
-    const camera = getCamera();
-    const timeline = gsap.timeline({
-      onComplete: () => router.push("/explore"),
-    });
-
-    if (camera) {
-      timeline.to(camera, {
-        fov: PORTAL_FOV,
-        duration: WARP_DURATION,
-        ease: "power2.in",
-        onUpdate: () => camera.updateProjectionMatrix(),
-      });
-    }
-
-    timeline.call(() => triggerFade(), [], 0.15);
+    gameStore.getState().finishLevel();
   };
 
   return (
@@ -47,7 +27,7 @@ export default function Portal() {
         <torusGeometry args={[15, 0.5, 16, 100]} />
         <meshStandardMaterial
           color="#12021f"
-          emissive="#ff2d95"
+          emissive={PORTAL_COLOR}
           emissiveIntensity={4}
         />
       </mesh>

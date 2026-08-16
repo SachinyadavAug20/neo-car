@@ -8,13 +8,13 @@ const TERMINAL_FONT =
   "var(--font-geist-mono), 'Fira Code', 'JetBrains Mono', monospace";
 
 const BOOT_LINES: readonly string[] = [
-  "[    0.000000] Linux version 6.1.0-meow_tui (builder@tui) #1 SMP",
-  "[    0.012301] Command line: BOOT_IMAGE=/vmlinuz-meow root=/dev/meow_tui ro quiet",
-  "[    0.098110] CPU0: Meow_TUI Virtual Processor detected",
+  "[    0.000000] Linux version 6.1.0-neon_drive (builder@system) #1 SMP",
+  "[    0.012301] Command line: BOOT_IMAGE=/vmlinuz-neon root=/dev/neon_drive ro quiet",
+  "[    0.098110] CPU0: NEON Virtual Processor detected",
   "[  OK  ] Reached target Local File Systems.",
   "[  OK  ] Reached target Network.",
-  "[  OK  ] Started Meow_TUI Daemon.",
-  "[  OK  ] Mounted /dev/meow/neon_drive at /run/neon_drive",
+  "[  OK  ] Started NEON_DRIVE Daemon.",
+  "[  OK  ] Mounted /dev/neon/data at /run/neon_drive",
   "[  OK  ] Started NEON_DRIVE subsystem.",
   "[  OK  ] Reached target Multi-User System.",
 ];
@@ -66,7 +66,7 @@ export default function MainMenu() {
     >
       <div className="w-full max-w-2xl">
         <p className="mb-6 text-center text-[10px] font-bold tracking-[0.25em] text-[#cba6f7] sm:text-sm">
-          +---[ MEOW_TUI OS ]---+
+          +---[ NEON_DRIVE OS ]---+
         </p>
         <div className="mb-6 h-56 overflow-hidden rounded border border-[#8aadf4]/25 bg-black/40 p-3 text-[10px] leading-relaxed text-[#a6e3a1] sm:text-xs">
           {bootLines.map((line, index) => (

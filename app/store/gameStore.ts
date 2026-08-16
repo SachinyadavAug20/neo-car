@@ -17,6 +17,7 @@ interface GameState {
   outOfBounds: boolean;
   oobTimer: number;
   oobTimerActive: boolean;
+  finished: boolean;
   incrementScore: () => void;
   subtractScore: (amount: number) => void;
   damageMemory: (amount: number) => void;
@@ -25,6 +26,7 @@ interface GameState {
   triggerGameOver: () => void;
   resetGame: () => void;
   reboot: () => void;
+  finishLevel: () => void;
   addLog: (msg: string) => void;
   setOutOfBounds: (isOOB: boolean) => void;
   updateOobTimer: (delta: number) => void;
@@ -43,6 +45,7 @@ export const gameStore = createStore<GameState>((set) => ({
   outOfBounds: false,
   oobTimer: OOB_TIMER_START,
   oobTimerActive: false,
+  finished: false,
   incrementScore: () => set((state) => ({ score: state.score + 1 })),
   subtractScore: (amount) =>
     set((state) => ({ score: Math.max(0, state.score - amount) })),
@@ -71,6 +74,7 @@ export const gameStore = createStore<GameState>((set) => ({
       outOfBounds: false,
       oobTimer: OOB_TIMER_START,
       oobTimerActive: false,
+      finished: false,
       log: [...state.log, "[SYS] NEON_DRIVE.BIN EXECUTED"].slice(-MAX_LOG),
     })),
   triggerGameOver: () => set({ gameState: "gameover" }),
@@ -85,6 +89,7 @@ export const gameStore = createStore<GameState>((set) => ({
       outOfBounds: false,
       oobTimer: OOB_TIMER_START,
       oobTimerActive: false,
+      finished: false,
     })),
   reboot: () =>
     set((state) => ({
@@ -97,7 +102,15 @@ export const gameStore = createStore<GameState>((set) => ({
       outOfBounds: false,
       oobTimer: OOB_TIMER_START,
       oobTimerActive: false,
+      finished: false,
       log: [...state.log, "[SYS] REBOOT SEQUENCE INITIATED"].slice(-MAX_LOG),
+    })),
+  finishLevel: () =>
+    set((state) => ({
+      finished: true,
+      gameState: "gameover",
+      highScore: Math.max(state.highScore, state.score),
+      log: [...state.log, "[SYS] LEVEL COMPLETE"].slice(-MAX_LOG),
     })),
   addLog: (msg) =>
     set((state) => ({ log: [...state.log, msg].slice(-MAX_LOG) })),
