@@ -8,9 +8,10 @@ const TERMINAL_FONT =
 
 export default function KernelPanic() {
   const panicked = useStore(gameStore, (state) => state.panicked);
-  const reboot = useStore(gameStore, (state) => state.reboot);
+  const gameState = useStore(gameStore, (state) => state.gameState);
+  const returnToMenu = useStore(gameStore, (state) => state.returnToMenu);
 
-  if (!panicked) return null;
+  if (!panicked && gameState !== "gameover") return null;
 
   return (
     <div
@@ -31,10 +32,10 @@ export default function KernelPanic() {
         </pre>
         <button
           type="button"
-          onClick={reboot}
+          onClick={returnToMenu}
           className="border border-[#ff003c]/70 bg-black px-4 py-2 text-sm font-bold tracking-[0.15em] text-[#ff003c] shadow-[0_0_18px_rgba(255,0,60,0.4)] transition hover:bg-[#ff003c] hover:text-black active:scale-95"
         >
-          &gt; ./reboot.sh
+          &gt; ./return_to_menu.sh
         </button>
       </div>
     </div>

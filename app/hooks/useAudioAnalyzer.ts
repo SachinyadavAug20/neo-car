@@ -6,8 +6,11 @@ type PlayState = "playing" | "paused";
 type FrequencyTuple = [number, number, number];
 type StateListener = (state: PlayState) => void;
 
-const AUDIO_SRC =
-  "/audio/desifreemusic-free-music-for-youtube-videosfree-to-use-music-233909.mp3";
+const PLAYLIST: readonly string[] = [
+  "/audio/alexgrohl-retro-electronic-535019.mp3",
+  "/audio/deltax-music-vice-city-vibes-grand-theft-auto-style-soundtrack-301060.mp3",
+  "/audio/everything01unique-gta-vi-theme-music-174952.mp3",
+];
 const FFT_SIZE = 512;
 const MAX_BYTE = 255;
 
@@ -25,6 +28,7 @@ class AudioEngine {
   private freqData: Uint8Array<ArrayBuffer> | null = null;
   private result: FrequencyTuple = [0, 0, 0];
   private state: PlayState = "paused";
+  private currentTrackIndex = 0;
   private readonly listeners = new Set<StateListener>();
 
   private average(data: Uint8Array, [start, end]: readonly [number, number]): number {
@@ -42,7 +46,7 @@ class AudioEngine {
   private ensure(): void {
     if (this.ctx) return;
 
-    const audio = new Audio(AUDIO_SRC);
+    const audio = new Audio(PLAYLIST[this.currentTrackIndex]);
     audio.loop = true;
     audio.preload = "auto";
     audio.crossOrigin = "anonymous";
@@ -67,6 +71,13 @@ class AudioEngine {
     this.analyser = analyser;
   }
 
+  private playTrack(): void {
+    if (!this.audio) return;
+    this.audio.src = PLAYLIST[this.currentTrackIndex];
+    void this.ctx?.resume().catch(() => undefined);
+    void this.audio.play().catch(() => this.setState("paused"));
+  }
+
   private refresh(): void {
     if (!this.ctx || !this.analyser || !this.freqData || this.state === "paused") {
       this.result[0] = 0;
@@ -82,13 +93,33 @@ class AudioEngine {
 
   play(): void {
     this.ensure();
-    void this.ctx?.resume().catch(() => undefined);
-    void this.audio?.play().catch(() => this.setState("paused"));
+    this.playTrack();
   }
 
   pause(): void {
     this.audio?.pause();
     void this.ctx?.suspend().catch(() => undefined);
+  }
+
+  nextTrack(): void {
+    this.ensure();
+    this.currentTrackIndex = (this.currentTrackIndex + 1) % PLAYLIST.length;
+    this.playTrack();
+  }
+
+  prevTrack(): void {
+    this.ensure();
+    this.currentTrackIndex =
+      (this.currentTrackIndex - 1 + PLAYLIST.length) % PLAYLIST.length;
+    this.playTrack();
+  }
+
+  getProgress(): number {
+    if (!this.audio) return 0;
+    const { currentTime, duration } = this.audio;
+    if (!Number.isFinite(duration) || duration <= 0) return 0;
+    const progress = currentTime / duration;
+    return Number.isFinite(progress) ? Math.min(1, Math.max(0, progress)) : 0;
   }
 
   getFrequencies(): FrequencyTuple {
@@ -130,6 +161,9 @@ export interface AudioAnalyzerApi {
   getSpectrum: () => Uint8Array<ArrayBuffer>;
   getState: () => PlayState;
   subscribe: (listener: StateListener) => () => void;
+  nextTrack: () => void;
+  prevTrack: () => void;
+  getProgress: () => number;
 }
 
 export function useAudioAnalyzer(): AudioAnalyzerApi {
@@ -154,5 +188,8 @@ export function useAudioAnalyzer(): AudioAnalyzerApi {
       (listener: StateListener) => engine?.subscribe(listener) ?? (() => undefined),
       [engine],
     ),
+    nextTrack: useCallback(() => engine?.nextTrack(), [engine]),
+    prevTrack: useCallback(() => engine?.prevTrack(), [engine]),
+    getProgress: useCallback(() => engine?.getProgress() ?? 0, [engine]),
   };
 }

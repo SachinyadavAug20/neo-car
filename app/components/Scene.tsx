@@ -20,7 +20,7 @@ import { gameStore } from "../store/gameStore";
 export default function Scene() {
   const bloomRef = useRef<BloomEffect>(null);
   const sessionId = useStore(gameStore, (state) => state.sessionId);
-  const panicked = useStore(gameStore, (state) => state.panicked);
+  const gameState = useStore(gameStore, (state) => state.gameState);
   const { getFrequencies } = useAudioAnalyzer();
 
   useFrame(() => {
@@ -49,7 +49,7 @@ export default function Scene() {
       <pointLight position={[-20, 10, -30]} intensity={200} distance={90} color="#cba6f7" />
       <pointLight position={[20, 10, -30]} intensity={200} distance={90} color="#7dc4e4" />
 
-      <Physics gravity={[0, -30, 0]} paused={panicked}>
+      <Physics gravity={[0, -30, 0]} paused={gameState !== "playing"}>
         <DrivableCar key={`car-${sessionId}`} />
         <ProceduralTerrain />
         <Portal />

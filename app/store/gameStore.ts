@@ -3,17 +3,22 @@ import { createStore } from "zustand/vanilla";
 const MAX_LOG = 5;
 const STARTING_MEMORY = 100;
 
+type GameStateValue = "menu" | "playing" | "gameover";
+
 interface GameState {
   score: number;
   memory: number;
   panicked: boolean;
   sessionId: number;
+  gameState: GameStateValue;
   log: string[];
   incrementScore: () => void;
   subtractScore: (amount: number) => void;
   damageMemory: (amount: number) => void;
   resetScore: () => void;
-  reboot: () => void;
+  startGame: () => void;
+  triggerGameOver: () => void;
+  returnToMenu: () => void;
   addLog: (msg: string) => void;
 }
 
@@ -22,6 +27,7 @@ export const gameStore = createStore<GameState>((set) => ({
   memory: STARTING_MEMORY,
   panicked: false,
   sessionId: 0,
+  gameState: "menu",
   log: [],
   incrementScore: () => set((state) => ({ score: state.score + 1 })),
   subtractScore: (amount) =>
@@ -29,19 +35,29 @@ export const gameStore = createStore<GameState>((set) => ({
   damageMemory: (amount) =>
     set((state) => {
       const memory = Math.max(0, state.memory - amount);
-      return { memory, panicked: state.panicked || memory === 0 };
+      if (memory === 0) {
+        return { memory, panicked: true, gameState: "gameover" };
+      }
+      return { memory };
     }),
   resetScore: () => set({ score: 0 }),
-  reboot: () =>
+  startGame: () =>
     set((state) => ({
+      gameState: "playing",
       score: 0,
       memory: STARTING_MEMORY,
       panicked: false,
       sessionId: state.sessionId + 1,
-      log: [
-        ...state.log,
-        "[SYS] KERNEL_PANIC RECOVERED",
-      ].slice(-MAX_LOG),
+      log: [...state.log, "[SYS] NEON_DRIVE.BIN EXECUTED"].slice(-MAX_LOG),
+    })),
+  triggerGameOver: () => set({ gameState: "gameover" }),
+  returnToMenu: () =>
+    set((state) => ({
+      gameState: "menu",
+      score: 0,
+      memory: STARTING_MEMORY,
+      panicked: false,
+      sessionId: state.sessionId + 1,
     })),
   addLog: (msg) =>
     set((state) => ({ log: [...state.log, msg].slice(-MAX_LOG) })),

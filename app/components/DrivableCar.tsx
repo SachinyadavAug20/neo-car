@@ -10,6 +10,7 @@ import { RigidBody, CuboidCollider, type RapierRigidBody } from "@react-three/ra
 import { Model as Car } from "./Car";
 import { registerCamera } from "../lib/cameraStore";
 import { gameStore } from "../store/gameStore";
+import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 
 export type Controls = "forward" | "back" | "left" | "right" | "up" | "down";
 
@@ -53,6 +54,7 @@ const TORQUE: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 };
 
 export default function DrivableCar() {
   const introCamera = useThree((state) => state.camera);
+  const { getFrequencies } = useAudioAnalyzer();
   const bodyRef = useRef<RapierRigidBody>(null);
   const carGroupRef = useRef<THREE.Group>(null);
   const leftTrailRef = useRef<ElementRef<typeof Trail>>(null);
@@ -102,6 +104,7 @@ export default function DrivableCar() {
     if (!body) return;
     if (gameStore.getState().panicked) return;
 
+    const [, , highs] = getFrequencies();
     const keys = getKeys();
     const linvel = body.linvel();
     const pos = body.translation();
@@ -177,7 +180,7 @@ export default function DrivableCar() {
       setTrailLength(desiredLength);
     }
 
-    const lineWidth = 0.1 * TRAIL_WIDTH * (0.5 + speedRatio * 0.9);
+    const lineWidth = 0.1 * TRAIL_WIDTH * (0.5 + speedRatio * 0.9 + highs * 1.5);
     const leftMat = leftTrailRef.current?.material as TrailMaterial | undefined;
     if (leftMat) leftMat.lineWidth = lineWidth;
     const rightMat = rightTrailRef.current?.material as TrailMaterial | undefined;

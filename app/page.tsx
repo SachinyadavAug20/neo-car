@@ -3,6 +3,7 @@
 import { Canvas } from "@react-three/fiber";
 import Scene from "./components/Scene";
 import HUD from "./components/HUD";
+import MainMenu from "./components/MainMenu";
 import PortalFade from "./components/PortalFade";
 import KernelPanic from "./components/KernelPanic";
 
@@ -16,6 +17,7 @@ export default function Home() {
       >
         <Scene />
       </Canvas>
+      <MainMenu />
       <HUD />
       <PortalFade />
       <KernelPanic />

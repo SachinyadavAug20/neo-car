@@ -16,14 +16,17 @@ const TERMINAL_FONT =
 
 export default function HUD() {
   const router = useRouter();
-  const { play, pause, getState, subscribe } = useAudioAnalyzer();
+  const { play, pause, getState, subscribe, nextTrack, prevTrack, getProgress } =
+    useAudioAnalyzer();
   const flashRef = useRef<HTMLDivElement>(null);
   const bootedRef = useRef(false);
   const log = useStore(gameStore, (state) => state.log);
   const memory = useStore(gameStore, (state) => state.memory);
+  const gameState = useStore(gameStore, (state) => state.gameState);
   const [playState, setPlayState] = useState<PlayState>("paused");
   const [driveMode, setDriveMode] = useState<DriveMode>("CRUISE");
   const [cpu, setCpu] = useState(34);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     return subscribe(setPlayState);
@@ -44,6 +47,18 @@ export default function HUD() {
     }, 1200);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    let raf = 0;
+    const tick = () => {
+      raf = requestAnimationFrame(tick);
+      if (playState !== "playing") return;
+      const next = getProgress() * 100;
+      setProgress((prev) => (Math.abs(prev - next) < 0.05 ? prev : next));
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [playState, getProgress]);
 
   const togglePlay = () => {
     if (getState() === "playing") pause();
@@ -87,6 +102,8 @@ export default function HUD() {
   };
 
   const isTurbo = driveMode === "TURBO";
+
+  if (gameState !== "playing") return null;
 
   return (
     <div
@@ -171,15 +188,17 @@ export default function HUD() {
             <div
               className={
                 playState === "playing"
-                  ? "h-full w-2/3 rounded bg-[#b4befe]"
-                  : "h-full w-1/3 rounded bg-[#cba6f7]"
+                  ? "h-full rounded bg-[#b4befe]"
+                  : "h-full rounded bg-[#cba6f7]"
               }
+              style={{ width: `${progress}%` }}
             />
           </div>
 
           <div className="flex items-center justify-center gap-4 text-sm">
             <button
               type="button"
+              onClick={prevTrack}
               aria-label="Previous track"
               className="rounded border border-[#8aadf4]/30 px-2 py-1 text-[#cad3f5]/60 transition hover:border-[#8aadf4] hover:text-[#cad3f5]"
             >
@@ -197,6 +216,7 @@ export default function HUD() {
 
             <button
               type="button"
+              onClick={nextTrack}
               aria-label="Next track"
               className="rounded border border-[#8aadf4]/30 px-2 py-1 text-[#cad3f5]/60 transition hover:border-[#8aadf4] hover:text-[#cad3f5]"
             >

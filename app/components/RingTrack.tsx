@@ -10,6 +10,7 @@ import {
   type IntersectionEnterPayload,
 } from "@react-three/rapier";
 import { gameStore } from "../store/gameStore";
+import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 
 const RING_COUNT = 30;
 const RING_START_Z = 50;
@@ -20,6 +21,9 @@ const RING_Y_MAX = 38;
 const RING_SPACING = (RING_END_Z - RING_START_Z) / (RING_COUNT - 1);
 const RING_RESPAWN_MARGIN = 20;
 const RING_LOOP_AHEAD = 1500;
+const DIFFICULTY_MAX_SCORE = 40;
+const X_SPREAD_GROWTH = 0.5;
+const Y_RANGE_GROWTH = 0.25;
 const PARTICLE_POOL_SIZE = 300;
 const VOXELS_PER_RING = 24;
 const PARTICLE_SPEED_MIN = 8;
@@ -65,6 +69,7 @@ function pseudoRandom(seed: number): number {
 }
 
 export default function RingTrack() {
+  const { getFrequencies } = useAudioAnalyzer();
   const collectedRef = useRef(new Set<number>());
   const ringMeshRefs = useRef<(THREE.Mesh | null)[]>([]);
   const ringBodyRefs = useRef<(RapierRigidBody | null)[]>([]);
@@ -138,23 +143,32 @@ export default function RingTrack() {
 
   useFrame((state, delta) => {
     const cameraZ = state.camera.position.z;
+    const score = gameStore.getState().score;
+    const [, mids] = getFrequencies();
+    const difficulty = Math.min(1, score / DIFFICULTY_MAX_SCORE);
+    const xSpread = RING_X_SPREAD * (1 + X_SPREAD_GROWTH * difficulty);
+    const yRange = RING_Y_MAX - RING_Y_MIN;
+    const yMin = RING_Y_MIN - yRange * Y_RANGE_GROWTH * difficulty;
+    const yMax = RING_Y_MAX + yRange * Y_RANGE_GROWTH * difficulty;
     for (let i = 0; i < RING_COUNT; i++) {
       const body = ringBodyRefs.current[i];
+      const mesh = ringMeshRefs.current[i];
       if (!body) continue;
       if (body.translation().z < cameraZ - RING_RESPAWN_MARGIN) {
         teleportCountRef.current[i] = (teleportCountRef.current[i] ?? 0) + 1;
         const seed = i * 1000 + teleportCountRef.current[i];
-        const randomX = (pseudoRandom(seed) * 2 - 1) * RING_X_SPREAD;
-        const randomY =
-          RING_Y_MIN + pseudoRandom(seed + 0.5) * (RING_Y_MAX - RING_Y_MIN);
+        const randomX = (pseudoRandom(seed) * 2 - 1) * xSpread;
+        const randomY = yMin + pseudoRandom(seed + 0.5) * (yMax - yMin);
         body.setNextKinematicTranslation({
           x: randomX,
           y: randomY,
           z: cameraZ + RING_LOOP_AHEAD,
         });
         collectedRef.current.delete(i);
-        const mesh = ringMeshRefs.current[i];
         if (mesh) mesh.visible = true;
+      }
+      if (mesh && mesh.visible) {
+        mesh.scale.setScalar(1 + mids * 0.4);
       }
     }
 
