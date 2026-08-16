@@ -18,6 +18,7 @@ import EnvironmentProps from "./EnvironmentProps";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 import { gameStore } from "../store/gameStore";
 import ContextLossGuard from "./ContextLossGuard";
+import ContextHealthGate from "./ContextHealthGate";
 import EffectBoundary from "./EffectBoundary";
 
 export default function Scene() {
@@ -65,17 +66,19 @@ export default function Scene() {
         <RogueDaemons key={`daemons-${sessionId}`} />
       </Physics>
 
-      <EffectBoundary fallback={null}>
-        <EffectComposer>
-          <Bloom
-            ref={bloomRef}
-            mipmapBlur
-            intensity={0.8}
-            luminanceThreshold={0.4}
-            luminanceSmoothing={0.9}
-          />
-        </EffectComposer>
-      </EffectBoundary>
+      <ContextHealthGate>
+        <EffectBoundary fallback={null}>
+          <EffectComposer>
+            <Bloom
+              ref={bloomRef}
+              mipmapBlur
+              intensity={0.8}
+              luminanceThreshold={0.4}
+              luminanceSmoothing={0.9}
+            />
+          </EffectComposer>
+        </EffectBoundary>
+      </ContextHealthGate>
     </KeyboardControls>
   );
 }

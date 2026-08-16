@@ -5,7 +5,7 @@ import * as THREE from "three";
 import gsap from "gsap";
 import { easing } from "maath";
 import { useFrame, useThree } from "@react-three/fiber";
-import { useKeyboardControls, Trail, Text } from "@react-three/drei";
+import { useKeyboardControls, Trail } from "@react-three/drei";
 import { RigidBody, CuboidCollider, type RapierRigidBody } from "@react-three/rapier";
 import { Model as Car } from "./Car";
 import { registerCamera } from "../lib/cameraStore";
@@ -47,9 +47,7 @@ const TRAIL_WIDTH = 0.2;
 const TRAIL_BASE_LENGTH = 2;
 const TRAIL_MAX_LENGTH = 8;
 
-const SCORE_TEXT_POSITION: [number, number, number] = [0, 4, -4];
-const SCORE_FONT =
-  "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@master/fonts/ttf/JetBrainsMono-Regular.ttf";
+
 
 type TrailMaterial = THREE.ShaderMaterial & { lineWidth: number; opacity: number };
 
@@ -63,10 +61,9 @@ export default function DrivableCar() {
   const carGroupRef = useRef<THREE.Group>(null);
   const leftTrailRef = useRef<ElementRef<typeof Trail>>(null);
   const rightTrailRef = useRef<ElementRef<typeof Trail>>(null);
-  const scoreTextRef = useRef<ElementRef<typeof Text>>(null);
+  
   const introActive = useRef(true);
   const lastTrailLengthRef = useRef(TRAIL_BASE_LENGTH);
-  const lastScoreRef = useRef(0);
   const throttleRef = useRef(0);
   const verticalRef = useRef(0);
   const steerRef = useRef(0);
@@ -177,12 +174,6 @@ export default function DrivableCar() {
     const speed = Math.hypot(linvel.x, linvel.y, linvel.z);
     const speedRatio = Math.min(1, speed / MAX_SPEED);
 
-    const score = gameStore.getState().score;
-    if (score !== lastScoreRef.current) {
-      lastScoreRef.current = score;
-      if (scoreTextRef.current) scoreTextRef.current.text = `SCORE: ${score}`;
-    }
-
     const desiredLength = Math.round(
       THREE.MathUtils.clamp(
         TRAIL_BASE_LENGTH + speedRatio * (TRAIL_MAX_LENGTH - TRAIL_BASE_LENGTH),
@@ -239,19 +230,6 @@ export default function DrivableCar() {
       canSleep={false}
     >
       <CuboidCollider args={[4, 1, 9]} position={[0, -0.5, 0]} />
-
-      <Text
-        ref={scoreTextRef}
-        position={SCORE_TEXT_POSITION}
-        rotation={[0, Math.PI, 0]}
-        fontSize={1.1}
-        color="#b4befe"
-        font={SCORE_FONT}
-        anchorX="center"
-        anchorY="middle"
-      >
-        SCORE: 0
-      </Text>
 
       <group position={LEFT_TAIL_POSITION}>
         <Trail

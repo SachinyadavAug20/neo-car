@@ -8,6 +8,7 @@ import { Sparkles } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { useRouter } from "next/navigation";
 import ContextLossGuard from "../components/ContextLossGuard";
+import ContextHealthGate from "../components/ContextHealthGate";
 import EffectBoundary from "../components/EffectBoundary";
 
 function FloatingCore() {
@@ -73,11 +74,13 @@ export default function ExplorePage() {
         <pointLight position={[0, -6, 0]} intensity={120} distance={60} color="#ff2d95" />
         <FloatingCore />
         <Sparkles count={400} scale={[30, 24, 30]} size={2.2} speed={0.35} color="#ff2d95" />
-        <EffectBoundary fallback={null}>
-          <EffectComposer>
-            <Bloom mipmapBlur intensity={1.8} luminanceThreshold={0.1} luminanceSmoothing={0.9} />
-          </EffectComposer>
-        </EffectBoundary>
+        <ContextHealthGate>
+          <EffectBoundary fallback={null}>
+            <EffectComposer>
+              <Bloom mipmapBlur intensity={1.8} luminanceThreshold={0.1} luminanceSmoothing={0.9} />
+            </EffectComposer>
+          </EffectBoundary>
+        </ContextHealthGate>
         </Canvas>
       </Suspense>
 
