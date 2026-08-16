@@ -65,7 +65,18 @@ export default function ExplorePage() {
   return (
     <main className="relative h-screen w-screen overflow-hidden bg-[#0a0118]">
       <Suspense fallback={<div className="h-screen w-screen bg-[#0a0118]" />}>
-        <Canvas camera={{ position: [0, 3, 14], fov: 60, near: 0.1, far: 200 }} dpr={[1, 1]}>
+        <Canvas
+          camera={{ position: [0, 3, 14], fov: 60, near: 0.1, far: 200 }}
+          dpr={[1, 1]}
+          gl={{
+            antialias: false,
+            alpha: false,
+            stencil: false,
+            depth: true,
+            powerPreference: "default",
+            failIfMajorPerformanceCaveat: false,
+          }}
+        >
         <color attach="background" args={["#0a0118"]} />
         <ContextLossGuard />
         <ambientLight intensity={1.1} />
