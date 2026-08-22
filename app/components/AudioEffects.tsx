@@ -15,30 +15,28 @@ import {
 import { type BloomEffect, type ChromaticAberrationEffect } from "postprocessing";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 import { intensityBoost, useIntensity } from "../lib/intensityContext";
-import { useGameStore } from "../lib/gameStore";
+import { useAppStore, THEMES } from "../lib/appStore";
 
 export function AudioEffects() {
   const bloomRef = useRef<BloomEffect>(null);
   const chromaticRef = useRef<ChromaticAberrationEffect>(null);
-  const dofRef = useRef<any>(null);
   const { getFrequencies } = useAudioAnalyzer();
   const { mode } = useIntensity();
 
-  useFrame(() => {
+  useFrame((state) => {
     const [bass, mids] = getFrequencies();
     const boost = intensityBoost(mode);
-    const speed = useGameStore.getState().speedMultiplier;
-
-    useGameStore.getState().setAudioFrequencies([bass, mids, 0]);
+    const route = useAppStore.getState().currentRoute;
 
     if (bloomRef.current) {
-      bloomRef.current.intensity = (0.85 + bass * 0.9 + mids * 0.25) * boost;
+      const routeBoost = route === "/drive" ? 1.1 : 1.0;
+      bloomRef.current.intensity = (0.75 + bass * 0.55 + mids * 0.15) * boost * routeBoost;
     }
 
     if (chromaticRef.current) {
-      const baseOffset = 0.0004 + bass * 0.0007;
-      const speedOffset = speed > 1.5 ? (speed - 1.5) * 0.0003 : 0;
-      const offset = baseOffset + speedOffset;
+      const baseOffset = 0.0002 + bass * 0.0004;
+      const routeOffset = route === "/drive" ? 0.00015 : 0;
+      const offset = baseOffset + routeOffset;
       chromaticRef.current.offset.set(offset, offset);
     }
   });
@@ -46,22 +44,21 @@ export function AudioEffects() {
   return (
     <EffectComposer multisampling={0}>
       <DepthOfField
-        ref={dofRef}
         focusDistance={0.02}
-        focalLength={0.06}
-        bokehScale={2}
+        focalLength={0.05}
+        bokehScale={3}
         height={480}
       />
       <Bloom
         ref={bloomRef}
+        luminanceThreshold={0.75}
+        luminanceSmoothing={0.35}
+        intensity={0.9}
         mipmapBlur
-        intensity={0.85}
-        luminanceThreshold={0.2}
-        luminanceSmoothing={0.25}
       />
-      <Vignette eskil={false} offset={0.3} darkness={0.6} />
-      <Noise premultiply opacity={0.04} />
-      <ChromaticAberration ref={chromaticRef} offset={[0.0004, 0.0004]} />
+      <Vignette eskil={false} offset={0.25} darkness={0.55} />
+      <Noise premultiply opacity={0.025} />
+      <ChromaticAberration ref={chromaticRef} offset={[0.0002, 0.0002]} />
     </EffectComposer>
   );
 }
@@ -76,22 +73,33 @@ export function AudioLights() {
   useFrame(() => {
     const [bass, mids, highs] = getFrequencies();
     const boost = intensityBoost(mode);
+    const activeTheme = useAppStore.getState().activeTheme;
+    const theme = THEMES[activeTheme];
 
     const bassLight = bassLightRef.current;
     if (bassLight) {
       bassLight.intensity = (25 + bass * 180) * boost;
-      bassLight.color.setRGB(0.7 + bass * 0.2, 0.65 + bass * 0.2, 1.0);
+      bassLight.color.setRGB(
+        theme.primary[0] + bass * 0.2,
+        theme.primary[1] + bass * 0.2,
+        theme.primary[2],
+      );
     }
 
     const midLight = midLightRef.current;
     if (midLight) {
       midLight.intensity = (15 + mids * 100) * boost;
-      midLight.color.setRGB(0.55 + mids * 0.2, 0.85 + mids * 0.08, 0.95 + mids * 0.04);
+      midLight.color.setRGB(
+        theme.secondary[0] + mids * 0.2,
+        theme.secondary[1] + mids * 0.08,
+        theme.secondary[2] + mids * 0.04,
+      );
     }
 
     const rimLight = rimLightRef.current;
     if (rimLight) {
       rimLight.intensity = (0.9 + highs * 1.1) * boost;
+      rimLight.color.setRGB(theme.accent[0], theme.accent[1], theme.accent[2]);
     }
   });
 

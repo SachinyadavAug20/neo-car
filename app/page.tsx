@@ -1,96 +1,81 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import TilingWindow from "./components/TilingWindow";
-import { FlameWrap } from "./components/canvasui/FlameWrap";
+import { useAppStore } from "./lib/appStore";
 
 const TERMINAL_FONT =
   "var(--font-geist-mono), 'Fira Code', 'JetBrains Mono', monospace";
 
-const ASCII_LOGO = `
- ███╗   ██╗███████╗ ██████╗ ███╗   ██╗
- ████╗  ██║██╔════╝██╔═══██╗████╗  ██║
- ██╔██╗ ██║█████╗  ██║   ██║██╔██╗ ██║
- ██║╚██╗██║██╔══╝  ██║   ██║██║╚██╗██║
- ██║ ╚████║███████╗╚██████╔╝██║ ╚████║
- ╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚═╝  ╚═══╝
-`;
-
 export default function HomePage() {
-  return (
-    <div className="pointer-events-auto flex w-full max-w-5xl flex-col items-center gap-6">
-      <TilingWindow title="welcome.sh" className="w-full max-w-2xl">
-        <pre
-          className="mb-4 text-[10px] leading-tight text-[#8aadf4] sm:text-xs"
-          style={{ fontFamily: TERMINAL_FONT }}
-        >
-          {ASCII_LOGO}
-        </pre>
-        <p
-          className="mb-2 text-xs tracking-[0.2em] text-[#a5adcb]"
-          style={{ fontFamily: TERMINAL_FONT }}
-        >
-          AMBIENT VISUALIZER &amp; INTERACTIVE PORTFOLIO
-        </p>
-        <p
-          className="mb-4 text-[11px] leading-relaxed text-[#6c7086]"
-          style={{ fontFamily: TERMINAL_FONT }}
-        >
-          A persistent 3D world living behind your browser. Navigate with the
-          workspace bar above. Drive with WASD. Feel the bass.
-        </p>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/drive"
-            className="rounded border border-[#a6e3a1]/40 bg-[#a6e3a1]/10 px-3 py-1.5 text-[10px] font-bold tracking-[0.2em] text-[#a6e3a1] transition-all hover:bg-[#a6e3a1]/20"
-            style={{ fontFamily: TERMINAL_FONT }}
-          >
-            &gt; BOOT SYSTEM_
-          </Link>
-          <Link
-            href="/about"
-            className="rounded border border-[#8aadf4]/30 px-3 py-1.5 text-[10px] tracking-[0.2em] text-[#8aadf4] transition-all hover:bg-white/5"
-            style={{ fontFamily: TERMINAL_FONT }}
-          >
-            about.md
-          </Link>
-          <Link
-            href="/projects"
-            className="rounded border border-[#cba6f7]/30 px-3 py-1.5 text-[10px] tracking-[0.2em] text-[#cba6f7] transition-all hover:bg-white/5"
-            style={{ fontFamily: TERMINAL_FONT }}
-          >
-            ./projects
-          </Link>
-        </div>
-      </TilingWindow>
+  const [revealed, setRevealed] = useState(false);
+  const setRoute = useAppStore((s) => s.setRoute);
 
-      <TilingWindow title="sys_stats.sh" className="w-full max-w-sm self-end">
-        <div
-          className="space-y-1 text-[10px] tracking-[0.15em] text-[#6c7086]"
-          style={{ fontFamily: TERMINAL_FONT }}
+  useEffect(() => {
+    const t = setTimeout(() => setRevealed(true), 300);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    setRoute("/");
+  }, [setRoute]);
+
+  return (
+    <div
+      className="pointer-events-auto flex flex-col items-center justify-center gap-8"
+      style={{ fontFamily: TERMINAL_FONT }}
+    >
+      <div
+        className={`flex flex-col items-center gap-6 transition-all duration-1000 ${
+          revealed ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+        }`}
+      >
+        <h1 className="text-center text-5xl font-black tracking-[0.3em] text-[#b4befe] drop-shadow-[0_0_40px_rgba(180,190,254,0.3)] sm:text-7xl md:text-8xl">
+          ENTER
+          <br />
+          <span className="text-[#cba6f7]">THE VOID</span>
+        </h1>
+
+        <p className="max-w-md text-center text-xs leading-relaxed tracking-[0.2em] text-[#585b70]">
+          AN IMMERSIVE AUDIO-VISUAL DRIVING SYNTHESIZER.
+          <br />
+          REACTIVE SHADERS. INFINITE HIGHWAY. PURE SOUND.
+        </p>
+      </div>
+
+      <div
+        className={`flex flex-col items-center gap-6 transition-all duration-1000 delay-500 ${
+          revealed ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+        }`}
+      >
+        <Link
+          href="/drive"
+          onClick={() => setRoute("/drive")}
+          className="group relative rounded-lg border border-[#8aadf4]/30 px-10 py-4 text-sm tracking-[0.3em] text-[#8aadf4] transition-all hover:border-[#8aadf4]/60 hover:bg-[#8aadf4]/10 hover:text-white hover:shadow-[0_0_30px_rgba(138,173,244,0.2)]"
         >
-          <p>
-            <span className="text-[#a6e3a1]">OS</span>{" "}
-            <span className="text-[#a5adcb]">NeonDrive 3.0</span>
-          </p>
-          <p>
-            <span className="text-[#a6e3a1]">WM</span>{" "}
-            <span className="text-[#a5adcb]">Hyprland (Web)</span>
-          </p>
-          <p>
-            <span className="text-[#a6e3a1]">GPU</span>{" "}
-            <span className="text-[#a5adcb]">WebGL2 / R3F</span>
-          </p>
-          <p>
-            <span className="text-[#a6e3a1]">CPU</span>{" "}
-            <span className="text-[#a5adcb]">React 19 + Next.js 16</span>
-          </p>
-          <p>
-            <span className="text-[#a6e3a1]">AUDIO</span>{" "}
-            <span className="text-[#a5adcb]">Web Audio API + FFT</span>
-          </p>
+          <span className="relative z-10">START ENGINE</span>
+          <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-[#8aadf4]/0 via-[#8aadf4]/5 to-[#8aadf4]/0 opacity-0 transition-opacity group-hover:opacity-100" />
+        </Link>
+
+        <div className="flex items-center gap-6 text-[9px] tracking-[0.2em] text-[#585b70]">
+          <Link
+            href="/garage"
+            onClick={() => setRoute("/garage")}
+            className="transition-all hover:text-[#cba6f7]"
+          >
+            GARAGE
+          </Link>
+          <span className="text-[#313244]">|</span>
+          <a
+            href="https://github.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-all hover:text-[#8aadf4]"
+          >
+            GITHUB
+          </a>
         </div>
-      </TilingWindow>
+      </div>
     </div>
   );
 }

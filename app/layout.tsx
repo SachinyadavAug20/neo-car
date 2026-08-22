@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NEON_DRIVE — Interactive Portfolio",
+  title: "NEON_DRIVE — Ambient Visualizer",
   description:
-    "A Web OS-style interactive portfolio with a persistent 3D driving environment, audio-reactive visuals, and tiling window interface.",
+    "An immersive audio-visual driving synthesizer. Cinematic GLSL shaders, reactive environments, infinite highway.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

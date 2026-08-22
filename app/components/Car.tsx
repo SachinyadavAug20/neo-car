@@ -5,8 +5,8 @@ import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import EffectBoundary from "./EffectBoundary";
 
-const GLTF_PATH = "/models/auto_union_type_c_streamliner/scene.gltf";
-const TARGET_CAR_WIDTH = 2.4;
+const GLTF_PATH = "/models/free_concept_car_033/scene.glb";
+const TARGET_CAR_WIDTH = 2.0;
 
 function CarModel() {
   const { scene } = useGLTF(GLTF_PATH);
@@ -25,7 +25,7 @@ function CarModel() {
   }, [scene]);
 
   return (
-    <group ref={ref} rotation={[-Math.PI / 2, 0, 0]}>
+    <group ref={ref} rotation={[0, Math.PI, 0]}>
       <primitive object={scene} />
     </group>
   );

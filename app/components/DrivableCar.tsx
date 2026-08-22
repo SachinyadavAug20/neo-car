@@ -8,23 +8,22 @@ import { Trail } from "@react-three/drei";
 import { RigidBody, CuboidCollider, type RapierRigidBody } from "@react-three/rapier";
 import { registerCamera } from "../lib/cameraStore";
 import { setCarStatus, type CarStatus } from "../lib/carStateStore";
-import { useRouteStore, ROUTE_CONFIG, type RouteId } from "../lib/routeStore";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 import { useKeyboard } from "../hooks/useKeyboard";
+import { useAppStore } from "../lib/appStore";
 import Car from "./Car";
-import SpeedLines from "./SpeedLines";
 
 const CAR_FORWARD = new THREE.Vector3(0, 0, 1);
-const CAMERA_BEHIND = 35;
-const CAMERA_HEIGHT = 16;
-const CAMERA_LOOK_AHEAD = 15;
-const CAMERA_LOOK_HEIGHT = 3;
-const CAMERA_POS_SMOOTH = 0.08;
-const CAMERA_LOOK_SMOOTH = 0.06;
+const CAMERA_BEHIND = 18.0;
+const CAMERA_HEIGHT = 4.2;
+const CAMERA_LOOK_AHEAD = 120.0;
+const CAMERA_LOOK_HEIGHT = 1.2;
+const CAMERA_POS_SMOOTH = 0.18;
+const CAMERA_LOOK_SMOOTH = 0.18;
 const MAX_SPEED = 250;
 const MAX_SPEED_OFF = 222;
-const BASE_FOV = 50;
-const MAX_FOV = 90;
+const BASE_FOV = 55;
+const MAX_FOV = 82;
 const FOV_SMOOTH = 0.2;
 const BANK_SMOOTH_TIME = 0.15;
 const MAX_BANK = 0.4;
@@ -42,8 +41,8 @@ const WRAP_OFFSET = 4000;
 const LANE_BOUNDARY = 45;
 const OOB_TIMER_MAX = 3.0;
 
-const LEFT_TAIL_POSITION: [number, number, number] = [-1.2, 0.6, -2.8];
-const RIGHT_TAIL_POSITION: [number, number, number] = [1.2, 0.6, -2.8];
+const LEFT_TAIL_POSITION: [number, number, number] = [-1.4, 0.6, 2.8];
+const RIGHT_TAIL_POSITION: [number, number, number] = [1.4, 0.6, 2.8];
 const TRAIL_WIDTH = 0.4;
 const TRAIL_BASE_LENGTH = 5;
 const TRAIL_MAX_LENGTH = 18;
@@ -55,8 +54,8 @@ type TrailMaterial = THREE.ShaderMaterial & {
 };
 
 const IMPULSE: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 };
-const tmpOffset = new THREE.Vector3();
-const tmpLookTarget = new THREE.Vector3();
+const tmpCamera = new THREE.Vector3();
+const tmpLook = new THREE.Vector3();
 const tmpShake = new THREE.Vector3();
 const quadraticAtten = (t: number) => t * t;
 const CAR_STATUS: CarStatus = {
@@ -87,11 +86,6 @@ export default function DrivableCar() {
   const [oobTimer, setOobTimer] = useState(0);
 
   const tmpForward = useMemo(() => new THREE.Vector3(), []);
-  const tmpLook = useMemo(() => new THREE.Vector3(), []);
-  const routeOffset = useMemo(() => new THREE.Vector3(), []);
-  const routeLookOffset = useMemo(() => new THREE.Vector3(), []);
-  const routeTarget = useMemo(() => new THREE.Vector3(), []);
-  const routeLookTarget = useMemo(() => new THREE.Vector3(), []);
 
   useEffect(() => {
     const cam = introCamera as THREE.PerspectiveCamera;
@@ -105,6 +99,7 @@ export default function DrivableCar() {
     const camera = state.camera;
     if (!body) return;
 
+    const currentRoute = useAppStore.getState().currentRoute;
     const [bass, , highs] = getFrequencies();
     const pos = body.translation();
     const quat = body.rotation();
@@ -235,43 +230,23 @@ export default function DrivableCar() {
       rightMat.color.setHSL(0.62, 0.85, 0.55 + bass * 0.2);
     }
 
-    tmpShake
-      .set(pos.x, pos.y, pos.z)
-      .addScaledVector(tmpForward, -CAMERA_BEHIND)
-      .add(tmpOffset.set(0, CAMERA_HEIGHT, 0));
+    if (currentRoute === "/drive") {
+      tmpCamera.set(pos.x, pos.y + CAMERA_HEIGHT, pos.z + CAMERA_BEHIND);
 
-    const shake = bass * 0.25;
-    tmpShake.x += (Math.random() - 0.5) * shake;
-    tmpShake.y += (Math.random() - 0.5) * shake;
+      const shake = bass * 0.25;
+      tmpCamera.x += (Math.random() - 0.5) * shake;
+      tmpCamera.y += (Math.random() - 0.5) * shake;
 
-    const currentRoute = useRouteStore.getState().route;
-    const cfg = ROUTE_CONFIG[currentRoute];
-    routeTarget.set(...cfg.camPos);
-    routeLookTarget.set(...cfg.camLook);
-    routeOffset.lerp(routeTarget, 0.03);
-    routeLookOffset.lerp(routeLookTarget, 0.03);
+      easing.damp3(camera.position, tmpCamera, CAMERA_POS_SMOOTH, delta);
 
-    tmpShake.x += routeOffset.x - ROUTE_CONFIG.home.camPos[0];
-    tmpShake.y += routeOffset.y - ROUTE_CONFIG.home.camPos[1];
-    tmpShake.z += routeOffset.z - ROUTE_CONFIG.home.camPos[2];
+      tmpLook.set(pos.x, pos.y + CAMERA_LOOK_HEIGHT, pos.z - CAMERA_LOOK_AHEAD);
 
-    easing.damp3(camera.position, tmpShake, CAMERA_POS_SMOOTH, delta);
+      easing.dampLookAt(camera, tmpLook, CAMERA_LOOK_SMOOTH, delta);
 
-    tmpLook
-      .set(pos.x, pos.y + CAMERA_LOOK_HEIGHT, pos.z)
-      .addScaledVector(tmpForward, CAMERA_LOOK_AHEAD);
-
-    tmpLook.x += routeLookOffset.x - ROUTE_CONFIG.home.camLook[0];
-    tmpLook.y += routeLookOffset.y - ROUTE_CONFIG.home.camLook[1];
-    tmpLook.z += routeLookOffset.z - ROUTE_CONFIG.home.camLook[2];
-
-    easing.damp3(tmpLookTarget, tmpLook, CAMERA_LOOK_SMOOTH, delta);
-    camera.lookAt(tmpLookTarget);
-
-    const routeFov = cfg.fov;
-    const targetFov = routeFov + speedRatio * (MAX_FOV - routeFov);
-    easing.damp(camera, "fov", targetFov, FOV_SMOOTH, delta);
-    camera.updateProjectionMatrix();
+      const targetFov = BASE_FOV + speedRatio * (MAX_FOV - BASE_FOV);
+      easing.damp(camera, "fov", targetFov, FOV_SMOOTH, delta);
+      camera.updateProjectionMatrix();
+    }
   });
 
   return (
@@ -288,7 +263,7 @@ export default function DrivableCar() {
       ccd
       canSleep={false}
     >
-      <CuboidCollider args={[4, 1.5, 13]} position={[0, -0.5, 0]} />
+      <CuboidCollider args={[2.8, 1.2, 5.5]} position={[0, 0.8, 0]} />
 
       <group position={LEFT_TAIL_POSITION}>
         <Trail
@@ -320,8 +295,7 @@ export default function DrivableCar() {
         </Trail>
       </group>
 
-      <group ref={carGroupRef} position={[0, -0.5, 0]}>
-        <SpeedLines speedRatio={speedRatioRef.current} />
+      <group ref={carGroupRef} position={[0, 0.4, 0]}>
         <pointLight
           ref={carLightRef}
           position={[0, 5, 0]}
@@ -346,7 +320,9 @@ export default function DrivableCar() {
             depthWrite={false}
           />
         </mesh>
-        <Car />
+        <group scale={0.12}>
+          <Car />
+        </group>
       </group>
     </RigidBody>
   );

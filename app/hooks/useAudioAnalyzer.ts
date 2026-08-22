@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
+import { useAppStore } from "../lib/appStore";
 
 type PlayState = "playing" | "paused";
 type FrequencyTuple = [number, number, number];
@@ -64,15 +65,21 @@ class AudioEngine {
     const source = ctx.createMediaElementSource(audio);
     const analyser = ctx.createAnalyser();
     analyser.fftSize = FFT_SIZE;
-    analyser.smoothingTimeConstant = 0.8;
+    analyser.smoothingTimeConstant = 0.85;
 
     source.connect(analyser);
     analyser.connect(ctx.destination);
 
     this.freqData = new Uint8Array(analyser.frequencyBinCount);
 
-    audio.addEventListener("play", () => this.setState("playing"));
-    audio.addEventListener("pause", () => this.setState("paused"));
+    audio.addEventListener("play", () => {
+      this.setState("playing");
+      useAppStore.getState().setIsPlaying(true);
+    });
+    audio.addEventListener("pause", () => {
+      this.setState("paused");
+      useAppStore.getState().setIsPlaying(false);
+    });
     audio.addEventListener("ended", () => this.nextTrack());
     audio.addEventListener("loadedmetadata", () =>
       this.trackListeners.forEach((listener) =>
@@ -88,6 +95,7 @@ class AudioEngine {
   private setTrackIndex(next: number): void {
     if (this.currentTrackIndex === next) return;
     this.currentTrackIndex = next;
+    useAppStore.getState().setCurrentTrackIndex(next);
     this.trackListeners.forEach((listener) =>
       listener(TRACK_NAMES[this.currentTrackIndex]),
     );
@@ -105,12 +113,18 @@ class AudioEngine {
       this.result[0] = 0;
       this.result[1] = 0;
       this.result[2] = 0;
+      useAppStore.getState().setAudioData({ bass: 0, mids: 0, highs: 0 });
       return;
     }
     this.analyser.getByteFrequencyData(this.freqData);
     this.result[0] = this.average(this.freqData, BASS_BINS);
     this.result[1] = this.average(this.freqData, MIDS_BINS);
     this.result[2] = this.average(this.freqData, HIGHS_BINS);
+    useAppStore.getState().setAudioData({
+      bass: this.result[0],
+      mids: this.result[1],
+      highs: this.result[2],
+    });
   }
 
   play(): void {

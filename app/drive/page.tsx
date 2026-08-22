@@ -1,19 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import gsap from "gsap";
 import { subscribeCarStatus, type CarStatus } from "../lib/carStateStore";
+import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
+import { useAppStore } from "../lib/appStore";
 
 const TERMINAL_FONT =
   "var(--font-geist-mono), 'Fira Code', 'JetBrains Mono', monospace";
-
-function Key({ children }: { children: string }) {
-  return (
-    <span className="inline-block min-w-[1.5em] rounded border border-[#8aadf4]/40 bg-[#0b0f19] px-1 text-center text-[10px] text-[#cad3f5]">
-      {children}
-    </span>
-  );
-}
 
 export default function DrivePage() {
   const [car, setCar] = useState<CarStatus>({
@@ -24,6 +19,12 @@ export default function DrivePage() {
     oobTimer: 0,
   });
   const overlayRef = useRef<HTMLDivElement>(null);
+  const setRoute = useAppStore((s) => s.setRoute);
+  const { getTrackName } = useAudioAnalyzer();
+
+  useEffect(() => {
+    setRoute("/drive");
+  }, [setRoute]);
 
   useEffect(() => {
     const unsub = subscribeCarStatus(setCar);
@@ -36,7 +37,7 @@ export default function DrivePage() {
     gsap.fromTo(
       el,
       { opacity: 0 },
-      { opacity: 1, duration: 0.8, ease: "power2.out" },
+      { opacity: 1, duration: 1.2, ease: "power2.out" },
     );
   }, []);
 
@@ -45,7 +46,6 @@ export default function DrivePage() {
 
   return (
     <div ref={overlayRef} className="pointer-events-none fixed inset-0 z-20">
-      {/* OOB Warning */}
       {showWarning && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
           <div
@@ -68,7 +68,6 @@ export default function DrivePage() {
         </div>
       )}
 
-      {/* HUD overlay */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
         <div
           className="flex items-center gap-6 rounded-xl border border-white/10 bg-[#0b0f19]/70 px-6 py-3 backdrop-blur-md"
@@ -106,18 +105,24 @@ export default function DrivePage() {
         </div>
       </div>
 
-      {/* Controls hint */}
       <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
-        <div
-          className="flex items-center gap-3 text-[8px] tracking-[0.15em] text-[#6c7086]/60"
+        <p
+          className="text-[8px] tracking-[0.2em] text-[#585b70]/60"
           style={{ fontFamily: TERMINAL_FONT }}
         >
-          <Key>W</Key> THROTTLE
-          <Key>S</Key> BRAKE
-          <Key>A</Key><Key>D</Key> STEER
-          <span className="mx-1 text-[#6c7086]/30">|</span>
-          <Key>SPACE</Key> PLAY/PAUSE
-        </div>
+          {getTrackName()}
+        </p>
+      </div>
+
+      <div className="absolute top-4 right-4 pointer-events-auto">
+        <Link
+          href="/"
+          onClick={() => setRoute("/")}
+          className="rounded border border-white/10 px-3 py-1.5 text-[9px] tracking-[0.15em] text-[#585b70] transition-all hover:border-white/20 hover:text-white"
+          style={{ fontFamily: TERMINAL_FONT }}
+        >
+          EXIT
+        </Link>
       </div>
     </div>
   );

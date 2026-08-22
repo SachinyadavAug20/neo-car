@@ -54,7 +54,7 @@ export default function SpectrumRing() {
     };
   }, [geometry, material]);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const mesh = instancedMeshRef.current;
     const group = groupRef.current;
     if (!mesh || !group) return;
@@ -77,7 +77,7 @@ export default function SpectrumRing() {
         Math.sin(angle) * RING_RADIUS,
       );
       dummy.rotation.y = -angle;
-      easing.damp(dampers[i], "y", 1 + value * 8, DAMP_TIME, state.delta);
+      easing.damp(dampers[i], "y", 1 + value * 8, DAMP_TIME, delta);
       const height = dampers[i].y;
       dummy.scale.set(1, height, 1);
       dummy.updateMatrix();
