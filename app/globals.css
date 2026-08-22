@@ -1,33 +1,82 @@
 @import "tailwindcss";
 
-html,
-body {
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+@theme {
+  --color-cream: #FFF8F0;
+  --color-surface: #FFFFFF;
+  --color-coral: #FF6B6B;
+  --color-teal: #4ECDC4;
+  --color-yellow: #FFE66D;
+  --color-purple: #A78BFA;
+  --color-lime: #A3E635;
+  --color-ink: #2D3436;
+  --color-muted: #636E72;
+  --color-border: #DFE6E9;
+  --color-bg: #F7F3EE;
+}
+
+html, body {
   margin: 0;
   padding: 0;
-  background: #050505;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 ::selection {
-  background: rgba(138, 173, 244, 0.3);
-  color: #cdd6f4;
+  background: rgba(255, 107, 107, 0.25);
+  color: var(--color-ink);
 }
 
-::-webkit-scrollbar {
-  width: 4px;
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-muted); }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-2deg); }
+  50% { transform: rotate(2deg); }
 }
 
-::-webkit-scrollbar-thumb {
-  background: rgba(138, 173, 244, 0.2);
-  border-radius: 2px;
+@keyframes pop-in {
+  0% { transform: scale(0.8) rotate(-3deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(138, 173, 244, 0.4);
+@keyframes slide-up {
+  0% { transform: translateY(20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-wiggle { animation: wiggle 2s ease-in-out infinite; }
+.animate-pop-in { animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.animate-slide-up { animation: slide-up 0.5s ease-out both; }
+
+.note-shadow {
+  box-shadow:
+    2px 2px 0 rgba(0,0,0,0.06),
+    4px 4px 0 rgba(0,0,0,0.04),
+    0 8px 24px rgba(0,0,0,0.06);
+}
+
+.clip-shadow {
+  filter: drop-shadow(2px 3px 4px rgba(0,0,0,0.12));
+}
+
+.paper-edge {
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 31px,
+      var(--color-border) 31px,
+      var(--color-border) 32px
+    );
+  background-position: 0 8px;
 }
