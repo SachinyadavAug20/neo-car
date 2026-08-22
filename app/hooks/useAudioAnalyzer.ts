@@ -166,10 +166,21 @@ class AudioEngine {
     return this.state;
   }
 
+  getTrackName(): string {
+    return TRACK_NAMES[this.currentTrackIndex];
+  }
+
   subscribe(listener: StateListener): () => void {
     this.listeners.add(listener);
     return () => {
       this.listeners.delete(listener);
+    };
+  }
+
+  subscribeTrack(listener: TrackListener): () => void {
+    this.trackListeners.add(listener);
+    return () => {
+      this.trackListeners.delete(listener);
     };
   }
 }
@@ -188,6 +199,8 @@ export interface AudioAnalyzerApi {
   getSpectrum: () => Uint8Array<ArrayBuffer>;
   getState: () => PlayState;
   subscribe: (listener: StateListener) => () => void;
+  getTrackName: () => string;
+  subscribeTrack: (listener: TrackListener) => () => void;
   nextTrack: () => void;
   prevTrack: () => void;
   getProgress: () => number;
@@ -213,6 +226,15 @@ export function useAudioAnalyzer(): AudioAnalyzerApi {
     getState: useCallback(() => engine?.getState() ?? "paused", [engine]),
     subscribe: useCallback(
       (listener: StateListener) => engine?.subscribe(listener) ?? (() => undefined),
+      [engine],
+    ),
+    getTrackName: useCallback(
+      () => engine?.getTrackName() ?? TRACK_NAMES[0],
+      [engine],
+    ),
+    subscribeTrack: useCallback(
+      (listener: TrackListener) =>
+        engine?.subscribeTrack(listener) ?? (() => undefined),
       [engine],
     ),
     nextTrack: useCallback(() => engine?.nextTrack(), [engine]),

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 import { subscribeCarStatus, type CarStatus } from "../lib/carStateStore";
 import { useIntensity } from "../lib/intensityContext";
@@ -16,10 +17,20 @@ function Key({ children }: { children: ReactNode }) {
 }
 
 export default function MusicControls() {
-  const { play, pause, getState, subscribe, nextTrack, prevTrack, getProgress } =
-    useAudioAnalyzer();
+  const {
+    play,
+    pause,
+    getState,
+    subscribe,
+    subscribeTrack,
+    getTrackName,
+    nextTrack,
+    prevTrack,
+    getProgress,
+  } = useAudioAnalyzer();
   const { mode, setMode } = useIntensity();
   const [playState, setPlayState] = useState<"playing" | "paused">("paused");
+  const [trackName, setTrackName] = useState("Retro Electronic");
   const [progress, setProgress] = useState(0);
   const [visible, setVisible] = useState(true);
   const [started, setStarted] = useState(
@@ -39,6 +50,11 @@ export default function MusicControls() {
   const flashTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => subscribe(setPlayState), [subscribe]);
+
+  useEffect(() => {
+    setTrackName(getTrackName());
+    return subscribeTrack(setTrackName);
+  }, [subscribeTrack, getTrackName]);
 
   useEffect(() => subscribeCarStatus(setCar), []);
 
@@ -167,7 +183,10 @@ export default function MusicControls() {
           <p className="text-[10px] tracking-[0.2em] text-[#a5adcb]">AMBIENT VISUALIZER</p>
         </div>
 
-        <div className="pointer-events-auto text-right" title="car status">
+        <div
+          className="pointer-events-auto rounded-xl border border-white/10 bg-white/5 p-3 text-right shadow-[0_4px_30px_rgba(0,0,0,0.1)] backdrop-blur-md"
+          title="car status"
+        >
           <div className="flex items-center justify-end gap-2">
             <span
               className={`rounded border px-1.5 py-0.5 text-xs font-bold ${
@@ -191,7 +210,7 @@ export default function MusicControls() {
             </span>
             <span className="text-[10px] tracking-[0.25em] text-[#6c7086]">KM/H</span>
           </div>
-          <div className="ml-auto mt-1 h-1.5 w-44 overflow-hidden rounded border border-[#8aadf4]/30 bg-[#1e2030]">
+          <div className="ml-auto mt-1 h-1.5 w-44 overflow-hidden rounded border border-white/10 bg-white/5">
             <div
               className={`h-full transition-all duration-100 ${
                 car.kmh > 700 ? "bg-[#f38ba8]" : "bg-[#b4befe]"
@@ -234,47 +253,63 @@ export default function MusicControls() {
           </p>
         </div>
 
-        <div className="pointer-events-auto flex flex-col items-center gap-3">
-          <p className="text-xs tracking-[0.15em] text-[#cba6f7]">Retro Electronic</p>
+        <div className="pointer-events-auto flex w-72 flex-col items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-4 shadow-[0_4px_30px_rgba(0,0,0,0.1)] backdrop-blur-md">
+          <p
+            className="text-xs tracking-[0.15em] text-[#cba6f7]"
+            style={{ textShadow: "0 0 12px rgba(203,166,247,0.75)" }}
+          >
+            {trackName}
+          </p>
 
-          <div className="h-1 w-64 overflow-hidden rounded border border-[#8aadf4]/40 bg-[#1e2030]">
+          <div className="h-0.5 w-full overflow-hidden rounded-full bg-white/10">
             <div
-              className="h-full bg-[#b4befe] transition-all duration-100"
+              className="h-full rounded-full bg-gradient-to-r from-[#89b4fa] to-[#cba6f7]"
               style={{ width: `${progress}%` }}
             />
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <button
+              type="button"
+              aria-label="Previous track"
               onClick={() => {
                 prevTrack();
                 flashNow();
               }}
-              className="rounded border border-[#8aadf4]/30 px-3 py-1 text-[#cad3f5]/60 transition hover:border-[#8aadf4] hover:text-[#cad3f5]"
+              className="rounded-lg p-2 text-[#cad3f5]/60 transition-all hover:bg-white/10 hover:text-white active:scale-95"
             >
-              &lt;&lt;
+              <SkipBack size={16} />
             </button>
             <button
+              type="button"
+              aria-label={playState === "playing" ? "Pause" : "Play"}
               onClick={togglePlay}
-              className="rounded border border-[#8aadf4]/60 bg-[#1e2030] px-6 py-2 font-bold text-[#cad3f5] shadow-[0_0_14px_rgba(138,173,244,0.3)] transition hover:bg-[#8aadf4] hover:text-[#1e2030] active:scale-95"
+              className="rounded-lg border border-white/10 bg-white/10 p-3 text-[#cad3f5] shadow-[0_0_14px_rgba(138,173,244,0.25)] transition-all hover:bg-white/20 hover:text-white active:scale-95"
             >
-              {playState === "playing" ? "[ PAUSE ]" : "[ PLAY ]"}
+              {playState === "playing" ? (
+                <Pause size={18} />
+              ) : (
+                <Play size={18} className="translate-x-[1px]" />
+              )}
             </button>
             <button
+              type="button"
+              aria-label="Next track"
               onClick={() => {
                 nextTrack();
                 flashNow();
               }}
-              className="rounded border border-[#8aadf4]/30 px-3 py-1 text-[#cad3f5]/60 transition hover:border-[#8aadf4] hover:text-[#cad3f5]"
+              className="rounded-lg p-2 text-[#cad3f5]/60 transition-all hover:bg-white/10 hover:text-white active:scale-95"
             >
-              &gt;&gt;
+              <SkipForward size={16} />
             </button>
           </div>
 
-          <div className="mt-1 flex items-center gap-4 text-[10px] tracking-[0.2em] text-[#6c7086]">
+          <div className="mt-1 flex items-center gap-4 text-[10px] tracking-[0.2em] text-[#a5adcb]">
             <button
+              type="button"
               onClick={() => setMode(mode === "chill" ? "intense" : "chill")}
-              className="rounded border border-[#8aadf4]/30 px-2 py-0.5 transition hover:border-[#8aadf4] hover:text-[#cad3f5]"
+              className="rounded-lg px-2 py-1 transition-all hover:bg-white/10 hover:text-white"
             >
               INTENSITY: {mode === "chill" ? "CHILL" : "INTENSE"}
             </button>

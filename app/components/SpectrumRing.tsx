@@ -3,11 +3,13 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
+import { easing } from "maath";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 
 const BAR_COUNT = 64;
 const RING_RADIUS = 22;
 const RING_HEIGHT = 20;
+const DAMP_TIME = 0.15;
 
 const dummy = new THREE.Object3D();
 
@@ -15,6 +17,11 @@ export default function SpectrumRing() {
   const groupRef = useRef<THREE.Group>(null);
   const instancedMeshRef = useRef<THREE.InstancedMesh>(null);
   const { getSpectrum } = useAudioAnalyzer();
+
+  const dampers = useMemo(
+    () => Array.from({ length: BAR_COUNT }, () => ({ y: 1 })),
+    [],
+  );
 
   const geometry = useMemo(() => new THREE.BoxGeometry(0.5, 1, 0.5), []);
   const material = useMemo(
@@ -70,7 +77,9 @@ export default function SpectrumRing() {
         Math.sin(angle) * RING_RADIUS,
       );
       dummy.rotation.y = -angle;
-      dummy.scale.set(1, 1 + value * 8, 1);
+      easing.damp(dampers[i], "y", 1 + value * 8, DAMP_TIME, state.delta);
+      const height = dampers[i].y;
+      dummy.scale.set(1, height, 1);
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
     }
