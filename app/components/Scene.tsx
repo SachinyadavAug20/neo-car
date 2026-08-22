@@ -3,7 +3,9 @@
 import { Physics } from "@react-three/rapier";
 import DrivableCar from "./DrivableCar";
 import ProceduralTerrain from "./ProceduralTerrain";
-import RetroSun from "./RetroSun";
+import MinimalHorizon from "./MinimalHorizon";
+import Scenery from "./Scenery";
+import PortfolioContent from "./PortfolioContent";
 import EnvironmentProps from "./EnvironmentProps";
 import GridFloor from "./GridFloor";
 import SpectrumRing from "./SpectrumRing";
@@ -24,9 +26,10 @@ export default function Scene() {
 
       <AudioStars />
 
-      <RetroSun />
+      <MinimalHorizon />
 
-      <EnvironmentProps />
+      <Scenery />
+      <PortfolioContent />
 
       <ambientLight intensity={1.2} color="#9ab6ff" />
       <hemisphereLight intensity={0.75} color="#7dc4e4" groundColor="#cba6f7" />

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import LayoutClient from "./LayoutClient";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,17 +14,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NEON_DRIVE — Ambient Visualizer",
-  description: "A calming 3D audio-reactive music visualizer built with React Three Fiber",
+  title: "NEON_DRIVE — Interactive Portfolio",
+  description:
+    "A Web OS-style interactive portfolio with a persistent 3D driving environment, audio-reactive visuals, and tiling window interface.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body>
+        <LayoutClient>{children}</LayoutClient>
+      </body>
     </html>
   );
 }

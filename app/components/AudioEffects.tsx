@@ -10,33 +10,48 @@ import {
   Vignette,
   Noise,
   ChromaticAberration,
+  DepthOfField,
 } from "@react-three/postprocessing";
 import { type BloomEffect, type ChromaticAberrationEffect } from "postprocessing";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 import { intensityBoost, useIntensity } from "../lib/intensityContext";
+import { useGameStore } from "../lib/gameStore";
 
 export function AudioEffects() {
   const bloomRef = useRef<BloomEffect>(null);
   const chromaticRef = useRef<ChromaticAberrationEffect>(null);
+  const dofRef = useRef<any>(null);
   const { getFrequencies } = useAudioAnalyzer();
   const { mode } = useIntensity();
 
   useFrame(() => {
     const [bass, mids] = getFrequencies();
     const boost = intensityBoost(mode);
+    const speed = useGameStore.getState().speedMultiplier;
+
+    useGameStore.getState().setAudioFrequencies([bass, mids, 0]);
 
     if (bloomRef.current) {
       bloomRef.current.intensity = (0.85 + bass * 0.9 + mids * 0.25) * boost;
     }
 
     if (chromaticRef.current) {
-      const offset = 0.0004 + bass * 0.0007;
+      const baseOffset = 0.0004 + bass * 0.0007;
+      const speedOffset = speed > 1.5 ? (speed - 1.5) * 0.0003 : 0;
+      const offset = baseOffset + speedOffset;
       chromaticRef.current.offset.set(offset, offset);
     }
   });
 
   return (
     <EffectComposer multisampling={0}>
+      <DepthOfField
+        ref={dofRef}
+        focusDistance={0.02}
+        focalLength={0.06}
+        bokehScale={2}
+        height={480}
+      />
       <Bloom
         ref={bloomRef}
         mipmapBlur
@@ -44,8 +59,8 @@ export function AudioEffects() {
         luminanceThreshold={0.2}
         luminanceSmoothing={0.25}
       />
-      <Vignette eskil={false} offset={0.3} darkness={0.55} />
-      <Noise premultiply opacity={0.035} />
+      <Vignette eskil={false} offset={0.3} darkness={0.6} />
+      <Noise premultiply opacity={0.04} />
       <ChromaticAberration ref={chromaticRef} offset={[0.0004, 0.0004]} />
     </EffectComposer>
   );

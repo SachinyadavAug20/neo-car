@@ -5,6 +5,7 @@ export interface CarStatus {
   gear: "D" | "R";
   onRoad: boolean;
   throttle: boolean;
+  oobTimer: number;
 }
 
 type StatusListener = (status: CarStatus) => void;
@@ -14,6 +15,7 @@ const IDLE_STATUS: CarStatus = {
   gear: "D",
   onRoad: true,
   throttle: false,
+  oobTimer: 0,
 };
 
 let status: CarStatus = IDLE_STATUS;
@@ -24,7 +26,8 @@ export function setCarStatus(next: CarStatus): void {
     Math.round(next.kmh) !== Math.round(status.kmh) ||
     next.gear !== status.gear ||
     next.onRoad !== status.onRoad ||
-    next.throttle !== status.throttle;
+    next.throttle !== status.throttle ||
+    Math.abs(next.oobTimer - status.oobTimer) > 0.1;
   if (!changed) return;
   status = { ...next, kmh: Math.round(next.kmh) };
   listeners.forEach((listener) => listener(status));

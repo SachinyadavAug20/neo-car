@@ -8,25 +8,27 @@ import { Trail } from "@react-three/drei";
 import { RigidBody, CuboidCollider, type RapierRigidBody } from "@react-three/rapier";
 import { registerCamera } from "../lib/cameraStore";
 import { setCarStatus, type CarStatus } from "../lib/carStateStore";
+import { useRouteStore, ROUTE_CONFIG, type RouteId } from "../lib/routeStore";
 import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
 import { useKeyboard } from "../hooks/useKeyboard";
 import Car from "./Car";
+import SpeedLines from "./SpeedLines";
 
 const CAR_FORWARD = new THREE.Vector3(0, 0, 1);
-const CAMERA_BEHIND = 28;
-const CAMERA_HEIGHT = 12;
+const CAMERA_BEHIND = 35;
+const CAMERA_HEIGHT = 16;
 const CAMERA_LOOK_AHEAD = 15;
 const CAMERA_LOOK_HEIGHT = 3;
 const CAMERA_POS_SMOOTH = 0.08;
 const CAMERA_LOOK_SMOOTH = 0.06;
 const MAX_SPEED = 250;
 const MAX_SPEED_OFF = 222;
-const BASE_FOV = 55;
-const MAX_FOV = 70;
+const BASE_FOV = 50;
+const MAX_FOV = 90;
 const FOV_SMOOTH = 0.2;
 const BANK_SMOOTH_TIME = 0.15;
 const MAX_BANK = 0.4;
-const INITIAL_CAM_POS: [number, number, number] = [0, 18, -30];
+const INITIAL_CAM_POS: [number, number, number] = [0, 22, -38];
 
 const THROTTLE_SPEED = 250;
 const REVERSE_SPEED = -10;
@@ -37,9 +39,11 @@ const STEER_RATE = 2.2;
 const BANK_GAIN = 0.5;
 const WRAP_TRIGGER = 5000;
 const WRAP_OFFSET = 4000;
+const LANE_BOUNDARY = 45;
+const OOB_TIMER_MAX = 3.0;
 
-const LEFT_TAIL_POSITION: [number, number, number] = [-0.8, 0.5, -2];
-const RIGHT_TAIL_POSITION: [number, number, number] = [0.8, 0.5, -2];
+const LEFT_TAIL_POSITION: [number, number, number] = [-1.2, 0.6, -2.8];
+const RIGHT_TAIL_POSITION: [number, number, number] = [1.2, 0.6, -2.8];
 const TRAIL_WIDTH = 0.4;
 const TRAIL_BASE_LENGTH = 5;
 const TRAIL_MAX_LENGTH = 18;
@@ -60,6 +64,7 @@ const CAR_STATUS: CarStatus = {
   gear: "D",
   onRoad: true,
   throttle: false,
+  oobTimer: 0,
 };
 
 export default function DrivableCar() {
@@ -76,10 +81,17 @@ export default function DrivableCar() {
 
   const lastTrailLengthRef = useRef(TRAIL_BASE_LENGTH);
   const frameCountRef = useRef(0);
+  const oobTimerRef = useRef(0);
+  const speedRatioRef = useRef(0);
   const [trailLength, setTrailLength] = useState(TRAIL_BASE_LENGTH);
+  const [oobTimer, setOobTimer] = useState(0);
 
   const tmpForward = useMemo(() => new THREE.Vector3(), []);
   const tmpLook = useMemo(() => new THREE.Vector3(), []);
+  const routeOffset = useMemo(() => new THREE.Vector3(), []);
+  const routeLookOffset = useMemo(() => new THREE.Vector3(), []);
+  const routeTarget = useMemo(() => new THREE.Vector3(), []);
+  const routeLookTarget = useMemo(() => new THREE.Vector3(), []);
 
   useEffect(() => {
     const cam = introCamera as THREE.PerspectiveCamera;
@@ -124,6 +136,7 @@ export default function DrivableCar() {
       speed = maxSpeed;
     }
     const speedRatio = Math.min(1, speed / MAX_SPEED);
+    speedRatioRef.current = speedRatio;
 
     const angvel = body.angvel();
     const steerPower = -steer * STEER_RATE * (0.2 + speedRatio * 0.8);
@@ -136,10 +149,28 @@ export default function DrivableCar() {
         : "D";
     CAR_STATUS.onRoad = onRoad;
     CAR_STATUS.throttle = throttle;
+    CAR_STATUS.oobTimer = oobTimerRef.current;
     setCarStatus(CAR_STATUS);
 
     if (pos.z > WRAP_TRIGGER) {
       body.setTranslation({ x: pos.x, y: pos.y, z: pos.z - WRAP_OFFSET }, true);
+    }
+
+    const outOfLane = Math.abs(pos.x) > LANE_BOUNDARY;
+    if (outOfLane) {
+      oobTimerRef.current = Math.min(oobTimerRef.current + delta, OOB_TIMER_MAX);
+    } else {
+      oobTimerRef.current = Math.max(oobTimerRef.current - delta * 2, 0);
+    }
+    if (frameCountRef.current % 6 === 0) {
+      setOobTimer(oobTimerRef.current);
+    }
+    if (oobTimerRef.current >= OOB_TIMER_MAX) {
+      body.setTranslation({ x: 0, y: 15, z: pos.z }, true);
+      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+      oobTimerRef.current = 0;
+      setOobTimer(0);
     }
 
     const carGroup = carGroupRef.current;
@@ -213,16 +244,32 @@ export default function DrivableCar() {
     tmpShake.x += (Math.random() - 0.5) * shake;
     tmpShake.y += (Math.random() - 0.5) * shake;
 
+    const currentRoute = useRouteStore.getState().route;
+    const cfg = ROUTE_CONFIG[currentRoute];
+    routeTarget.set(...cfg.camPos);
+    routeLookTarget.set(...cfg.camLook);
+    routeOffset.lerp(routeTarget, 0.03);
+    routeLookOffset.lerp(routeLookTarget, 0.03);
+
+    tmpShake.x += routeOffset.x - ROUTE_CONFIG.home.camPos[0];
+    tmpShake.y += routeOffset.y - ROUTE_CONFIG.home.camPos[1];
+    tmpShake.z += routeOffset.z - ROUTE_CONFIG.home.camPos[2];
+
     easing.damp3(camera.position, tmpShake, CAMERA_POS_SMOOTH, delta);
 
     tmpLook
       .set(pos.x, pos.y + CAMERA_LOOK_HEIGHT, pos.z)
       .addScaledVector(tmpForward, CAMERA_LOOK_AHEAD);
 
+    tmpLook.x += routeLookOffset.x - ROUTE_CONFIG.home.camLook[0];
+    tmpLook.y += routeLookOffset.y - ROUTE_CONFIG.home.camLook[1];
+    tmpLook.z += routeLookOffset.z - ROUTE_CONFIG.home.camLook[2];
+
     easing.damp3(tmpLookTarget, tmpLook, CAMERA_LOOK_SMOOTH, delta);
     camera.lookAt(tmpLookTarget);
 
-    const targetFov = BASE_FOV + speedRatio * (MAX_FOV - BASE_FOV);
+    const routeFov = cfg.fov;
+    const targetFov = routeFov + speedRatio * (MAX_FOV - routeFov);
     easing.damp(camera, "fov", targetFov, FOV_SMOOTH, delta);
     camera.updateProjectionMatrix();
   });
@@ -241,7 +288,7 @@ export default function DrivableCar() {
       ccd
       canSleep={false}
     >
-      <CuboidCollider args={[4, 1, 9]} position={[0, -0.5, 0]} />
+      <CuboidCollider args={[4, 1.5, 13]} position={[0, -0.5, 0]} />
 
       <group position={LEFT_TAIL_POSITION}>
         <Trail
@@ -274,6 +321,7 @@ export default function DrivableCar() {
       </group>
 
       <group ref={carGroupRef} position={[0, -0.5, 0]}>
+        <SpeedLines speedRatio={speedRatioRef.current} />
         <pointLight
           ref={carLightRef}
           position={[0, 5, 0]}
@@ -288,7 +336,7 @@ export default function DrivableCar() {
           distance={9}
           color="#6aa9ff"
         />
-        <mesh ref={exhaustRef} position={[0, 0.8, -2.6]} rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh ref={exhaustRef} position={[0, 0.8, -3.8]} rotation={[-Math.PI / 2, 0, 0]}>
           <coneGeometry args={[0.55, 1.6, 12]} />
           <meshBasicMaterial
             color="#8ad6ff"
