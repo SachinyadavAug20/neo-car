@@ -180,9 +180,9 @@ export default function MusicControls() {
             </span>
             <span
               className={`text-3xl font-bold tabular-nums tracking-[0.1em] drop-shadow-[0_0_12px_rgba(138,173,244,0.45)] ${
-                car.kmh > 70
+                car.kmh > 700
                   ? "text-[#f38ba8]"
-                  : car.kmh > 40
+                  : car.kmh > 350
                     ? "text-[#f9e2af]"
                     : "text-[#b4befe]"
               }`}
@@ -194,9 +194,9 @@ export default function MusicControls() {
           <div className="ml-auto mt-1 h-1.5 w-44 overflow-hidden rounded border border-[#8aadf4]/30 bg-[#1e2030]">
             <div
               className={`h-full transition-all duration-100 ${
-                car.kmh > 70 ? "bg-[#f38ba8]" : "bg-[#b4befe]"
+                car.kmh > 700 ? "bg-[#f38ba8]" : "bg-[#b4befe]"
               }`}
-              style={{ width: `${Math.min(100, (car.kmh / 250) * 100)}%` }}
+              style={{ width: `${Math.min(100, (car.kmh / 900) * 100)}%` }}
             />
           </div>
           <p

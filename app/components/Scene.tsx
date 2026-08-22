@@ -6,9 +6,10 @@ import ProceduralTerrain from "./ProceduralTerrain";
 import RetroSun from "./RetroSun";
 import EnvironmentProps from "./EnvironmentProps";
 import GridFloor from "./GridFloor";
-import FloatingParticles from "./FloatingParticles";
 import SpectrumRing from "./SpectrumRing";
 import Road from "./Road";
+import StreetLights from "./StreetLights";
+import GradientSky from "./GradientSky";
 import {
   AudioEffects,
   AudioLights,
@@ -32,13 +33,14 @@ export default function Scene() {
       <AudioLights />
 
       <GridFloor />
-      <FloatingParticles />
       <SpectrumRing />
+      <GradientSky />
 
       <Physics gravity={[0, 0, 0]}>
         <DrivableCar />
       </Physics>
       <Road />
+      <StreetLights />
       <ProceduralTerrain />
 
       <AudioEffects />

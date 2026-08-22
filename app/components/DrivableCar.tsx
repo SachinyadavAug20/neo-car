@@ -19,7 +19,8 @@ const CAMERA_LOOK_AHEAD = 15;
 const CAMERA_LOOK_HEIGHT = 3;
 const CAMERA_POS_SMOOTH = 0.08;
 const CAMERA_LOOK_SMOOTH = 0.06;
-const MAX_SPEED = 42;
+const MAX_SPEED = 250;
+const MAX_SPEED_OFF = 222;
 const BASE_FOV = 55;
 const MAX_FOV = 70;
 const FOV_SMOOTH = 0.2;
@@ -27,9 +28,9 @@ const BANK_SMOOTH_TIME = 0.15;
 const MAX_BANK = 0.4;
 const INITIAL_CAM_POS: [number, number, number] = [0, 18, -30];
 
-const THROTTLE_SPEED = 40;
+const THROTTLE_SPEED = 250;
 const REVERSE_SPEED = -10;
-const OFF_ROAD_FACTOR = 0.45;
+const OFF_ROAD_FACTOR = 0.9;
 const ROAD_HALF_WIDTH = 11;
 
 const STEER_RATE = 2.2;
@@ -39,11 +40,15 @@ const WRAP_OFFSET = 4000;
 
 const LEFT_TAIL_POSITION: [number, number, number] = [-0.8, 0.5, -2];
 const RIGHT_TAIL_POSITION: [number, number, number] = [0.8, 0.5, -2];
-const TRAIL_WIDTH = 0.2;
-const TRAIL_BASE_LENGTH = 2;
-const TRAIL_MAX_LENGTH = 8;
+const TRAIL_WIDTH = 0.4;
+const TRAIL_BASE_LENGTH = 5;
+const TRAIL_MAX_LENGTH = 18;
 
-type TrailMaterial = THREE.ShaderMaterial & { lineWidth: number; opacity: number };
+type TrailMaterial = THREE.ShaderMaterial & {
+  lineWidth: number;
+  opacity: number;
+  color: THREE.Color;
+};
 
 const IMPULSE: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 };
 const tmpOffset = new THREE.Vector3();
@@ -112,10 +117,11 @@ export default function DrivableCar() {
 
     const linvel = body.linvel();
     let speed = Math.hypot(linvel.x, linvel.y, linvel.z);
-    if (speed > MAX_SPEED) {
-      const k = MAX_SPEED / speed;
+    const maxSpeed = onRoad ? MAX_SPEED : MAX_SPEED_OFF;
+    if (speed > maxSpeed) {
+      const k = maxSpeed / speed;
       body.setLinvel({ x: linvel.x * k, y: linvel.y * k, z: linvel.z * k }, true);
-      speed = MAX_SPEED;
+      speed = maxSpeed;
     }
     const speedRatio = Math.min(1, speed / MAX_SPEED);
 
@@ -186,11 +192,17 @@ export default function DrivableCar() {
       setTrailLength(desiredLength);
     }
 
-    const lineWidth = 0.1 * TRAIL_WIDTH * (0.5 + speedRatio * 0.8 + highs * 0.6);
+    const lineWidth = 0.1 * TRAIL_WIDTH * (0.4 + speedRatio * 1.0 + highs * 0.8);
     const leftMat = leftTrailRef.current?.material as TrailMaterial | undefined;
-    if (leftMat) leftMat.lineWidth = lineWidth;
+    if (leftMat) {
+      leftMat.lineWidth = lineWidth;
+      leftMat.color.setHSL(0.62, 0.85, 0.55 + bass * 0.2);
+    }
     const rightMat = rightTrailRef.current?.material as TrailMaterial | undefined;
-    if (rightMat) rightMat.lineWidth = lineWidth;
+    if (rightMat) {
+      rightMat.lineWidth = lineWidth;
+      rightMat.color.setHSL(0.62, 0.85, 0.55 + bass * 0.2);
+    }
 
     tmpShake
       .set(pos.x, pos.y, pos.z)
@@ -263,11 +275,29 @@ export default function DrivableCar() {
 
       <group ref={carGroupRef} position={[0, -0.5, 0]}>
         <pointLight
+          ref={carLightRef}
           position={[0, 5, 0]}
           intensity={40}
           distance={50}
           color="#e8f0ff"
         />
+        <pointLight
+          ref={underglowRef}
+          position={[0, -1.6, 0]}
+          intensity={3}
+          distance={9}
+          color="#6aa9ff"
+        />
+        <mesh ref={exhaustRef} position={[0, 0.8, -2.6]} rotation={[-Math.PI / 2, 0, 0]}>
+          <coneGeometry args={[0.55, 1.6, 12]} />
+          <meshBasicMaterial
+            color="#8ad6ff"
+            transparent
+            opacity={0.4}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+          />
+        </mesh>
         <Car />
       </group>
     </RigidBody>

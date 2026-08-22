@@ -5,11 +5,18 @@ import { useCallback, useMemo } from "react";
 type PlayState = "playing" | "paused";
 type FrequencyTuple = [number, number, number];
 type StateListener = (state: PlayState) => void;
+type TrackListener = (trackName: string) => void;
 
 const PLAYLIST: readonly string[] = [
   "/audio/alexgrohl-retro-electronic-535019.mp3",
   "/audio/deltax-music-vice-city-vibes-grand-theft-auto-style-soundtrack-301060.mp3",
   "/audio/everything01unique-gta-vi-theme-music-174952.mp3",
+];
+
+const TRACK_NAMES: readonly string[] = [
+  "Retro Electronic",
+  "Vice City Vibes",
+  "GTA VI Theme",
 ];
 const FFT_SIZE = 512;
 const MAX_BYTE = 255;
@@ -31,6 +38,7 @@ class AudioEngine {
   private state: PlayState = "paused";
   private currentTrackIndex = 0;
   private readonly listeners = new Set<StateListener>();
+  private readonly trackListeners = new Set<TrackListener>();
   private lastFrameId = -1;
 
   private average(data: Uint8Array, [start, end]: readonly [number, number]): number {
@@ -49,7 +57,6 @@ class AudioEngine {
     if (this.ctx) return;
 
     const audio = new Audio(PLAYLIST[this.currentTrackIndex]);
-    audio.loop = true;
     audio.preload = "auto";
     audio.crossOrigin = "anonymous";
 
@@ -66,11 +73,24 @@ class AudioEngine {
 
     audio.addEventListener("play", () => this.setState("playing"));
     audio.addEventListener("pause", () => this.setState("paused"));
-    audio.addEventListener("ended", () => this.setState("paused"));
+    audio.addEventListener("ended", () => this.nextTrack());
+    audio.addEventListener("loadedmetadata", () =>
+      this.trackListeners.forEach((listener) =>
+        listener(TRACK_NAMES[this.currentTrackIndex]),
+      ),
+    );
 
     this.audio = audio;
     this.ctx = ctx;
     this.analyser = analyser;
+  }
+
+  private setTrackIndex(next: number): void {
+    if (this.currentTrackIndex === next) return;
+    this.currentTrackIndex = next;
+    this.trackListeners.forEach((listener) =>
+      listener(TRACK_NAMES[this.currentTrackIndex]),
+    );
   }
 
   private playTrack(): void {
@@ -105,14 +125,15 @@ class AudioEngine {
 
   nextTrack(): void {
     this.ensure();
-    this.currentTrackIndex = (this.currentTrackIndex + 1) % PLAYLIST.length;
+    this.setTrackIndex((this.currentTrackIndex + 1) % PLAYLIST.length);
     this.playTrack();
   }
 
   prevTrack(): void {
     this.ensure();
-    this.currentTrackIndex =
-      (this.currentTrackIndex - 1 + PLAYLIST.length) % PLAYLIST.length;
+    this.setTrackIndex(
+      (this.currentTrackIndex - 1 + PLAYLIST.length) % PLAYLIST.length,
+    );
     this.playTrack();
   }
 
