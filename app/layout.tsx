@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist } from "next/font/google";
 import "./globals.css";
 import LayoutClient from "./LayoutClient";
 
@@ -8,22 +8,14 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "clipnotes - A Playful Workspace",
-  description: "A playful notebook with 3D objects. Stick ideas, stay creative.",
+  title: "DRIFT — Floating Sky Islands",
+  description: "An immersive 3D journey through floating sky islands. Explore crystal caverns, ancient ruins, and ethereal gardens suspended in the clouds.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-    >
+    <html lang="en" className={`${geistSans.variable} antialiased`}>
       <body>
         <LayoutClient>{children}</LayoutClient>
       </body>
