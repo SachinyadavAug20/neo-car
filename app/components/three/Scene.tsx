@@ -19,6 +19,19 @@ import CameraController from "./CameraController";
 import ScrollCamera from "./ScrollCamera";
 import Effects from "./Effects";
 import AudioEngine from "./AudioEngine";
+import ParticleReveal from "./ParticleReveal";
+import RippleOverlay from "./RippleOverlay";
+import Companion from "./Companion";
+import DynamicAtmosphere from "./DynamicAtmosphere";
+import MemoryStones from "./MemoryStones";
+import PlayerTrail from "./PlayerTrail";
+import CrystalPuzzle from "./CrystalPuzzle";
+import ProceduralAudio from "./ProceduralAudio";
+import WeatherSystem from "./WeatherSystem";
+import LightPainting from "./LightPainting";
+import AudioVisualizer from "./AudioVisualizer";
+import PortalSystem from "./PortalSystem";
+import InteractiveFlora from "./InteractiveFlora";
 import { useStore } from "@/app/lib/store";
 import { useNarrative } from "@/app/lib/narrativeStore";
 
@@ -35,27 +48,39 @@ export default function Scene() {
       style={{ position: "absolute", inset: 0 }}
     >
       <color attach="background" args={["#0a0e27"]} />
-      <fog attach="fog" args={["#0a0e27", 40, 120]} />
 
       <Suspense fallback={null}>
         <Stars />
         <Aurora />
         <Lighting />
+        <DynamicAtmosphere />
         <SkyIslands />
         <InteractiveObjects />
         <Particles />
         <Butterflies />
         <Collectibles />
+        <MemoryStones />
+        <CrystalPuzzle />
         <Clouds />
         <Water />
         <UserNotes />
         <NotePlacer />
+        <InteractiveFlora />
+        {started && playing && <Companion />}
+        {started && playing && <PlayerTrail />}
+        {started && playing && <WeatherSystem />}
+        {started && <LightPainting />}
+        {started && <AudioVisualizer />}
+        {started && <PortalSystem />}
       </Suspense>
 
       <ClickBurst />
       {started && playing ? <ScrollCamera /> : <CameraController />}
+      {started && <ParticleReveal />}
+      {started && <RippleOverlay />}
       <Effects />
       <AudioEngine />
+      <ProceduralAudio />
     </Canvas>
   );
 }

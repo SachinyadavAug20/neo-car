@@ -13,11 +13,11 @@ export const metadata: Metadata = {
   description: "An immersive 3D journey through floating sky islands. Explore crystal caverns, ancient ruins, and ethereal gardens suspended in the clouds.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout() {
   return (
     <html lang="en" className={`${geistSans.variable} antialiased`}>
       <body>
-        <LayoutClient>{children}</LayoutClient>
+        <LayoutClient />
       </body>
     </html>
   );
