@@ -32,6 +32,22 @@ import LightPainting from "./LightPainting";
 import AudioVisualizer from "./AudioVisualizer";
 import PortalSystem from "./PortalSystem";
 import InteractiveFlora from "./InteractiveFlora";
+import DynamicSky from "./DynamicSky";
+import GhostMemories from "./GhostMemories";
+import EmberParticles from "./EmberParticles";
+import HiddenSecrets from "./HiddenSecrets";
+import InkTransition from "./InkTransition";
+import FrostOverlay from "./FrostOverlay";
+import CursorLight from "./CursorLight";
+import FloatingBottles from "./FloatingBottles";
+import InteractiveFireflies from "./InteractiveFireflies";
+import TimeDilation from "./TimeDilation";
+import FloatingParallax from "./FloatingParallax";
+import CrystalClusters from "./CrystalClusters";
+import RuneCircles from "./RuneCircles";
+import LightRibbons from "./LightRibbons";
+import StoryFragments from "./StoryFragments";
+import BeaconLights from "./BeaconLights";
 import { useStore } from "@/app/lib/store";
 import { useNarrative } from "@/app/lib/narrativeStore";
 
@@ -51,10 +67,15 @@ export default function Scene() {
 
       <Suspense fallback={null}>
         <Stars />
+        <DynamicSky />
         <Aurora />
         <Lighting />
         <DynamicAtmosphere />
+        <FloatingParallax />
+        <BeaconLights />
         <SkyIslands />
+        <CrystalClusters />
+        <RuneCircles />
         <InteractiveObjects />
         <Particles />
         <Butterflies />
@@ -66,16 +87,27 @@ export default function Scene() {
         <UserNotes />
         <NotePlacer />
         <InteractiveFlora />
+        <GhostMemories />
+        <EmberParticles />
+        <HiddenSecrets />
+        <FloatingBottles />
+        <StoryFragments />
+        <LightRibbons />
+        <InteractiveFireflies />
         {started && playing && <Companion />}
         {started && playing && <PlayerTrail />}
         {started && playing && <WeatherSystem />}
         {started && <LightPainting />}
         {started && <AudioVisualizer />}
         {started && <PortalSystem />}
+        {started && <CursorLight />}
+        {started && <TimeDilation />}
       </Suspense>
 
       <ClickBurst />
       {started && playing ? <ScrollCamera /> : <CameraController />}
+      {started && <InkTransition />}
+      {started && <FrostOverlay />}
       {started && <ParticleReveal />}
       {started && <RippleOverlay />}
       <Effects />

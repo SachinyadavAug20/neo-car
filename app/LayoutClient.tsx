@@ -16,6 +16,9 @@ import PhotoMode from "./components/ui/PhotoMode";
 import CustomCursor from "./components/ui/CustomCursor";
 import QualitySettings from "./components/ui/QualitySettings";
 import StoryJournal from "./components/ui/StoryJournal";
+import Achievements from "./components/ui/Achievements";
+import ShareJourney from "./components/ui/ShareJourney";
+import ProceduralMusic from "./components/three/ProceduralMusic";
 import { useNarrative } from "./lib/narrativeStore";
 
 const Scene = dynamic(() => import("./components/three/Scene"), {
@@ -43,12 +46,15 @@ export default function LayoutClient() {
         <HUD />
         <PhotoMode />
         <StoryJournal />
+        <Achievements />
+        <ShareJourney />
         <QualitySettings />
         <LorePanel />
         <CinematicCredits />
       </div>
       <IntroOverlay />
       <CustomCursor />
+      <ProceduralMusic />
     </>
   );
 }
