@@ -48,6 +48,21 @@ import RuneCircles from "./RuneCircles";
 import LightRibbons from "./LightRibbons";
 import StoryFragments from "./StoryFragments";
 import BeaconLights from "./BeaconLights";
+import TerrainDetail from "./TerrainDetail";
+import DustMotes from "./DustMotes";
+import WindStreaks from "./WindStreaks";
+import NeuralNetwork from "./NeuralNetwork";
+import OrbitRings from "./OrbitRings";
+import PulseWave from "./PulseWave";
+import FogLightShafts from "./FogLightShafts";
+import DepthLayers from "./DepthLayers";
+import SpiralGalaxy from "./SpiralGalaxy";
+import HologramEffect from "./HologramEffect";
+import NoiseTerrain from "./NoiseTerrain";
+import GodRays from "./GodRays";
+import WireframeGrid from "./WireframeGrid";
+import FireflySwarm from "./FireflySwarm";
+import CursorRipple from "./CursorRipple";
 import { useStore } from "@/app/lib/store";
 import { useNarrative } from "@/app/lib/narrativeStore";
 
@@ -67,15 +82,25 @@ export default function Scene() {
 
       <Suspense fallback={null}>
         <Stars />
+        <SpiralGalaxy />
         <DynamicSky />
         <Aurora />
         <Lighting />
+        <GodRays />
+        <FogLightShafts />
         <DynamicAtmosphere />
+        <DepthLayers />
         <FloatingParallax />
         <BeaconLights />
         <SkyIslands />
+        <NoiseTerrain />
+        <WireframeGrid />
+        <TerrainDetail />
         <CrystalClusters />
         <RuneCircles />
+        <OrbitRings />
+        <NeuralNetwork />
+        <HologramEffect />
         <InteractiveObjects />
         <Particles />
         <Butterflies />
@@ -84,6 +109,10 @@ export default function Scene() {
         <CrystalPuzzle />
         <Clouds />
         <Water />
+        <PulseWave />
+        <DustMotes />
+        <WindStreaks />
+        <FireflySwarm />
         <UserNotes />
         <NotePlacer />
         <InteractiveFlora />
@@ -108,6 +137,7 @@ export default function Scene() {
       {started && playing ? <ScrollCamera /> : <CameraController />}
       {started && <InkTransition />}
       {started && <FrostOverlay />}
+      {started && <CursorRipple />}
       {started && <ParticleReveal />}
       {started && <RippleOverlay />}
       <Effects />
