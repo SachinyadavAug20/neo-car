@@ -11,6 +11,7 @@ export default function InteractiveFireflies() {
   const { started } = useNarrative();
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const { pointer } = useThree();
+  const dummy = useRef(new THREE.Object3D()).current;
 
   const fireflies = useMemo(() => {
     return Array.from({ length: COUNT }, () => ({
@@ -25,7 +26,6 @@ export default function InteractiveFireflies() {
 
   useFrame((state) => {
     if (!meshRef.current) return;
-    const dummy = new THREE.Object3D();
     const mx = pointer.x * 25;
     const my = 15 + pointer.y * 15;
 

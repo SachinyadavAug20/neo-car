@@ -10,6 +10,7 @@ export default function FireflySwarm() {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const trailRef = useRef<THREE.InstancedMesh>(null);
   const { pointer } = useThree();
+  const dummy = useRef(new THREE.Object3D()).current;
 
   const fireflies = useMemo(() => {
     return Array.from({ length: SWARM_COUNT }, () => ({
@@ -32,7 +33,6 @@ export default function FireflySwarm() {
 
   useFrame((state) => {
     if (!meshRef.current || !trailRef.current) return;
-    const dummy = new THREE.Object3D();
     const mx = pointer.x * 15;
     const my = 10 + pointer.y * 10;
 

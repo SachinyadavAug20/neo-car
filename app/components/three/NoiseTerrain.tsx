@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -71,6 +71,7 @@ const fragmentShader = `
 
 export default function NoiseTerrain() {
   const matRef = useRef<THREE.ShaderMaterial>(null);
+  const uniforms = useMemo(() => ({ uTime: { value: 0 } }), []);
 
   useFrame((state) => {
     if (!matRef.current) return;
@@ -84,7 +85,7 @@ export default function NoiseTerrain() {
         ref={matRef}
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        uniforms={{ uTime: { value: 0 } }}
+        uniforms={uniforms}
         transparent
         side={THREE.DoubleSide}
         wireframe

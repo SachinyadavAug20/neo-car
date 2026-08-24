@@ -55,5 +55,14 @@ export default function AudioEngine() {
     );
   }, [activeIsland, audioEnabled]);
 
+  useEffect(() => {
+    return () => {
+      if (ctxRef.current) {
+        ctxRef.current.close().catch(() => {});
+        ctxRef.current = null;
+      }
+    };
+  }, []);
+
   return null;
 }

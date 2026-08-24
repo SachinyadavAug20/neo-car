@@ -12,7 +12,7 @@ const SCALES: Record<string, number[]> = {
 };
 
 export default function ProceduralMusic() {
-  const { started, mood, currentChapter } = useNarrative();
+  const { started, mood } = useNarrative();
   const audioEnabled = useStore((s) => s.audioEnabled);
   const ctxRef = useRef<AudioContext | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -42,8 +42,8 @@ export default function ProceduralMusic() {
     osc.stop(ctx.currentTime + duration);
   }, []);
 
-  const playChord = useCallback((ctx: AudioContext, mood: string) => {
-    const scale = SCALES[mood] || SCALES.wonder;
+  const playChord = useCallback((ctx: AudioContext, m: string) => {
+    const scale = SCALES[m] || SCALES.wonder;
     const baseIdx = Math.floor(Math.random() * 3);
     const notes = [scale[baseIdx], scale[baseIdx + 2], scale[baseIdx + 4]];
     notes.forEach((freq) => {
@@ -54,22 +54,31 @@ export default function ProceduralMusic() {
   useEffect(() => {
     if (!started || !audioEnabled) {
       if (intervalRef.current) clearInterval(intervalRef.current);
+      if (ctxRef.current && ctxRef.current.state !== "closed") {
+        ctxRef.current.close().catch(() => {});
+        ctxRef.current = null;
+      }
       return;
     }
 
-    try {
-      ctxRef.current = new AudioContext();
-    } catch {
-      return;
+    if (ctxRef.current && ctxRef.current.state === "closed") {
+      ctxRef.current = null;
+    }
+
+    if (!ctxRef.current) {
+      try {
+        ctxRef.current = new AudioContext();
+      } catch {
+        return;
+      }
     }
 
     const ctx = ctxRef.current;
-    if (!ctx) return;
-
     if (ctx.state === "suspended") ctx.resume();
 
     const baseInterval = mood === "wonder" ? 4000 : mood === "loss" ? 6000 : 5000;
 
+    if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
       playChord(ctx, mood || "wonder");
     }, baseInterval);
@@ -80,7 +89,7 @@ export default function ProceduralMusic() {
   }, [started, audioEnabled, mood, playChord]);
 
   useEffect(() => {
-    if (!ctxRef.current || !audioEnabled || !started) return;
+    if (!ctxRef.current || !audioEnabled || !started || ctxRef.current.state === "closed") return;
     if (lastMoodRef.current !== mood) {
       lastMoodRef.current = mood;
       playChord(ctxRef.current, mood || "wonder");
@@ -89,8 +98,10 @@ export default function ProceduralMusic() {
 
   useEffect(() => {
     return () => {
-      if (ctxRef.current) {
-        ctxRef.current.close();
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (ctxRef.current && ctxRef.current.state !== "closed") {
+        ctxRef.current.close().catch(() => {});
+        ctxRef.current = null;
       }
     };
   }, []);

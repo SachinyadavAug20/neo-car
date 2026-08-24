@@ -7,7 +7,7 @@ import { useNarrative } from "@/app/lib/narrativeStore";
 
 export default function CrystalClusters() {
   const { started } = useNarrative();
-  const groupRef = useRef<THREE.Group>(null);
+  const meshRefs = useRef<THREE.Mesh[]>([]);
 
   const clusters = useMemo(() => {
     return Array.from({ length: 12 }, () => ({
@@ -25,23 +25,27 @@ export default function CrystalClusters() {
   }, []);
 
   useFrame((state) => {
-    if (!groupRef.current) return;
-    groupRef.current.children.forEach((child, i) => {
-      const mesh = child as THREE.Mesh;
+    meshRefs.current.forEach((mesh, i) => {
+      if (!mesh) return;
       const cluster = clusters[i];
       if (!cluster) return;
       const mat = mesh.material as THREE.MeshStandardMaterial;
-      mat.emissiveIntensity = 0.3 + Math.sin(state.clock.elapsedTime * cluster.speed + cluster.offset) * 0.2;
+      if (mat && "emissiveIntensity" in mat) {
+        mat.emissiveIntensity = 0.3 + Math.sin(state.clock.elapsedTime * cluster.speed + cluster.offset) * 0.2;
+      }
     });
   });
 
   if (!started) return null;
 
   return (
-    <group ref={groupRef}>
+    <group>
       {clusters.map((cluster, i) => (
         <group key={i} position={[cluster.x, cluster.y, cluster.z]} rotation={[cluster.tilt, cluster.rotation, 0]}>
-          <mesh frustumCulled={false}>
+          <mesh
+            ref={(el) => { if (el) meshRefs.current[i] = el; }}
+            frustumCulled={false}
+          >
             <coneGeometry args={[cluster.radius, cluster.height, 6]} />
             <meshStandardMaterial
               color={`hsl(${cluster.hue * 360}, 70%, 60%)`}
@@ -53,19 +57,6 @@ export default function CrystalClusters() {
               metalness={0.3}
             />
           </mesh>
-          {Math.random() > 0.5 && (
-            <mesh position={[cluster.radius * 0.5, cluster.height * 0.3, 0]} rotation={[0.3, 0.5, 0.2]} frustumCulled={false}>
-              <coneGeometry args={[cluster.radius * 0.6, cluster.height * 0.5, 5]} />
-              <meshStandardMaterial
-                color={`hsl(${cluster.hue * 360 + 30}, 70%, 60%)`}
-                emissive={`hsl(${cluster.hue * 360 + 30}, 80%, 40%)`}
-                emissiveIntensity={0.3}
-                transparent
-                opacity={0.6}
-                roughness={0.1}
-              />
-            </mesh>
-          )}
         </group>
       ))}
     </group>

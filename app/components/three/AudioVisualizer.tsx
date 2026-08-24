@@ -19,6 +19,8 @@ export default function AudioVisualizer() {
   const ctxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const dataArray = useRef(new Uint8Array(64));
+  const dummy = useRef(new THREE.Object3D()).current;
+  const col = useRef(new THREE.Color()).current;
 
   const chapter = CHAPTERS[currentChapter];
   const color = chapter ? new THREE.Color(chapter.color) : new THREE.Color("#4ecdc4");
@@ -44,8 +46,6 @@ export default function AudioVisualizer() {
       treble = 0.3 + Math.sin(t * 5) * 0.2;
     }
 
-    const dummy = new THREE.Object3D();
-    const col = new THREE.Color();
     let idx = 0;
 
     for (let ring = 0; ring < RING_COUNT; ring++) {

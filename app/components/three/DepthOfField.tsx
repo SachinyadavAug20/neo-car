@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useNarrative } from "@/app/lib/narrativeStore";
@@ -62,6 +62,12 @@ const fragmentShader = `
 export default function DepthOfField() {
   const { started, mood } = useNarrative();
   const matRef = useRef<THREE.ShaderMaterial>(null);
+  const uniforms = useMemo(() => ({
+    tDiffuse: { value: null },
+    uTime: { value: 0 },
+    uFocus: { value: 0.5 },
+    uBlur: { value: 0.4 },
+  }), []);
 
   useFrame((state) => {
     if (!matRef.current) return;
@@ -81,12 +87,7 @@ export default function DepthOfField() {
         ref={matRef}
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        uniforms={{
-          tDiffuse: { value: null },
-          uTime: { value: 0 },
-          uFocus: { value: 0.5 },
-          uBlur: { value: 0.4 },
-        }}
+        uniforms={uniforms}
         transparent
         depthTest={false}
         depthWrite={false}

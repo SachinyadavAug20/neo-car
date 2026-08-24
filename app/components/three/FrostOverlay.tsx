@@ -76,6 +76,11 @@ export default function FrostOverlay() {
   const { started, currentBeat } = useNarrative();
   const matRef = useRef<THREE.ShaderMaterial>(null);
   const mouseRef = useRef({ x: 0.5, y: 0.5 });
+  const uniforms = useMemo(() => ({
+    uTime: { value: 0 },
+    uFrost: { value: 0.05 },
+    uCursor: { value: new THREE.Vector2(0.5, 0.5) },
+  }), []);
 
   const targetFrost = useMemo(() => {
     if (currentBeat === 2 || currentBeat === 5) return 0.4;
@@ -107,11 +112,7 @@ export default function FrostOverlay() {
         ref={matRef}
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        uniforms={{
-          uTime: { value: 0 },
-          uFrost: { value: 0.05 },
-          uCursor: { value: new THREE.Vector2(0.5, 0.5) },
-        }}
+        uniforms={uniforms}
         transparent
         depthTest={false}
         depthWrite={false}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useNarrative } from "@/app/lib/narrativeStore";
@@ -56,6 +56,11 @@ export default function HologramEffect() {
 
   const colors = ["#67e8f9", "#a78bfa", "#4ecdc4", "#fbbf24"];
 
+  const uniforms = useMemo(() => colors.map((color) => ({
+    uTime: { value: 0 },
+    uColor: { value: new THREE.Color(color) },
+  })), []);
+
   useFrame((state) => {
     if (!matRef.current) return;
     matRef.current.uniforms.uTime.value = state.clock.elapsedTime;
@@ -76,10 +81,7 @@ export default function HologramEffect() {
               ref={i === 0 ? matRef : undefined}
               vertexShader={vertexShader}
               fragmentShader={fragmentShader}
-              uniforms={{
-                uTime: { value: 0 },
-                uColor: { value: new THREE.Color(colors[i]) },
-              }}
+              uniforms={uniforms[i]}
               transparent
               side={THREE.DoubleSide}
               depthWrite={false}

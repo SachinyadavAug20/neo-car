@@ -5,6 +5,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { Html } from "@react-three/drei";
 import { useNarrative } from "@/app/lib/narrativeStore";
+import { useEffect } from "react";
 
 const SECRETS = [
   { pos: [10, 0, 5] as [number, number, number], trigger: "click", message: "The void remembers you." },
@@ -19,6 +20,7 @@ export default function HiddenSecrets() {
   const [foundSecrets, setFoundSecrets] = useState<Set<number>>(new Set());
   const [activeSecret, setActiveSecret] = useState<number | null>(null);
   const refs = useRef<(THREE.Mesh | null)[]>([]);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useFrame((state) => {
     if (!started) return;
@@ -33,6 +35,19 @@ export default function HiddenSecrets() {
     });
   });
 
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  const revealSecret = (i: number) => {
+    setFoundSecrets((prev) => new Set([...prev, i]));
+    setActiveSecret(i);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setActiveSecret(null), 4000);
+  };
+
   if (!started) return null;
 
   return (
@@ -45,16 +60,12 @@ export default function HiddenSecrets() {
               onClick={(e) => {
                 if (secret.trigger === "click") {
                   e.stopPropagation();
-                  setFoundSecrets((prev) => new Set([...prev, i]));
-                  setActiveSecret(i);
-                  setTimeout(() => setActiveSecret(null), 4000);
+                  revealSecret(i);
                 }
               }}
               onPointerEnter={() => {
                 if (secret.trigger === "hover") {
-                  setFoundSecrets((prev) => new Set([...prev, i]));
-                  setActiveSecret(i);
-                  setTimeout(() => setActiveSecret(null), 4000);
+                  revealSecret(i);
                 }
               }}
             >
@@ -78,11 +89,13 @@ export default function HiddenSecrets() {
       ))}
 
       {activeSecret !== null && (
-        <div className="fixed bottom-40 left-1/2 -translate-x-1/2 z-50 glass rounded-xl px-6 py-4 max-w-sm animate-fadeIn pointer-events-none text-center">
-          <div className="text-[10px] tracking-[0.5em] text-amber-400/60 uppercase mb-2">Secret Found</div>
-          <div className="text-sm text-white/50 italic">&ldquo;{SECRETS[activeSecret].message}&rdquo;</div>
-          <div className="mt-2 text-[10px] text-white/20">{foundSecrets.size} / {SECRETS.length} secrets</div>
-        </div>
+        <Html center position={[0, 12, 0]} distanceFactor={20}>
+          <div className="glass rounded-xl px-6 py-4 max-w-sm animate-fadeIn pointer-events-none text-center">
+            <div className="text-[10px] tracking-[0.5em] text-amber-400/60 uppercase mb-2">Secret Found</div>
+            <div className="text-sm text-white/50 italic">&ldquo;{SECRETS[activeSecret].message}&rdquo;</div>
+            <div className="mt-2 text-[10px] text-white/20">{foundSecrets.size} / {SECRETS.length} secrets</div>
+          </div>
+        </Html>
       )}
     </>
   );

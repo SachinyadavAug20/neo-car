@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -34,6 +34,11 @@ export default function CursorRipple() {
   const { pointer } = useThree();
   const radiusRef = useRef(0);
   const centerRef = useRef(new THREE.Vector2(0.5, 0.5));
+  const uniforms = useMemo(() => ({
+    uTime: { value: 0 },
+    uCenter: { value: new THREE.Vector2(0.5, 0.5) },
+    uRadius: { value: 0 },
+  }), []);
 
   useFrame((state, delta) => {
     if (!matRef.current) return;
@@ -56,11 +61,7 @@ export default function CursorRipple() {
         ref={matRef}
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        uniforms={{
-          uTime: { value: 0 },
-          uCenter: { value: new THREE.Vector2(0.5, 0.5) },
-          uRadius: { value: 0 },
-        }}
+        uniforms={uniforms}
         transparent
         depthTest={false}
         depthWrite={false}

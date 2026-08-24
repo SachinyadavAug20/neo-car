@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useNarrative } from "@/app/lib/narrativeStore";
@@ -76,6 +76,12 @@ export default function InkTransition() {
   const progressRef = useRef(0);
   const activeRef = useRef(false);
   const timerRef = useRef(0);
+  const uniforms = useMemo(() => ({
+    uTime: { value: 0 },
+    uProgress: { value: 0 },
+    uColor: { value: new THREE.Color("#67e8f9") },
+    uResolution: { value: new THREE.Vector2(1, 1) },
+  }), []);
 
   useFrame((state, delta) => {
     if (!matRef.current) return;
@@ -117,12 +123,7 @@ export default function InkTransition() {
         ref={matRef}
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        uniforms={{
-          uTime: { value: 0 },
-          uProgress: { value: 0 },
-          uColor: { value: new THREE.Color("#67e8f9") },
-          uResolution: { value: new THREE.Vector2(1, 1) },
-        }}
+        uniforms={uniforms}
         transparent
         depthTest={false}
         depthWrite={false}

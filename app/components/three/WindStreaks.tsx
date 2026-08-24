@@ -10,6 +10,7 @@ const STREAK_COUNT = 40;
 export default function WindStreaks() {
   const { started, mood } = useNarrative();
   const meshRef = useRef<THREE.InstancedMesh>(null);
+  const dummy = useRef(new THREE.Object3D()).current;
 
   const streaks = useMemo(() => {
     return Array.from({ length: STREAK_COUNT }, () => ({
@@ -25,7 +26,6 @@ export default function WindStreaks() {
 
   useFrame((state) => {
     if (!meshRef.current) return;
-    const dummy = new THREE.Object3D();
     const windSpeed = mood === "courage" ? 2 : mood === "wonder" ? 0.5 : 1;
 
     streaks.forEach((s, i) => {

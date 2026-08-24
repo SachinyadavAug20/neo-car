@@ -9,6 +9,7 @@ const COUNT = 300;
 export default function DustMotes() {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const { camera } = useThree();
+  const dummy = useRef(new THREE.Object3D()).current;
 
   const motes = useMemo(() => {
     return Array.from({ length: COUNT }, () => ({
@@ -24,8 +25,6 @@ export default function DustMotes() {
 
   useFrame((state) => {
     if (!meshRef.current) return;
-    const dummy = new THREE.Object3D();
-
     motes.forEach((m, i) => {
       let mx = m.x + Math.sin(state.clock.elapsedTime * m.speed + m.offset) * m.drift;
       let my = m.y + Math.sin(state.clock.elapsedTime * m.speed * 0.5) * 0.5;

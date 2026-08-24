@@ -8,6 +8,7 @@ const STAR_COUNT = 500;
 
 export default function SpiralGalaxy() {
   const meshRef = useRef<THREE.InstancedMesh>(null);
+  const dummy = useRef(new THREE.Object3D()).current;
 
   const stars = useMemo(() => {
     return Array.from({ length: STAR_COUNT }, (_, i) => {
@@ -22,7 +23,6 @@ export default function SpiralGalaxy() {
 
   useFrame((state) => {
     if (!meshRef.current) return;
-    const dummy = new THREE.Object3D();
     meshRef.current.rotation.y = state.clock.elapsedTime * 0.02;
 
     stars.forEach((s, i) => {

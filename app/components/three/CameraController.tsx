@@ -6,16 +6,21 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import gsap from "gsap";
 import { useAppStore } from "@/app/lib/store";
-import { OVERVIEW_CAMERA, ISLANDS } from "@/app/lib/types";
+import { OVERVIEW_CAMERA } from "@/app/lib/types";
 
 export default function CameraController() {
   const { camera } = useThree();
   const controlsRef = useRef<any>(null);
   const activeIsland = useAppStore((s) => s.activeIsland);
-  const isTransitioning = useAppStore((s) => s.isTransitioning);
   const prevIslandRef = useRef<string | null>(null);
+  const tlRef = useRef<gsap.core.Timeline | null>(null);
 
   useEffect(() => {
+    if (tlRef.current) {
+      tlRef.current.kill();
+      tlRef.current = null;
+    }
+
     if (!activeIsland) {
       if (prevIslandRef.current) {
         const tl = gsap.timeline({
@@ -23,6 +28,7 @@ export default function CameraController() {
             useAppStore.getState().setIsTransitioning(false);
           },
         });
+        tlRef.current = tl;
 
         tl.to(camera.position, {
           x: OVERVIEW_CAMERA.position[0],
@@ -55,6 +61,7 @@ export default function CameraController() {
         useAppStore.getState().setIsTransitioning(false);
       },
     });
+    tlRef.current = tl;
 
     const target = activeIsland.position;
     const camOffset = activeIsland.cameraOffset;
@@ -88,6 +95,15 @@ export default function CameraController() {
 
     prevIslandRef.current = activeIsland.id;
   }, [activeIsland, camera]);
+
+  useEffect(() => {
+    return () => {
+      if (tlRef.current) {
+        tlRef.current.kill();
+        tlRef.current = null;
+      }
+    };
+  }, []);
 
   useFrame(() => {
     if (controlsRef.current) {

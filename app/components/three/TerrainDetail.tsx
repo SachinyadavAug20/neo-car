@@ -64,6 +64,7 @@ const fragmentShader = `
 
 export default function TerrainDetail() {
   const matRef = useRef<THREE.ShaderMaterial>(null);
+  const uniforms = useMemo(() => ({ uTime: { value: 0 } }), []);
 
   useFrame((state) => {
     if (!matRef.current) return;
@@ -77,7 +78,7 @@ export default function TerrainDetail() {
         ref={matRef}
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        uniforms={{ uTime: { value: 0 } }}
+        uniforms={uniforms}
         transparent
         depthWrite={false}
         side={THREE.DoubleSide}

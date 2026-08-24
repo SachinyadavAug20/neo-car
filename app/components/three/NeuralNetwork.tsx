@@ -6,10 +6,12 @@ import * as THREE from "three";
 
 const NODE_COUNT = 30;
 const CONNECTION_DISTANCE = 12;
+const MAX_POSITIONS = NODE_COUNT * NODE_COUNT * 6;
 
 export default function NeuralNetwork() {
   const groupRef = useRef<THREE.Group>(null);
   const linesRef = useRef<THREE.LineSegments>(null);
+  const dummy = useRef(new THREE.Object3D());
 
   const nodes = useMemo(() => {
     return Array.from({ length: NODE_COUNT }, () => ({
@@ -20,6 +22,10 @@ export default function NeuralNetwork() {
       vy: (Math.random() - 0.5) * 0.3,
       vz: (Math.random() - 0.5) * 0.5,
     }));
+  }, []);
+
+  const posAttr = useMemo(() => {
+    return new THREE.Float32BufferAttribute(new Float32Array(MAX_POSITIONS), 3);
   }, []);
 
   useFrame((state) => {
@@ -35,7 +41,7 @@ export default function NeuralNetwork() {
       if (Math.abs(node.z) > 20) node.vz *= -1;
     });
 
-    const linePositions: number[] = [];
+    let offset = 0;
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
         const dx = nodes[i].x - nodes[j].x;
@@ -43,15 +49,18 @@ export default function NeuralNetwork() {
         const dz = nodes[i].z - nodes[j].z;
         const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
         if (dist < CONNECTION_DISTANCE) {
-          linePositions.push(nodes[i].x, nodes[i].y, nodes[i].z);
-          linePositions.push(nodes[j].x, nodes[j].y, nodes[j].z);
+          posAttr.array[offset++] = nodes[i].x;
+          posAttr.array[offset++] = nodes[i].y;
+          posAttr.array[offset++] = nodes[i].z;
+          posAttr.array[offset++] = nodes[j].x;
+          posAttr.array[offset++] = nodes[j].y;
+          posAttr.array[offset++] = nodes[j].z;
         }
       }
     }
 
-    const geo = linesRef.current.geometry;
-    geo.setAttribute("position", new THREE.Float32BufferAttribute(linePositions, 3));
-    geo.attributes.position.needsUpdate = true;
+    posAttr.needsUpdate = true;
+    linesRef.current.geometry.setDrawRange(0, offset / 3);
 
     groupRef.current.children.forEach((child, i) => {
       if (i < nodes.length) {
@@ -73,7 +82,9 @@ export default function NeuralNetwork() {
         ))}
       </group>
       <lineSegments ref={linesRef} frustumCulled={false}>
-        <bufferGeometry />
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[posAttr.array as Float32Array, 3]} />
+        </bufferGeometry>
         <lineBasicMaterial color="#67e8f9" transparent opacity={0.1} />
       </lineSegments>
     </>

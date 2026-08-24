@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useNarrative } from "@/app/lib/narrativeStore";
@@ -34,6 +34,7 @@ export default function MemoryStones() {
   const [hoveredStone, setHoveredStone] = useState<number | null>(null);
   const [activeFragment, setActiveFragment] = useState<string | null>(null);
   const groupRefs = useRef<(THREE.Group | null)[]>([]);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useFrame((state) => {
     if (!started) return;
@@ -46,11 +47,18 @@ export default function MemoryStones() {
     });
   });
 
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
   const collectStone = (index: number) => {
     if (collectedStones.has(index)) return;
     setCollectedStones((prev) => new Set([...prev, index]));
     setActiveFragment(FRAGMENTS[index]);
-    setTimeout(() => setActiveFragment(null), 6000);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setActiveFragment(null), 6000);
   };
 
   if (!started) return null;
@@ -98,13 +106,14 @@ export default function MemoryStones() {
         </group>
       ))}
 
-      {/* Fragment display */}
       {activeFragment && (
-        <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-50 glass rounded-xl px-6 py-4 max-w-md animate-fadeIn pointer-events-none">
-          <div className="text-[10px] tracking-[0.5em] text-amber-400/60 uppercase mb-2">Memory Fragment</div>
-          <div className="text-sm text-white/50 italic leading-relaxed">{activeFragment}</div>
-          <div className="mt-2 text-[10px] text-white/20">{collectedStones.size} / {STONE_POSITIONS.length} found</div>
-        </div>
+        <Html center position={[0, 12, 0]} distanceFactor={20}>
+          <div className="glass rounded-xl px-6 py-4 max-w-md animate-fadeIn pointer-events-none">
+            <div className="text-[10px] tracking-[0.5em] text-amber-400/60 uppercase mb-2">Memory Fragment</div>
+            <div className="text-sm text-white/50 italic leading-relaxed">{activeFragment}</div>
+            <div className="mt-2 text-[10px] text-white/20">{collectedStones.size} / {STONE_POSITIONS.length} found</div>
+          </div>
+        </Html>
       )}
     </>
   );

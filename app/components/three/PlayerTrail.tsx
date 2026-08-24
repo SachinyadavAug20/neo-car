@@ -14,6 +14,8 @@ export default function PlayerTrail() {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const positions = useRef<Float32Array>(new Float32Array(TRAIL_LENGTH * 3));
   const idx = useRef(0);
+  const dummy = useRef(new THREE.Object3D()).current;
+  const col = useRef(new THREE.Color()).current;
 
   const chapter = CHAPTERS[currentChapter];
   const color = chapter ? new THREE.Color(chapter.color) : new THREE.Color("#67e8f9");
@@ -31,9 +33,6 @@ export default function PlayerTrail() {
     positions.current[i3 + 1] = y - 0.5;
     positions.current[i3 + 2] = z;
     idx.current++;
-
-    const dummy = new THREE.Object3D();
-    const col = new THREE.Color();
 
     for (let i = 0; i < TRAIL_LENGTH; i++) {
       const pi = ((idx.current - i + TRAIL_LENGTH * 10) % TRAIL_LENGTH) * 3;

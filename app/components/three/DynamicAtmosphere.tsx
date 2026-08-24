@@ -12,6 +12,8 @@ export default function DynamicAtmosphere() {
   const ambientRef = useRef<THREE.AmbientLight>(null);
   const targetColor = useRef(new THREE.Color("#0a0e27"));
   const targetFogColor = useRef(new THREE.Color("#0a0e27"));
+  const color = useRef(new THREE.Color());
+  const fogColor = useRef(new THREE.Color());
 
   useFrame((state, delta) => {
     if (!started || !playing) return;
@@ -19,11 +21,11 @@ export default function DynamicAtmosphere() {
     const chapter = CHAPTERS[currentChapter];
     if (!chapter) return;
 
-    const color = new THREE.Color(chapter.color);
-    const fogColor = new THREE.Color(chapter.color).multiplyScalar(0.15);
+    color.current.set(chapter.color);
+    fogColor.current.set(chapter.color).multiplyScalar(0.15);
 
-    targetColor.current.lerp(color, delta * 0.3);
-    targetFogColor.current.lerp(fogColor, delta * 0.3);
+    targetColor.current.lerp(color.current, delta * 0.3);
+    targetFogColor.current.lerp(fogColor.current, delta * 0.3);
 
     if (fogRef.current) {
       fogRef.current.color.lerp(targetFogColor.current, delta * 2);

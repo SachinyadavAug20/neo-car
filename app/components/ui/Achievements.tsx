@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Trophy, Star, Eye, Compass, BookOpen, Camera, Sparkles } from "lucide-react";
 import { useNarrative } from "@/app/lib/narrativeStore";
 import { CHAPTERS } from "@/app/lib/narrative";
@@ -18,6 +18,8 @@ export default function Achievements() {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [showToast, setShowToast] = useState<string | null>(null);
   const [showPanel, setShowPanel] = useState(false);
+  const prevUnlockedRef = useRef<Set<string>>(new Set());
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!started) return;
@@ -74,24 +76,33 @@ export default function Achievements() {
       },
     ];
 
-    const prevIds = achievements.map((a) => a.id);
+    const currentUnlocked = new Set(
+      newAchievements.filter((a) => a.unlocked).map((a) => a.id),
+    );
     const newlyUnlocked = newAchievements.filter(
-      (a) => a.unlocked && !prevIds.includes(a.id),
+      (a) => a.unlocked && !prevUnlockedRef.current.has(a.id),
     );
 
     if (newlyUnlocked.length > 0) {
       setShowToast(newlyUnlocked[0].title);
-      setTimeout(() => setShowToast(null), 3000);
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      toastTimerRef.current = setTimeout(() => setShowToast(null), 3000);
     }
 
+    prevUnlockedRef.current = currentUnlocked;
     setAchievements(newAchievements);
   }, [started, collectedLore, storyLog, currentChapter, mood]);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
 
   if (!started) return null;
 
   return (
     <>
-      {/* Achievement toast */}
       {showToast && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[80] glass rounded-xl px-4 py-3 flex items-center gap-3 animate-fadeIn pointer-events-none">
           <Trophy size={16} className="text-amber-400" />
@@ -102,7 +113,6 @@ export default function Achievements() {
         </div>
       )}
 
-      {/* Trophy button */}
       <button
         onClick={() => setShowPanel(!showPanel)}
         className="fixed top-6 left-28 z-40 glass p-3 rounded-full text-white/30 hover:text-white/60 transition-colors pointer-events-auto"
@@ -110,7 +120,6 @@ export default function Achievements() {
         <Trophy size={16} />
       </button>
 
-      {/* Achievement panel */}
       {showPanel && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#050816]/90 backdrop-blur-sm pointer-events-auto">
           <div className="glass rounded-2xl p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto relative">

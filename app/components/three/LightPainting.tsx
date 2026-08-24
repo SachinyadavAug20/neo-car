@@ -23,6 +23,8 @@ export default function LightPainting() {
   const drawing = useRef(false);
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const timeRef = useRef(0);
+  const dummy = useRef(new THREE.Object3D()).current;
+  const col = useRef(new THREE.Color()).current;
 
   const handlePointerDown = useCallback(() => {
     if (!started) return;
@@ -76,8 +78,6 @@ export default function LightPainting() {
     trailsRef.current = trailsRef.current.filter((t) => t.life > 0);
 
     if (meshRef.current) {
-      const dummy = new THREE.Object3D();
-      const col = new THREE.Color();
       let idx = 0;
       const maxInstances = MAX_TRAILS * TRAIL_POINTS;
 

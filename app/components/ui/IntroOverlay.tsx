@@ -1,12 +1,22 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import { useNarrative } from "@/app/lib/narrativeStore";
+
+function seededRandom(seed: number) {
+  const x = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+  return x - Math.floor(x);
+}
 
 export default function IntroOverlay() {
   const { started, setStarted, setPlaying } = useNarrative();
   const [phase, setPhase] = useState<"title" | "subtitle" | "prompt">("title");
   const [fading, setFading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (started) return;
@@ -14,6 +24,19 @@ export default function IntroOverlay() {
     const t2 = setTimeout(() => setPhase("prompt"), 4500);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [started]);
+
+  const particles = useMemo(() => {
+    return Array.from({ length: 50 }, (_, i) => ({
+      width: seededRandom(i * 7 + 1) * 3 + 1,
+      height: seededRandom(i * 7 + 2) * 3 + 1,
+      left: seededRandom(i * 7 + 3) * 100,
+      top: seededRandom(i * 7 + 4) * 100,
+      hue: 180 + seededRandom(i * 7 + 5) * 100,
+      opacity: seededRandom(i * 7 + 6) * 0.5 + 0.1,
+      duration: seededRandom(i * 7 + 7) * 3 + 2,
+      delay: seededRandom(i * 7 + 8) * 3,
+    }));
+  }, []);
 
   const handleEnter = () => {
     setFading(true);
@@ -30,19 +53,19 @@ export default function IntroOverlay() {
       className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#050816] transition-opacity duration-1000 ${fading ? "opacity-0" : "opacity-100"}`}
     >
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {Array.from({ length: 50 }).map((_, i) => (
+        {mounted && particles.map((p, i) => (
           <div
             key={i}
             className="absolute rounded-full animate-pulse"
             style={{
-              width: Math.random() * 3 + 1 + "px",
-              height: Math.random() * 3 + 1 + "px",
-              left: Math.random() * 100 + "%",
-              top: Math.random() * 100 + "%",
-              backgroundColor: `hsl(${180 + Math.random() * 100}, 70%, 70%)`,
-              opacity: Math.random() * 0.5 + 0.1,
-              animationDuration: Math.random() * 3 + 2 + "s",
-              animationDelay: Math.random() * 3 + "s",
+              width: p.width + "px",
+              height: p.height + "px",
+              left: p.left + "%",
+              top: p.top + "%",
+              backgroundColor: `hsl(${p.hue}, 70%, 70%)`,
+              opacity: p.opacity,
+              animationDuration: p.duration + "s",
+              animationDelay: p.delay + "s",
             }}
           />
         ))}

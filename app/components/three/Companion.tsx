@@ -14,6 +14,7 @@ export default function Companion() {
   const timeRef = useRef(0);
   const trailPositions = useRef<Float32Array>(new Float32Array(60 * 3));
   const trailIndex = useRef(0);
+  const dummy = useRef(new THREE.Object3D()).current;
 
   const chapter = CHAPTERS[currentChapter];
   const color = chapter ? new THREE.Color(chapter.color) : new THREE.Color("#67e8f9");
@@ -44,7 +45,6 @@ export default function Companion() {
       trailPositions.current[i3 + 2] = baseZ;
       trailIndex.current++;
 
-      const dummy = new THREE.Object3D();
       for (let i = 0; i < 20; i++) {
         const idx = ((trailIndex.current - i + 200) % 20) * 3;
         dummy.position.set(
