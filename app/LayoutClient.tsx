@@ -18,6 +18,7 @@ import QualitySettings from "./components/ui/QualitySettings";
 import StoryJournal from "./components/ui/StoryJournal";
 import Achievements from "./components/ui/Achievements";
 import ShareJourney from "./components/ui/ShareJourney";
+import LoadingExperience from "./components/ui/LoadingExperience";
 import ProceduralMusic from "./components/three/ProceduralMusic";
 import { useNarrative } from "./lib/narrativeStore";
 
@@ -31,6 +32,7 @@ export default function LayoutClient() {
 
   return (
     <>
+      <LoadingExperience />
       <div className="relative h-dvh w-dvw overflow-hidden bg-[#050816]">
         <Scene />
         {started && (

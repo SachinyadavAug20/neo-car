@@ -63,6 +63,27 @@ import GodRays from "./GodRays";
 import WireframeGrid from "./WireframeGrid";
 import FireflySwarm from "./FireflySwarm";
 import CursorRipple from "./CursorRipple";
+import ScrollReveal from "./ScrollReveal";
+import MagneticCursor from "./MagneticCursor";
+import FloatingIslandHero from "./FloatingIslandHero";
+import ProceduralTerrain from "./ProceduralTerrain";
+import EnergyField from "./EnergyField";
+import WaterReflections from "./WaterReflections";
+import AtmosphericFog from "./AtmosphericFog";
+import MusicReactive from "./MusicReactive";
+import IslandConnections from "./IslandConnections";
+import WeatherCycle from "./WeatherCycle";
+import CollectibleEffects from "./CollectibleEffects";
+import CursorTrail from "./CursorTrail";
+import NoiseFog from "./NoiseFog";
+import HexGrid from "./HexGrid";
+import FilmGrain from "./FilmGrain";
+import PortalRings from "./PortalRings";
+import DepthParticles from "./DepthParticles";
+import LightBeams from "./LightBeams";
+import FloatingOrbs from "./FloatingOrbs";
+import WaveLines from "./WaveLines";
+import VignetteOverlay from "./VignetteOverlay";
 import { useStore } from "@/app/lib/store";
 import { useNarrative } from "@/app/lib/narrativeStore";
 
@@ -89,10 +110,13 @@ export default function Scene() {
         <GodRays />
         <FogLightShafts />
         <DynamicAtmosphere />
+        <AtmosphericFog />
         <DepthLayers />
         <FloatingParallax />
         <BeaconLights />
         <SkyIslands />
+        <FloatingIslandHero />
+        <ProceduralTerrain />
         <NoiseTerrain />
         <WireframeGrid />
         <TerrainDetail />
@@ -101,14 +125,18 @@ export default function Scene() {
         <OrbitRings />
         <NeuralNetwork />
         <HologramEffect />
+        <IslandConnections />
+        <EnergyField />
         <InteractiveObjects />
         <Particles />
         <Butterflies />
         <Collectibles />
+        <CollectibleEffects />
         <MemoryStones />
         <CrystalPuzzle />
         <Clouds />
         <Water />
+        <WaterReflections />
         <PulseWave />
         <DustMotes />
         <WindStreaks />
@@ -123,6 +151,15 @@ export default function Scene() {
         <StoryFragments />
         <LightRibbons />
         <InteractiveFireflies />
+        <MusicReactive />
+        <WeatherCycle />
+        <NoiseFog />
+        <HexGrid />
+        <PortalRings />
+        <DepthParticles />
+        <LightBeams />
+        <FloatingOrbs />
+        <WaveLines />
         {started && playing && <Companion />}
         {started && playing && <PlayerTrail />}
         {started && playing && <WeatherSystem />}
@@ -131,9 +168,11 @@ export default function Scene() {
         {started && <PortalSystem />}
         {started && <CursorLight />}
         {started && <TimeDilation />}
+        {started && <ScrollReveal />}
       </Suspense>
 
       <ClickBurst />
+      <MagneticCursor />
       {started && playing ? <ScrollCamera /> : <CameraController />}
       {started && <InkTransition />}
       {started && <FrostOverlay />}
@@ -141,6 +180,9 @@ export default function Scene() {
       {started && <ParticleReveal />}
       {started && <RippleOverlay />}
       <Effects />
+      <FilmGrain />
+      <VignetteOverlay />
+      <CursorTrail />
       <AudioEngine />
       <ProceduralAudio />
     </Canvas>
