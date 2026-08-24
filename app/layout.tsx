@@ -9,8 +9,8 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "DRIFT — Floating Sky Islands",
-  description: "An immersive 3D journey through floating sky islands. Explore crystal caverns, ancient ruins, and ethereal gardens suspended in the clouds.",
+  title: "DRIFT — A Paper World",
+  description: "A paper craft fantasy story about a crane named Milo who learns to fly.",
 };
 
 export default function RootLayout() {

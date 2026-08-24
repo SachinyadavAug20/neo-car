@@ -12,6 +12,8 @@
 
 **Pip** — Lira's younger brother. He was blown away three years ago. Everyone assumes he is gone. He is not gone. He is somewhere in the Unfolded Lands, folded into something new.
 
+**Chip** — A paper cricket who folds himself into different shapes. He knows the way to every mountain. But the real question is not how to get there. It is why you want to go.
+
 ---
 
 ## Act One: The Village of Small Folds
@@ -30,6 +32,14 @@ Milo would pick himself up. He would straighten his crooked fold. He would try a
 
 He never stopped trying.
 
+The windmill turned slowly at the edge of the village. Its blades were four boxes connected to a cylinder. Round and round they went. Milo sometimes wondered if the windmill dreamed of spinning faster. Of breaking free of its pole. Of flying.
+
+But the windmill just turned. And Milo just jumped. And the birds just watched.
+
+---
+
+## Act Two: The Storm
+
 One evening a storm came from the east. The wind was different this time. It was not the normal wind that rustled the paper trees and rocked the paper boats. This wind had weight. This wind had intention. It pushed against the village like a hand pressing against a page.
 
 The villagers folded themselves small. They tucked their edges in. They waited.
@@ -40,15 +50,19 @@ Then it let go.
 
 And in that moment Milo understood something. The wind was not his enemy. The wind was a language he had not learned yet.
 
+The storm passed. The village unfolded. The birds came out of their houses and looked at Milo differently. He had been held by the wind. He had been in the sky. Even if it was just for a moment.
+
+That night Milo packed his lantern and decided to find Sage the owl. He had heard she lived on the highest mountain. He had heard she knew the Secret Fold. The fold that could turn any paper creature into whatever it imagined.
+
+He did not tell anyone where he was going. He just walked toward the mountain.
+
 ---
 
-## Act Two: The Journey to the Mountain
-
-The next morning Milo packed his lantern and left the village. He did not tell anyone where he was going. He did not say goodbye. He just walked toward the highest mountain where the old owl Sage was supposed to live.
+## Act Three: The Fox Who Was Hiding
 
 The path went through the Forest of Folded Trees. Every tree was a different shape. Some were tall and thin. Some were short and wide. Some had branches that pointed down instead of up. Milo had to fold himself small to get through the tight spaces. He had to unfold himself to reach the high places. He learned that being misshapen was sometimes useful.
 
-In the forest he met a paper fox sitting under a tree. She was curled up with her tail over her nose. Her edges were crinkled. Her folds were soft from too much handling.
+In the forest he met a paper fox sitting under a tree. She was curled up with her tail over her nose. Her edges were crinkled. Her folds were soft from too much handling. Fireflies drifted around her like tiny floating lanterns.
 
 "Are you lost?" Milo asked.
 
@@ -78,9 +92,11 @@ Lira looked at him for a long time. Then she stood up and shook the crinkles out
 
 ---
 
-## Act Three: The Unfolded Lands
+## Act Four: The Unfolded Lands
 
 They left the forest and entered the Unfolded Lands. It was called that because nothing here was folded. The paper was flat and raw and white. It stretched in every direction like a blank page waiting to be written on. There were no trees. No mountains. No rivers. Just white.
+
+In the distance they could see ancient ruins. Pillars made of cylinders. Arches made of boxes. A dodecahedron floating above it all, turning slowly, catching light that had no source.
 
 "This is where I lost him," Lira said quietly.
 
@@ -126,7 +142,7 @@ Milo did not understand. But he thanked Chip and kept walking.
 
 ---
 
-## Act Four: The Wind
+## Act Five: Flying
 
 They were halfway across the Unfolded Lands when the wind came.
 
@@ -150,7 +166,7 @@ And then it was gone.
 
 ---
 
-## Act Five: Sage
+## Act Six: Sage the Owl
 
 Sage was sitting on a paper branch at the very top of the mountain. She was old. Her folds were soft. Her edges were worn. But her eyes were sharp and bright like they had been cut with a fresh blade.
 
@@ -194,7 +210,7 @@ Milo looked at the blank paper in his hands. He did not understand. Not yet. But
 
 ---
 
-## Act Six: The Return
+## Act Seven: The Boat Named Pip
 
 Milo flew home. He flew on the wind. It carried him over the Unfolded Lands and the forest and the river. He landed in the village at sunset.
 
@@ -222,13 +238,11 @@ Lira was quiet. Then she said, "Can I tell you something?"
 
 Milo smiled. "Let us go find out."
 
----
-
-## Act Seven: Finding Pip
-
 They walked back into the Unfolded Lands. This time it was not white. The paper had color now. Soft pastels. Pinks and blues and greens. The ground was warm. The air smelled like fresh creases.
 
-They found Pip at the edge of a paper lake. He was not a cricket. He was not a fox. He was a paper boat. A small golden boat with a white sail. He was floating on the water going nowhere in particular.
+They found Pip at the edge of a paper lake. The water was circles of blue. A lighthouse stood on the shore, its light pulsing like a heartbeat. And there was Pip.
+
+He was not a cricket. He was not a fox. He was a paper boat. A small golden boat with a white sail. He was floating on the water going nowhere in particular.
 
 "Pip?" Lira said.
 
