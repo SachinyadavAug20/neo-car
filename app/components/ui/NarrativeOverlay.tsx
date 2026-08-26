@@ -264,6 +264,116 @@ export default function NarrativeOverlay({ state, onAdvance, onInteractionProgre
                   </div>
                 </div>
               )}
+              {beat.interaction === "collect-leaves" && (
+                <div style={{
+                  background: "#fff", border: "2px solid #1a1a2e", borderRadius: 12,
+                  padding: "14px 20px", boxShadow: "2px 2px 0 #1a1a2e",
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+                }}>
+                  <div style={{ fontSize: 13, color: "#1a1a2e", fontWeight: 700 }}>
+                    CLICK to collect glowing paper leaves!
+                  </div>
+                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center" }}>
+                    {Array.from({ length: beat.interactionTarget || 8 }).map((_, i) => (
+                      <div key={i} style={{
+                        width: 12, height: 12, borderRadius: "50%", border: "2px solid #1a1a2e",
+                        background: i < state.interactionProgress ? ["#22c55e", "#4ade80", "#fbbf24", "#f472b6"][i % 4] : "transparent",
+                        transition: "background 0.2s",
+                      }} />
+                    ))}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#1a1a2e", fontWeight: 600 }}>
+                    {state.interactionProgress} / {beat.interactionTarget} leaves
+                  </div>
+                </div>
+              )}
+              {beat.interaction === "toggle-cells" && (
+                <div style={{
+                  background: "#faf5ff", border: "2px solid #1a1a2e", borderRadius: 12,
+                  padding: "14px 20px", boxShadow: "2px 2px 0 #1a1a2e",
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+                }}>
+                  <div style={{ fontSize: 13, color: "#1a1a2e", fontWeight: 700 }}>
+                    CLICK the grid cells to awaken the pattern!
+                  </div>
+                  <div style={{ width: 140, height: 8, background: "#e5e7eb", borderRadius: 4, overflow: "hidden", border: "1px solid #1a1a2e" }}>
+                    <div style={{
+                      width: `${(state.interactionProgress / (beat.interactionTarget || 10)) * 100}%`,
+                      height: "100%", background: "#a78bfa", borderRadius: 4, transition: "width 0.1s",
+                    }} />
+                  </div>
+                  <div style={{ fontSize: 12, color: "#1a1a2e", fontWeight: 600 }}>
+                    {state.interactionProgress} / {beat.interactionTarget} cells awakened
+                  </div>
+                </div>
+              )}
+              {beat.interaction === "row-boat" && (
+                <div style={{
+                  background: "#fff", border: "2px solid #1a1a2e", borderRadius: 12,
+                  padding: "14px 20px", boxShadow: "2px 2px 0 #1a1a2e",
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+                }}>
+                  <div style={{ fontSize: 13, color: "#1a1a2e", fontWeight: 700 }}>
+                    CLICK rapidly to row to Pip!
+                  </div>
+                  <div style={{ width: 140, height: 8, background: "#e5e7eb", borderRadius: 4, overflow: "hidden", border: "1px solid #1a1a2e" }}>
+                    <div style={{
+                      width: `${(state.interactionProgress / (beat.interactionTarget || 20)) * 100}%`,
+                      height: "100%", background: "#67e8f9", borderRadius: 4, transition: "width 0.1s",
+                    }} />
+                  </div>
+                  <div style={{ fontSize: 12, color: "#1a1a2e", fontWeight: 600 }}>
+                    {state.interactionProgress} / {beat.interactionTarget} strokes
+                  </div>
+                </div>
+              )}
+              {beat.interaction === "celebrate" && (
+                <div style={{
+                  background: "linear-gradient(135deg, #fbbf24, #f472b6, #a78bfa)",
+                  border: "2px solid #1a1a2e", borderRadius: 12,
+                  padding: "14px 20px", boxShadow: "2px 2px 0 #1a1a2e",
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+                }}>
+                  <div style={{ fontSize: 13, color: "#1a1a2e", fontWeight: 700 }}>
+                    CLICK anywhere to release paper cranes!
+                  </div>
+                  <div style={{ display: "flex", gap: 4 }}>
+                    {Array.from({ length: beat.interactionTarget || 15 }).map((_, i) => (
+                      <div key={i} style={{
+                        width: 10, height: 10, borderRadius: "50%", border: "2px solid #1a1a2e",
+                        background: i < state.interactionProgress ? ["#fbbf24", "#f472b6", "#a78bfa", "#67e8f9"][i % 4] : "transparent",
+                        transition: "background 0.2s",
+                      }} />
+                    ))}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#1a1a2e", fontWeight: 600 }}>
+                    {state.interactionProgress} / {beat.interactionTarget} cranes released
+                  </div>
+                </div>
+              )}
+              {beat.interaction === "follow-butterfly" && (
+                <div style={{
+                  background: "#fff", border: "2px solid #1a1a2e", borderRadius: 12,
+                  padding: "14px 20px", boxShadow: "2px 2px 0 #1a1a2e",
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+                }}>
+                  <div style={{ fontSize: 13, color: "#1a1a2e", fontWeight: 700 }}>
+                    CLICK to follow the butterfly through the world!
+                  </div>
+                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center" }}>
+                    {Array.from({ length: beat.interactionTarget || 25 }).map((_, i) => (
+                      <div key={i} style={{
+                        width: 8, height: 8, borderRadius: "50%", border: "2px solid #1a1a2e",
+                        background: i < state.interactionProgress ? ["#a78bfa", "#f472b6", "#67e8f9"][i % 3] : "transparent",
+                        transition: "background 0.2s",
+                      }} />
+                    ))}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#1a1a2e", fontWeight: 600 }}>
+                    {state.interactionProgress} / {beat.interactionTarget} steps followed
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

@@ -153,6 +153,162 @@ export default function StoryCamera({ narrativeState, onInteractionProgress, onI
     };
   }, [narrativeState.currentAct, narrativeState.currentBeat, narrativeState.interactionState, camera, onInteractionProgress, onInteractionComplete]);
 
+  // ─── Collect-leaves interaction (Act 3) ─────────────────────────────
+  useEffect(() => {
+    const beat = getCurrentBeat(narrativeState);
+    if (!beat || beat.interaction !== "collect-leaves" || narrativeState.interactionState === "complete") return;
+
+    const collectCount = { current: 0 };
+    const onClick = (e: MouseEvent) => {
+      collectCount.current++;
+      onInteractionProgress(collectCount.current);
+
+      // Dispatch event for PaperWorld to spawn collectible
+      window.dispatchEvent(new CustomEvent("collect-leaf", {
+        detail: { count: collectCount.current, x: e.clientX, y: e.clientY }
+      }));
+
+      // Camera bounce
+      gsap.to(camera.position, {
+        y: camera.position.y + 0.3,
+        duration: 0.15,
+        yoyo: true,
+        repeat: 1,
+        ease: "power2.out",
+      });
+
+      if (collectCount.current >= (beat.interactionTarget || 8)) {
+        onInteractionComplete();
+        collectCount.current = 0;
+      }
+    };
+
+    gl.domElement.addEventListener("click", onClick);
+    return () => gl.domElement.removeEventListener("click", onClick);
+  }, [narrativeState.currentAct, narrativeState.currentBeat, narrativeState.interactionState, camera, gl, onInteractionProgress, onInteractionComplete]);
+
+  // ─── Toggle-cells interaction (Act 4) ──────────────────────────────
+  useEffect(() => {
+    const beat = getCurrentBeat(narrativeState);
+    if (!beat || beat.interaction !== "toggle-cells" || narrativeState.interactionState === "complete") return;
+
+    let toggleCount = 0;
+    const onClick = (e: MouseEvent) => {
+      toggleCount++;
+      onInteractionProgress(toggleCount);
+
+      window.dispatchEvent(new CustomEvent("toggle-cell", {
+        detail: { count: toggleCount, clientX: e.clientX, clientY: e.clientY }
+      }));
+
+      if (toggleCount >= (beat.interactionTarget || 10)) {
+        onInteractionComplete();
+        toggleCount = 0;
+      }
+    };
+
+    gl.domElement.addEventListener("click", onClick);
+    return () => gl.domElement.removeEventListener("click", onClick);
+  }, [narrativeState.currentAct, narrativeState.currentBeat, narrativeState.interactionState, gl, onInteractionProgress, onInteractionComplete]);
+
+  // ─── Row-boat interaction (Act 6) ──────────────────────────────────
+  useEffect(() => {
+    const beat = getCurrentBeat(narrativeState);
+    if (!beat || beat.interaction !== "row-boat" || narrativeState.interactionState === "complete") return;
+
+    let rowCount = 0;
+    const onClick = () => {
+      rowCount++;
+      onInteractionProgress(rowCount);
+
+      window.dispatchEvent(new CustomEvent("row-boat", { detail: { count: rowCount } }));
+
+      // Camera tilt to simulate rowing
+      gsap.to(camera.rotation, {
+        z: rowCount % 2 === 0 ? 0.03 : -0.03,
+        duration: 0.15,
+        ease: "power2.out",
+      });
+
+      if (rowCount >= (beat.interactionTarget || 20)) {
+        onInteractionComplete();
+        rowCount = 0;
+      }
+    };
+
+    gl.domElement.addEventListener("click", onClick);
+    return () => {
+      gl.domElement.removeEventListener("click", onClick);
+      camera.rotation.z = 0;
+    };
+  }, [narrativeState.currentAct, narrativeState.currentBeat, narrativeState.interactionState, gl, onInteractionProgress, onInteractionComplete]);
+
+  // ─── Celebrate interaction (Act 8) ─────────────────────────────────
+  useEffect(() => {
+    const beat = getCurrentBeat(narrativeState);
+    if (!beat || beat.interaction !== "celebrate" || narrativeState.interactionState === "complete") return;
+
+    let clickCount = 0;
+    const onClick = (e: MouseEvent) => {
+      clickCount++;
+      onInteractionProgress(clickCount);
+
+      window.dispatchEvent(new CustomEvent("celebrate", {
+        detail: { count: clickCount, x: e.clientX, y: e.clientY }
+      }));
+
+      // Camera shake on celebration
+      gsap.to(camera.position, {
+        x: camera.position.x + (Math.random() - 0.5) * 0.5,
+        y: camera.position.y + (Math.random() - 0.5) * 0.3,
+        duration: 0.1,
+        yoyo: true,
+        repeat: 1,
+        ease: "power2.out",
+      });
+
+      if (clickCount >= (beat.interactionTarget || 15)) {
+        onInteractionComplete();
+        clickCount = 0;
+      }
+    };
+
+    gl.domElement.addEventListener("click", onClick);
+    return () => gl.domElement.removeEventListener("click", onClick);
+  }, [narrativeState.currentAct, narrativeState.currentBeat, narrativeState.interactionState, camera, gl, onInteractionProgress, onInteractionComplete]);
+
+  // ─── Follow-butterfly interaction (Act 7/8) ────────────────────────
+  useEffect(() => {
+    const beat = getCurrentBeat(narrativeState);
+    if (!beat || beat.interaction !== "follow-butterfly" || narrativeState.interactionState === "complete") return;
+
+    let followCount = 0;
+    const onClick = () => {
+      followCount++;
+      onInteractionProgress(followCount);
+
+      window.dispatchEvent(new CustomEvent("follow-butterfly", { detail: { count: followCount } }));
+
+      // Camera follows in a gentle arc
+      const angle = (followCount / 25) * Math.PI * 2;
+      gsap.to(camera.position, {
+        x: 8 * Math.cos(angle),
+        y: 4 + Math.sin(angle * 0.5) * 2,
+        z: 40 + 8 * Math.sin(angle),
+        duration: 0.4,
+        ease: "power2.out",
+      });
+
+      if (followCount >= (beat.interactionTarget || 25)) {
+        onInteractionComplete();
+        followCount = 0;
+      }
+    };
+
+    gl.domElement.addEventListener("click", onClick);
+    return () => gl.domElement.removeEventListener("click", onClick);
+  }, [narrativeState.currentAct, narrativeState.currentBeat, narrativeState.interactionState, camera, gl, onInteractionProgress, onInteractionComplete]);
+
   // ─── Reset counters on beat change ─────────────────────────────────
   useEffect(() => {
     windAccum.current = 0;

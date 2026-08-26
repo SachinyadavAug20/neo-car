@@ -8,11 +8,14 @@ import StoryCamera from "./StoryCamera";
 import NarrativeOverlay from "../ui/NarrativeOverlay";
 import DraftingTerminal from "../ui/DraftingTerminal";
 import CommandPalette from "../ui/CommandPalette";
+import CustomCursor from "../ui/CustomCursor";
+import { useKeyboardSecrets } from "../ui/useInteractions";
 import Fog from "./Fog";
 import { NarrativeState, INITIAL_STATE, getCurrentBeat, getCurrentAct, nextBeat, STORY_ACTS } from "@/app/lib/narrative";
 import { usePersistentFolds } from "@/app/lib/usePersistentFolds";
 import { TerminalLine } from "../ui/DraftingTerminal";
 import gsap from "gsap";
+import * as THREE from "three";
 
 export default function Scene() {
   const [narrativeState, setNarrativeState] = useState<NarrativeState>({
@@ -45,6 +48,40 @@ export default function Scene() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
+
+  // Keyboard secrets (type "wind", "paper", "fold", etc.)
+  const [secretNotification, setSecretNotification] = useState<string | null>(null);
+  useKeyboardSecrets(useCallback((word: string) => {
+    // Trigger hidden events based on typed word
+    switch (word) {
+      case "wind":
+        setWindForce(prev => Math.min(10, prev + 2));
+        window.dispatchEvent(new CustomEvent("set-wind-force", { detail: { force: Math.min(10, windForce + 2) } }));
+        break;
+      case "paper":
+        window.dispatchEvent(new CustomEvent("paper-shower"));
+        break;
+      case "fold":
+        window.dispatchEvent(new CustomEvent("fold-crease"));
+        break;
+      case "pip":
+      case "milo":
+      case "crane":
+        window.dispatchEvent(new CustomEvent("spawn-entity", { detail: { name: word } }));
+        break;
+      case "sudo":
+        window.dispatchEvent(new CustomEvent("toggle-debug"));
+        break;
+      case "help":
+        setTerminalOpen(true);
+        break;
+      case "drift":
+        window.dispatchEvent(new CustomEvent("drift-mode"));
+        break;
+    }
+    setSecretNotification(`"${word}" activated`);
+    setTimeout(() => setSecretNotification(null), 2000);
+  }, [windForce]));
 
   // Track mood from narrative state
   useEffect(() => {
@@ -250,18 +287,41 @@ export default function Scene() {
 
   return (
     <>
+      {/* Custom cursor */}
+      <CustomCursor />
       <Canvas
         camera={{ position: [3, 2, 5], fov: 50 }}
-        gl={{ antialias: true, alpha: false }}
+        gl={{ antialias: true, alpha: false, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.2 }}
         dpr={[1, 1.5]}
+        shadows
         style={{ position: "absolute", inset: 0 }}
       >
         <color attach="background" args={["#fdf6e3"]} />
         <Fog />
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[5, 8, 5]} intensity={1.2} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
-        <directionalLight position={[-3, 4, -2]} intensity={0.3} color="#e0e7ff" />
-        <hemisphereLight args={["#fdf6e3", "#e8e0d4", 0.4]} />
+
+        {/* Improved lighting setup */}
+        <ambientLight intensity={0.6} color="#fdf6e3" />
+        <directionalLight
+          position={[8, 12, 8]}
+          intensity={1.5}
+          color="#fff8e7"
+          castShadow
+          shadow-mapSize-width={2048}
+          shadow-mapSize-height={2048}
+          shadow-camera-near={0.1}
+          shadow-camera-far={100}
+          shadow-camera-left={-30}
+          shadow-camera-right={30}
+          shadow-camera-top={30}
+          shadow-camera-bottom={-30}
+        />
+        <directionalLight position={[-5, 6, -3]} intensity={0.4} color="#e0e7ff" />
+        <pointLight position={[0, 5, 0]} intensity={0.3} color="#fbbf24" distance={20} />
+        <hemisphereLight args={["#fdf6e3", "#e8e0d4", 0.5]} />
+
+        {/* Rim light for depth */}
+        <directionalLight position={[0, 3, -10]} intensity={0.2} color="#c4b5fd" />
+
         <Suspense fallback={null}>
           <PaperWorld
             narrativeState={narrativeState}
@@ -313,6 +373,20 @@ export default function Scene() {
           zIndex: 30,
         }}>
           The paper remembers.
+        </div>
+      )}
+
+      {/* Secret word notification */}
+      {secretNotification && (
+        <div style={{
+          position: "fixed", top: 80, left: "50%", transform: "translateX(-50%)",
+          background: "rgba(26, 26, 46, 0.9)", color: "#fbbf24",
+          borderRadius: 12, padding: "10px 24px",
+          fontSize: 14, fontFamily: "monospace", fontWeight: 700,
+          zIndex: 100, animation: "fadeSlideIn 0.3s ease-out",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+        }}>
+          {secretNotification}
         </div>
       )}
 

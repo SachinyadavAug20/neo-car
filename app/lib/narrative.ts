@@ -11,7 +11,7 @@ export interface Beat {
     position: [number, number, number];
     lookAt: [number, number, number];
   };
-  interaction?: "none" | "click-jump" | "drag-wind" | "click-unfold" | "click-reveal";
+  interaction?: "none" | "click-jump" | "drag-wind" | "click-unfold" | "click-reveal" | "collect-leaves" | "toggle-cells" | "row-boat" | "celebrate" | "follow-butterfly";
   interactionTarget?: number;
   envChange?: {
     fogNear?: number;
@@ -169,6 +169,15 @@ export const STORY_ACTS: Act[] = [
         mood: "calm",
         camera: { position: [-30, 6, 12], lookAt: [-40, 0.5, 0] },
       },
+      {
+        id: "3-collect",
+        text: "Glowing paper leaves drifted down. Collect them to light the path!",
+        character: "prompt",
+        mood: "calm",
+        interaction: "collect-leaves",
+        interactionTarget: 8,
+        camera: { position: [-38, 4, 6], lookAt: [-40, 1, 0] },
+      },
     ],
   },
 
@@ -206,6 +215,15 @@ export const STORY_ACTS: Act[] = [
         character: "sage",
         mood: "secret",
         camera: { position: [8, 4.5, -36], lookAt: [0, 2, -40] },
+      },
+      {
+        id: "4-grid",
+        text: "The grid below hummed with life. Click the cells to awaken them!",
+        character: "prompt",
+        mood: "secret",
+        interaction: "toggle-cells",
+        interactionTarget: 10,
+        camera: { position: [6, 5, -36], lookAt: [0, 0.5, -40] },
       },
     ],
   },
@@ -277,6 +295,15 @@ export const STORY_ACTS: Act[] = [
         mood: "hope",
         camera: { position: [6, 4, 50], lookAt: [0, 0.5, 40] },
       },
+      {
+        id: "6-row",
+        text: "Click rapidly to row across the water to Pip!",
+        character: "prompt",
+        mood: "hope",
+        interaction: "row-boat",
+        interactionTarget: 20,
+        camera: { position: [4, 3, 48], lookAt: [0, 0.5, 40] },
+      },
     ],
   },
 
@@ -307,6 +334,15 @@ export const STORY_ACTS: Act[] = [
         mood: "hope",
         camera: { position: [6, 8, 52], lookAt: [0, 1, 40] },
       },
+      {
+        id: "7-butterfly",
+        text: "A paper butterfly danced across the water. Follow its path!",
+        character: "prompt",
+        mood: "hope",
+        interaction: "follow-butterfly",
+        interactionTarget: 25,
+        camera: { position: [4, 3, 46], lookAt: [0, 2, 40] },
+      },
     ],
   },
 
@@ -336,6 +372,15 @@ export const STORY_ACTS: Act[] = [
         character: "narrator",
         mood: "final",
         camera: { position: [0, 28, 0], lookAt: [0, 0, 0] },
+      },
+      {
+        id: "8-celebrate",
+        text: "Click anywhere to release the paper cranes of celebration!",
+        character: "prompt",
+        mood: "final",
+        interaction: "celebrate",
+        interactionTarget: 15,
+        camera: { position: [5, 20, 5], lookAt: [0, 10, 0] },
       },
     ],
   },

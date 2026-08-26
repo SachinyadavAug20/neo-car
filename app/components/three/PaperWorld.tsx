@@ -7,6 +7,51 @@ import gsap from "gsap";
 import { NarrativeState, getCurrentAct, getCurrentBeat } from "@/app/lib/narrative";
 import { ConeTree, BonsaiTree } from "./LSystemTree";
 import FluidWater from "./FluidWater";
+import GLTFModel from "./GLTFModel";
+import { MouseParallaxEffect, PushPendulum, HiddenCritter, AmbientDust, PaperShatter, RippleEffect } from "./Interactions";
+
+// ─── External Models Config ───────────────────────────────────────────
+// Polyfork models (CC0, no attribution required).
+// Drop .glb files in public/models/ and add entries here.
+// Models are rendered with toon shading to match the paper craft aesthetic.
+
+interface ExternalModel {
+  path: string;
+  position: [number, number, number];
+  scale?: number;
+  rotation?: [number, number, number];
+  animate?: "float" | "rotate" | "bob" | "none";
+  animateSpeed?: number;
+  acts?: number[];
+  tint?: string;
+}
+
+const EXTERNAL_MODELS: ExternalModel[] = [
+  // Act 1 (Cliff) — Field Radio Set near the cliff edge
+  { path: "/models/field-radio-set-b6f3fd.glb", position: [4, 0, -1], scale: 0.6, rotation: [0, 0.5, 0], acts: [1], tint: "#d6d3d1" },
+
+  // Act 2 (Storm) — Duckboard Walkway + Dragon's Teeth as storm barriers
+  { path: "/models/duckboard-walkway-b523bc.glb", position: [38, 0, 2], scale: 0.25, rotation: [0, 0.3, 0], acts: [2], tint: "#a8a29e" },
+  { path: "/models/duckboard-walkway-b523bc.glb", position: [42, 0, -2], scale: 0.25, rotation: [0, -0.5, 0], acts: [2], tint: "#78716c" },
+  { path: "/models/dragon-s-tooth-block-2f980d.glb", position: [44, 0, 1], scale: 0.35, rotation: [0, 0.8, 0], acts: [2], tint: "#d6d3d1" },
+  { path: "/models/dragon-s-tooth-block-2f980d.glb", position: [36, 0, -1], scale: 0.35, rotation: [0, -0.3, 0], acts: [2], tint: "#a8a29e" },
+
+  // Act 3 (Forest) — Market Stall + Duckboard as forest path
+  { path: "/models/market-stall-94937d.glb", position: [-42, 0, 2], scale: 0.5, rotation: [0, 1.2, 0], acts: [3], tint: "#22c55e" },
+  { path: "/models/duckboard-walkway-b523bc.glb", position: [-38, 0, -2], scale: 0.2, rotation: [0, 0.8, 0], acts: [3], tint: "#16a34a" },
+
+  // Act 4/5 (Unfolded Lands) — Stair Core as Sage's pillar + Cafe as ancient structure
+  { path: "/models/stair-and-lift-core-a13dd9.glb", position: [0, 0, -40], scale: 0.15, rotation: [0, 0, 0], acts: [4, 5], tint: "#a78bfa" },
+  { path: "/models/cafe-storefront-unit-443728.glb", position: [5, 0, -42], scale: 0.12, rotation: [0, 0.5, 0], acts: [4, 5], tint: "#c4b5fd" },
+
+  // Act 6/7 (Water) — Market Stall as dock + Duckboard as pier
+  { path: "/models/market-stall-94937d.glb", position: [3, 0, 42], scale: 0.4, rotation: [0, -0.8, 0], acts: [6, 7], tint: "#67e8f9" },
+  { path: "/models/duckboard-walkway-b523bc.glb", position: [-2, 0, 43], scale: 0.2, rotation: [0, 1.5, 0], acts: [6, 7], tint: "#7dd3fc" },
+
+  // Act 8 (Aerial) — Corner Restaurant + Clinic as distant landmarks
+  { path: "/models/corner-restaurant-unit-d85304.glb", position: [15, 0, 15], scale: 0.08, rotation: [0, 0.3, 0], acts: [8], tint: "#fbbf24" },
+  { path: "/models/clinic-annexe-0f56d1.glb", position: [-15, 0, -15], scale: 0.08, rotation: [0, 1.0, 0], acts: [8], tint: "#f472b6" },
+];
 
 // ─── World Constants ──────────────────────────────────────────────────
 // Act 1: [0, 0, 0]       — Cliff edge (center)
@@ -677,13 +722,14 @@ const CONWAY_SIZE = 20;
 const CONWAY_CELLS = CONWAY_SIZE * CONWAY_SIZE;
 const CONWAY_UPDATE_INTERVAL = 8;
 
-function ConwayPaperGrid({ visible, playerPos }: { visible: boolean; playerPos: [number, number, number] }) {
+function ConwayPaperGrid({ visible, playerPos, interactive = false }: { visible: boolean; playerPos: [number, number, number]; interactive?: boolean }) {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const edgeMeshRef = useRef<THREE.InstancedMesh>(null);
   const gridRef = useRef<number[]>(Array(CONWAY_CELLS).fill(0));
   const targetScales = useRef<Float32Array>(new Float32Array(CONWAY_CELLS));
   const frameCount = useRef(0);
   const initialized = useRef(false);
+  const { camera, gl } = useThree();
 
   const cellSize = 0.5;
   const halfGrid = (CONWAY_SIZE * cellSize) / 2;
@@ -748,6 +794,37 @@ function ConwayPaperGrid({ visible, playerPos }: { visible: boolean; playerPos: 
       targetScales.current[i] = next[i] ? 1 : 0;
     }
   }, []);
+
+  // Click-to-toggle handler for interactive mode
+  useEffect(() => {
+    if (!visible || !interactive) return;
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    const onClick = (e: MouseEvent) => {
+      if (document.pointerLockElement) document.exitPointerLock();
+      const rect = gl.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+
+      if (meshRef.current) {
+        const intersects = raycaster.intersectObject(meshRef.current);
+        if (intersects.length > 0) {
+          const instanceId = intersects[0].instanceId;
+          if (instanceId !== undefined && instanceId < CONWAY_CELLS) {
+            const g = gridRef.current;
+            g[instanceId] = g[instanceId] ? 0 : 1;
+            targetScales.current[instanceId] = g[instanceId] ? 1 : 0;
+            window.dispatchEvent(new CustomEvent("toggle-cell", { detail: { cellId: instanceId } }));
+          }
+        }
+      }
+    };
+
+    gl.domElement.addEventListener("click", onClick);
+    return () => gl.domElement.removeEventListener("click", onClick);
+  }, [visible, interactive, camera, gl]);
 
   useEffect(() => {
     if (visible && !initialized.current) {
@@ -912,6 +989,594 @@ function logConsoleEasterEggs() {
   );
 }
 
+// ─── Paper Origami Crane (decorative, non-interactive) ────────────────
+
+function OrigamiCrane({ position, color = "#f97316", scale = 1, speed = 1 }: { position: [number, number, number]; color?: string; scale?: number; speed?: number }) {
+  const ref = useRef<THREE.Group>(null);
+  useFrame((state) => {
+    if (!ref.current) return;
+    const t = state.clock.elapsedTime;
+    ref.current.position.y = position[1] + Math.sin(t * speed + position[0]) * 0.3;
+    ref.current.rotation.y = t * speed * 0.3;
+  });
+  return (
+    <group ref={ref} position={position} scale={scale}>
+      <PaperBox position={[0, 0, 0]} color={color} size={[0.3, 0.04, 0.15]} />
+      <PaperCone position={[0.2, 0, 0]} color={color} args={[0.03, 0.12, 3]} />
+      <PaperBox position={[-0.05, 0.03, 0.1]} color={color} size={[0.2, 0.01, 0.18]} />
+      <PaperBox position={[-0.05, 0.03, -0.1]} color={color} size={[0.15, 0.01, 0.12]} />
+      <PaperBox position={[-0.18, 0, 0]} color={color} size={[0.08, 0.04, 0.04]} rotation={[0, 0, -0.3]} />
+    </group>
+  );
+}
+
+// ─── Paper Flower ─────────────────────────────────────────────────────
+
+function PaperFlower({ position, color = "#f472b6", petalCount = 5 }: { position: [number, number, number]; color?: string; petalCount?: number }) {
+  const ref = useRef<THREE.Group>(null);
+  useFrame((state) => {
+    if (!ref.current) return;
+    const t = state.clock.elapsedTime;
+    ref.current.rotation.y = Math.sin(t * 0.5 + position[0]) * 0.2;
+  });
+  return (
+    <group ref={ref} position={position}>
+      <PaperCylinder position={[0, 0.2, 0]} color="#22c55e" args={[0.02, 0.02, 0.4, 4]} />
+      {Array.from({ length: petalCount }, (_, i) => {
+        const a = (i / petalCount) * Math.PI * 2;
+        return (
+          <PaperCone
+            key={i}
+            position={[Math.cos(a) * 0.12, 0.45, Math.sin(a) * 0.12]}
+            color={color}
+            args={[0.06, 0.1, 4]}
+            rotation={[0.5, a, 0]}
+          />
+        );
+      })}
+      <PaperSphere position={[0, 0.48, 0]} color="#fbbf24" radius={0.04} />
+    </group>
+  );
+}
+
+// ─── Paper Rock Stack (cairn) ────────────────────────────────────────
+
+function PaperRockStack({ position, count = 3 }: { position: [number, number, number]; count?: number }) {
+  return (
+    <group position={position}>
+      {Array.from({ length: count }, (_, i) => (
+        <PaperBox
+          key={i}
+          position={[0, i * 0.22, 0]}
+          color={["#a8a29e", "#d6d3d1", "#78716c"][i % 3]}
+          size={[0.3 + i * 0.08, 0.18, 0.25 + i * 0.05]}
+          rotation={[0, i * 0.4, (i - 1) * 0.05]}
+        />
+      ))}
+    </group>
+  );
+}
+
+// ─── Paper Arch / Gateway ─────────────────────────────────────────────
+
+function PaperArch({ position, color = "#d6d3d1", width = 2, height = 3 }: { position: [number, number, number]; color?: string; width?: number; height?: number }) {
+  const archPieces = useMemo(() => {
+    const pieces = [];
+    const segments = 8;
+    for (let i = 0; i < segments; i++) {
+      const t = (i / (segments - 1)) * Math.PI;
+      pieces.push({
+        x: Math.cos(t) * (width / 2),
+        y: Math.sin(t) * (height / 2) + 0.5,
+        rot: t - Math.PI / 2,
+      });
+    }
+    return pieces;
+  }, [width, height]);
+
+  return (
+    <group position={position}>
+      <PaperBox position={[-width / 2, 1, 0]} color={color} size={[0.25, 2, 0.25]} />
+      <PaperBox position={[width / 2, 1, 0]} color={color} size={[0.25, 2, 0.25]} />
+      {archPieces.map((p, i) => (
+        <PaperBox
+          key={i}
+          position={[p.x, p.y, 0]}
+          color={i % 2 === 0 ? color : "#a8a29e"}
+          size={[0.2, 0.15, 0.2]}
+          rotation={[0, 0, p.rot]}
+        />
+      ))}
+    </group>
+  );
+}
+
+// ─── Paper Lantern ────────────────────────────────────────────────────
+
+function PaperLantern({ position, color = "#fbbf24" }: { position: [number, number, number]; color?: string }) {
+  const ref = useRef<THREE.Group>(null);
+  useFrame((state) => {
+    if (!ref.current) return;
+    const t = state.clock.elapsedTime;
+    ref.current.position.y = position[1] + Math.sin(t * 1.5 + position[0]) * 0.1;
+  });
+  return (
+    <group ref={ref} position={position}>
+      <PaperCylinder position={[0, 0.5, 0]} color="#1a1a2e" args={[0.01, 0.01, 0.3, 4]} />
+      <PaperBox position={[0, 0, 0]} color={color} size={[0.3, 0.4, 0.3]} />
+      <PaperBox position={[0, 0, 0]} color={color} size={[0.25, 0.35, 0.25]} />
+      <pointLight position={[0, 0, 0]} intensity={0.8} color={color} distance={5} />
+    </group>
+  );
+}
+
+// ─── Paper Butterfly ──────────────────────────────────────────────────
+
+function PaperButterfly({ position, color = "#a78bfa" }: { position: [number, number, number]; color?: string }) {
+  const ref = useRef<THREE.Group>(null);
+  const wingL = useRef<THREE.Group>(null);
+  const wingR = useRef<THREE.Group>(null);
+  const offset = useMemo(() => Math.random() * Math.PI * 2, []);
+
+  useFrame((state) => {
+    if (!ref.current) return;
+    const t = state.clock.elapsedTime;
+    ref.current.position.x = position[0] + Math.sin(t * 0.8 + offset) * 3;
+    ref.current.position.y = position[1] + Math.sin(t * 1.2 + offset) * 0.5 + Math.sin(t * 0.5) * 0.3;
+    ref.current.position.z = position[2] + Math.cos(t * 0.6 + offset) * 2;
+    ref.current.rotation.y = Math.atan2(
+      Math.cos(t * 0.8 + offset) * 0.8,
+      -Math.sin(t * 0.6 + offset) * 0.6
+    );
+    if (wingL.current) wingL.current.rotation.y = Math.sin(t * 8) * 0.5;
+    if (wingR.current) wingR.current.rotation.y = -Math.sin(t * 8) * 0.5;
+  });
+
+  return (
+    <group ref={ref} position={position}>
+      <PaperBox position={[0, 0, 0]} color="#1a1a2e" size={[0.02, 0.02, 0.08]} />
+      <group ref={wingL} position={[0, 0, 0.04]}>
+        <PaperBox position={[-0.06, 0.02, 0]} color={color} size={[0.12, 0.01, 0.08]} />
+        <PaperBox position={[-0.04, -0.02, 0]} color={color} size={[0.08, 0.01, 0.06]} />
+      </group>
+      <group ref={wingR} position={[0, 0, -0.04]}>
+        <PaperBox position={[-0.06, 0.02, 0]} color={color} size={[0.12, 0.01, 0.08]} />
+        <PaperBox position={[-0.04, -0.02, 0]} color={color} size={[0.08, 0.01, 0.06]} />
+      </group>
+    </group>
+  );
+}
+
+// ─── Paper Windmill ───────────────────────────────────────────────────
+
+function PaperWindmill({ position, color = "#67e8f9" }: { position: [number, number, number]; color?: string }) {
+  const bladesRef = useRef<THREE.Group>(null);
+  useFrame((state) => {
+    if (!bladesRef.current) return;
+    bladesRef.current.rotation.z = state.clock.elapsedTime * 2;
+  });
+  return (
+    <group position={position}>
+      <PaperCylinder position={[0, 0.6, 0]} color="#a8a29e" args={[0.04, 0.06, 1.2, 6]} />
+      <group ref={bladesRef} position={[0, 1.3, 0]}>
+        {[0, 1, 2, 3].map((i) => {
+          const a = (i / 4) * Math.PI * 2;
+          return (
+            <PaperBox
+              key={i}
+              position={[Math.cos(a) * 0.3, Math.sin(a) * 0.3, 0]}
+              color={i % 2 === 0 ? color : "#ffffff"}
+              size={[0.15, 0.08, 0.01]}
+              rotation={[0, 0, a]}
+            />
+          );
+        })}
+        <PaperSphere position={[0, 0, 0.02]} color="#fbbf24" radius={0.04} />
+      </group>
+    </group>
+  );
+}
+
+// ─── Paper Mushroom ───────────────────────────────────────────────────
+
+function PaperMushroom({ position, capColor = "#ef4444" }: { position: [number, number, number]; capColor?: string }) {
+  return (
+    <group position={position}>
+      <PaperCylinder position={[0, 0.15, 0]} color="#f5f0e8" args={[0.06, 0.08, 0.3, 6]} />
+      <PaperCone position={[0, 0.4, 0]} color={capColor} args={[0.2, 0.15, 8]} />
+      <PaperSphere position={[0.05, 0.42, 0.05]} color="#ffffff" radius={0.03} />
+      <PaperSphere position={[-0.06, 0.44, -0.03]} color="#ffffff" radius={0.025} />
+    </group>
+  );
+}
+
+// ─── Paper Path (trail of flat squares) ───────────────────────────────
+
+function PaperPath({ start, end, count = 8 }: { start: [number, number, number]; end: [number, number, number]; count?: number }) {
+  const steps = useMemo(() => {
+    return Array.from({ length: count }, (_, i) => {
+      const t = i / (count - 1);
+      return [
+        start[0] + (end[0] - start[0]) * t,
+        start[1] + (end[1] - start[1]) * t + Math.sin(t * Math.PI) * 0.1,
+        start[2] + (end[2] - start[2]) * t,
+      ] as [number, number, number];
+    });
+  }, [start, end, count]);
+
+  return (
+    <group>
+      {steps.map((pos, i) => (
+        <PaperBox
+          key={i}
+          position={pos}
+          color={i % 2 === 0 ? "#e8e0d4" : "#d6d3d1"}
+          size={[0.4, 0.03, 0.4]}
+          rotation={[0, i * 0.3, 0]}
+        />
+      ))}
+    </group>
+  );
+}
+
+// ─── Paper Swan (origami style) ───────────────────────────────────────
+
+function PaperSwan({ position, color = "#ffffff", scale = 1 }: { position: [number, number, number]; color?: string; scale?: number }) {
+  const ref = useRef<THREE.Group>(null);
+  useFrame((state) => {
+    if (!ref.current) return;
+    ref.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 1.2 + position[0]) * 0.08;
+    ref.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.3) * 0.15;
+  });
+  return (
+    <group ref={ref} position={position} scale={scale}>
+      <PaperBox position={[0, 0, 0]} color={color} size={[0.4, 0.06, 0.25]} />
+      <PaperCone position={[0.22, 0.08, 0]} color={color} args={[0.04, 0.18, 3]} rotation={[0, 0, -0.5]} />
+      <PaperBox position={[-0.12, 0.1, 0]} color={color} size={[0.2, 0.02, 0.3]} rotation={[0, 0, 0.3]} />
+      <PaperBox position={[-0.12, 0.1, 0]} color={color} size={[0.15, 0.02, 0.22]} rotation={[0, 0, 0.5]} />
+      <PaperBox position={[0.28, 0.12, 0]} color="#f97316" size={[0.06, 0.03, 0.03]} />
+    </group>
+  );
+}
+
+// ─── Paper Frog (jumping) ─────────────────────────────────────────────
+
+function PaperFrog({ position, color = "#22c55e" }: { position: [number, number, number]; color?: string }) {
+  const ref = useRef<THREE.Group>(null);
+  const jumpRef = useRef(0);
+  useFrame((state) => {
+    if (!ref.current) return;
+    const t = state.clock.elapsedTime;
+    jumpRef.current = Math.max(0, jumpRef.current - 0.02);
+    const jumpY = Math.sin(jumpRef.current * Math.PI) * 0.8;
+    ref.current.position.y = position[1] + jumpY + Math.abs(Math.sin(t * 0.5)) * 0.05;
+  });
+  return (
+    <group ref={ref} position={position}>
+      <PaperBox position={[0, 0.12, 0]} color={color} size={[0.25, 0.12, 0.2]} />
+      <PaperBox position={[0, 0.2, 0]} color={color} size={[0.2, 0.06, 0.18]} />
+      <PaperSphere position={[-0.08, 0.24, 0.08]} color={color} radius={0.035} />
+      <PaperSphere position={[0.08, 0.24, 0.08]} color={color} radius={0.035} />
+      <PaperSphere position={[-0.08, 0.24, 0.08]} color="#1a1a2e" radius={0.015} />
+      <PaperSphere position={[0.08, 0.24, 0.08]} color="#1a1a2e" radius={0.015} />
+      <PaperBox position={[-0.15, 0.06, 0.12]} color={color} size={[0.08, 0.04, 0.12]} rotation={[0.3, 0, 0]} />
+      <PaperBox position={[0.15, 0.06, 0.12]} color={color} size={[0.08, 0.04, 0.12]} rotation={[0.3, 0, 0]} />
+    </group>
+  );
+}
+
+// ─── Paper Star ───────────────────────────────────────────────────────
+
+function PaperStar({ position, color = "#fbbf24", radius = 0.3 }: { position: [number, number, number]; color?: string; radius?: number }) {
+  const ref = useRef<THREE.Group>(null);
+  useFrame((state) => {
+    if (!ref.current) return;
+    ref.current.rotation.y = state.clock.elapsedTime * 0.5;
+    ref.current.position.y = position[1] + Math.sin(state.clock.elapsedTime + position[0]) * 0.15;
+  });
+  const points = useMemo(() => {
+    const pts: [number, number, number][] = [];
+    for (let i = 0; i < 5; i++) {
+      const outerAngle = (i / 5) * Math.PI * 2 - Math.PI / 2;
+      const innerAngle = ((i + 0.5) / 5) * Math.PI * 2 - Math.PI / 2;
+      pts.push([Math.cos(outerAngle) * radius, Math.sin(outerAngle) * radius, 0]);
+      pts.push([Math.cos(innerAngle) * radius * 0.4, Math.sin(innerAngle) * radius * 0.4, 0]);
+    }
+    return pts;
+  }, [radius]);
+
+  return (
+    <group ref={ref} position={position}>
+      {points.map(([x, y, z], i) => (
+        <PaperBox
+          key={i}
+          position={[x * 0.5, y * 0.5, z]}
+          color={color}
+          size={[0.08, 0.08, 0.04]}
+        />
+      ))}
+      <PaperSphere position={[0, 0, 0]} color={color} radius={radius * 0.15} />
+    </group>
+  );
+}
+
+// ─── Paper House ──────────────────────────────────────────────────────
+
+function PaperHouse({ position, wallColor = "#f5f0e8", roofColor = "#ef4444" }: { position: [number, number, number]; wallColor?: string; roofColor?: string }) {
+  return (
+    <group position={position}>
+      <PaperBox position={[0, 0.3, 0]} color={wallColor} size={[0.6, 0.6, 0.5]} />
+      <PaperBox position={[0.1, 0.2, 0.26]} color="#1a1a2e" size={[0.15, 0.25, 0.02]} />
+      <PaperBox position={[-0.12, 0.35, 0.26]} color="#67e8f9" size={[0.12, 0.12, 0.02]} />
+      <group position={[0, 0.7, 0]}>
+        <PaperCone position={[0, 0, 0]} color={roofColor} args={[0.45, 0.3, 4]} rotation={[0, Math.PI / 4, 0]} />
+      </group>
+      <PaperCylinder position={[0.2, 0.85, 0]} color="#78716c" args={[0.04, 0.04, 0.2, 6]} />
+    </group>
+  );
+}
+
+// ─── Paper Gem / Crystal ──────────────────────────────────────────────
+
+function PaperGem({ position, color = "#a78bfa", scale = 1 }: { position: [number, number, number]; color?: string; scale?: number }) {
+  const ref = useRef<THREE.Group>(null);
+  useFrame((state) => {
+    if (!ref.current) return;
+    ref.current.rotation.y = state.clock.elapsedTime * 0.8;
+    ref.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 1.5) * 0.1;
+  });
+  return (
+    <group ref={ref} position={position} scale={scale}>
+      <mesh>
+        <octahedronGeometry args={[0.2, 0]} />
+        <meshToonMaterial color={color} emissive={color} emissiveIntensity={0.2} transparent opacity={0.85} />
+      </mesh>
+      <lineSegments>
+        <edgesGeometry args={[new THREE.OctahedronGeometry(0.2, 0)]} />
+        <lineBasicMaterial color="#1a1a2e" transparent opacity={0.5} />
+      </lineSegments>
+      <pointLight position={[0, 0, 0]} intensity={0.4} color={color} distance={2} />
+    </group>
+  );
+}
+
+// ─── Paper Sailboat ───────────────────────────────────────────────────
+
+function PaperSailboat({ position, hullColor = "#f5f0e8", sailColor = "#ffffff" }: { position: [number, number, number]; hullColor?: string; sailColor?: string }) {
+  const ref = useRef<THREE.Group>(null);
+  useFrame((state) => {
+    if (!ref.current) return;
+    const t = state.clock.elapsedTime;
+    ref.current.position.y = position[1] + Math.sin(t * 1.8) * 0.1;
+    ref.current.rotation.z = Math.sin(t * 1.2) * 0.08;
+    ref.current.rotation.x = Math.sin(t * 0.9) * 0.05;
+  });
+  return (
+    <group ref={ref} position={position}>
+      <PaperBox position={[0, 0, 0]} color={hullColor} size={[0.5, 0.08, 0.25]} />
+      <PaperBox position={[0, 0.04, 0]} color={hullColor} size={[0.4, 0.06, 0.2]} />
+      <PaperCylinder position={[0.05, 0.2, 0]} color="#78716c" args={[0.01, 0.01, 0.35, 4]} />
+      <PaperBox position={[0.05, 0.3, 0.01]} color={sailColor} size={[0.01, 0.25, 0.18]} />
+      <PaperBox position={[0.05, 0.25, -0.01]} color={sailColor} size={[0.01, 0.15, 0.12]} />
+    </group>
+  );
+}
+
+// ─── Paper Arrow (directional marker) ─────────────────────────────────
+
+function PaperArrow({ position, direction = [1, 0, 0] as [number, number, number], color = "#fbbf24" }: { position: [number, number, number]; direction?: [number, number, number]; color?: string }) {
+  const ref = useRef<THREE.Group>(null);
+  useFrame((state) => {
+    if (!ref.current) return;
+    ref.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2 + position[0]) * 0.1;
+  });
+  const rotation = useMemo(() => {
+    const up = new THREE.Vector3(0, 1, 0);
+    const dir = new THREE.Vector3(...direction).normalize();
+    const quat = new THREE.Quaternion().setFromUnitVectors(up, dir);
+    const euler = new THREE.Euler().setFromQuaternion(quat);
+    return [euler.x, euler.y, euler.z] as [number, number, number];
+  }, [direction]);
+
+  return (
+    <group ref={ref} position={position} rotation={rotation}>
+      <PaperCone position={[0, 0.2, 0]} color={color} args={[0.1, 0.2, 3]} />
+      <PaperCylinder position={[0, 0, 0]} color={color} args={[0.03, 0.03, 0.2, 4]} />
+    </group>
+  );
+}
+
+// ─── Paper Wind Chime ─────────────────────────────────────────────────
+
+function PaperWindChime({ position }: { position: [number, number, number] }) {
+  const ref = useRef<THREE.Group>(null);
+  const rods = useRef<THREE.Group[]>([]);
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    rods.current.forEach((rod, i) => {
+      if (!rod) return;
+      rod.rotation.z = Math.sin(t * (1.5 + i * 0.3) + i * 1.2) * 0.15;
+      rod.rotation.x = Math.cos(t * (1.2 + i * 0.2) + i * 0.8) * 0.1;
+    });
+  });
+  return (
+    <group ref={ref} position={position}>
+      <PaperBox position={[0, 0.3, 0]} color="#78716c" size={[0.3, 0.03, 0.3]} />
+      {[-0.08, 0, 0.08].map((x, i) => (
+        <group
+          key={i}
+          ref={(el) => { if (el) rods.current[i] = el; }}
+          position={[x, 0.1, 0]}
+        >
+          <PaperCylinder position={[0, 0, 0]} color="#a8a29e" args={[0.005, 0.005, 0.2, 4]} />
+          <PaperBox position={[0, -0.12, 0]} color={["#67e8f9", "#a78bfa", "#f472b6"][i]} size={[0.04, 0.08, 0.02]} />
+        </group>
+      ))}
+      <PaperCylinder position={[0, 0.35, 0]} color="#1a1a2e" args={[0.005, 0.005, 0.1, 4]} />
+    </group>
+  );
+}
+
+// ─── Paper Lotus ──────────────────────────────────────────────────────
+
+function PaperLotus({ position, color = "#f472b6" }: { position: [number, number, number]; color?: string }) {
+  const ref = useRef<THREE.Group>(null);
+  useFrame((state) => {
+    if (!ref.current) return;
+    ref.current.rotation.y = state.clock.elapsedTime * 0.2;
+    ref.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 0.8) * 0.05;
+  });
+  return (
+    <group ref={ref} position={position}>
+      {[0, 1, 2, 3, 4, 5].map((i) => {
+        const a = (i / 6) * Math.PI * 2;
+        return (
+          <PaperBox
+            key={`outer-${i}`}
+            position={[Math.cos(a) * 0.15, 0.05, Math.sin(a) * 0.15]}
+            color={color}
+            size={[0.1, 0.02, 0.06]}
+            rotation={[0.3, a, 0]}
+          />
+        );
+      })}
+      {[0, 1, 2, 3, 4].map((i) => {
+        const a = ((i + 0.5) / 5) * Math.PI * 2;
+        return (
+          <PaperBox
+            key={`inner-${i}`}
+            position={[Math.cos(a) * 0.08, 0.1, Math.sin(a) * 0.08]}
+            color="#fbbf24"
+            size={[0.07, 0.02, 0.04]}
+            rotation={[0.5, a, 0]}
+          />
+        );
+      })}
+      <PaperSphere position={[0, 0.12, 0]} color="#fbbf24" radius={0.04} />
+    </group>
+  );
+}
+
+// ─── Collected Leaf (Act 3) ──────────────────────────────────────────
+
+function CollectedLeaf({ position, color }: { position: [number, number, number]; color: string }) {
+  const ref = useRef<THREE.Group>(null);
+  const startY = position[1];
+  useFrame((state) => {
+    if (!ref.current) return;
+    const t = state.clock.elapsedTime;
+    ref.current.rotation.y = t * 2;
+    ref.current.rotation.x = Math.sin(t * 3) * 0.3;
+    ref.current.position.y = startY + Math.sin(t * 2) * 0.3;
+  });
+  return (
+    <group ref={ref} position={position}>
+      <PaperBox position={[0, 0, 0]} color={color} size={[0.15, 0.02, 0.1]} rotation={[0.2, 0, 0.1]} />
+      <PaperBox position={[0.05, 0.01, 0]} color={color} size={[0.1, 0.02, 0.08]} rotation={[-0.1, 0.5, 0]} />
+      <pointLight position={[0, 0, 0]} intensity={0.3} color={color} distance={2} />
+    </group>
+  );
+}
+
+// ─── Celebration Particle (Act 8) ────────────────────────────────────
+
+function CelebrationParticle({ position, color, velocity }: { position: [number, number, number]; color: string; velocity: [number, number, number] }) {
+  const ref = useRef<THREE.Group>(null);
+  const lifeRef = useRef(1);
+  const posRef = useRef(new THREE.Vector3(...position));
+  const velRef = useRef(new THREE.Vector3(...velocity));
+
+  useFrame((_, delta) => {
+    if (!ref.current) return;
+    lifeRef.current -= delta * 0.5;
+    if (lifeRef.current <= 0) {
+      ref.current.scale.setScalar(0);
+      return;
+    }
+    velRef.current.y -= delta * 3;
+    posRef.current.addScaledVector(velRef.current, delta);
+    ref.current.position.copy(posRef.current);
+    ref.current.rotation.y += delta * 5;
+    ref.current.rotation.x += delta * 3;
+    ref.current.scale.setScalar(lifeRef.current);
+  });
+
+  return (
+    <group ref={ref} position={position}>
+      <PaperTetrahedron position={[0, 0, 0]} color={color} radius={0.15} />
+      <pointLight position={[0, 0, 0]} intensity={0.5} color={color} distance={3} />
+    </group>
+  );
+}
+
+// ─── Interactive Paper Object (hover glow) ────────────────────────────
+
+function InteractivePaperObject({
+  position, color, size, hoverColor = "#fbbf24", onClick
+}: {
+  position: [number, number, number];
+  color: string;
+  size: [number, number, number];
+  hoverColor?: string;
+  onClick?: () => void;
+}) {
+  const ref = useRef<THREE.Group>(null);
+  const [hovered, setHovered] = useState(false);
+  const matRef = useRef<THREE.MeshToonMaterial>(null);
+
+  useFrame(() => {
+    if (!ref.current) return;
+    const targetScale = hovered ? 1.15 : 1;
+    ref.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
+    // Floating bob when hovered
+    if (hovered) {
+      ref.current.position.y = position[1] + Math.sin(Date.now() * 0.003) * 0.1;
+    }
+  });
+
+  return (
+    <group
+      ref={ref}
+      position={position}
+      onClick={(e) => { e.stopPropagation(); onClick?.(); }}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        setHovered(true);
+        document.body.style.cursor = "pointer";
+        window.dispatchEvent(new CustomEvent("cursor-change", { detail: { cursor: "pointer" } }));
+      }}
+      onPointerOut={() => {
+        setHovered(false);
+        document.body.style.cursor = "none";
+        window.dispatchEvent(new CustomEvent("cursor-change", { detail: { cursor: "default" } }));
+      }}
+    >
+      <mesh castShadow>
+        <boxGeometry args={size} />
+        <meshToonMaterial
+          color={hovered ? hoverColor : color}
+          emissive={hovered ? hoverColor : "#000000"}
+          emissiveIntensity={hovered ? 0.4 : 0}
+        />
+      </mesh>
+      <lineSegments>
+        <edgesGeometry args={[new THREE.BoxGeometry(...size)]} />
+        <lineBasicMaterial color="#1a1a2e" transparent opacity={hovered ? 0.8 : 0.5} />
+      </lineSegments>
+      {hovered && (
+        <>
+          <pointLight position={[0, 0.5, 0]} intensity={0.6} color={hoverColor} distance={3} />
+          {/* Outer glow ring */}
+          <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[Math.max(size[0], size[2]) * 0.8, Math.max(size[0], size[2]) * 1.0, 32]} />
+            <meshBasicMaterial color={hoverColor} transparent opacity={0.2} side={THREE.DoubleSide} />
+          </mesh>
+        </>
+      )}
+    </group>
+  );
+}
+
 // ─── Main World ───────────────────────────────────────────────────────
 
 interface PaperWorldProps {
@@ -1020,6 +1685,75 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
     }
   }, [currentAct, beat?.mood, beat?.envChange]);
 
+  // ─── Collect Leaves interaction (Act 3) ────────────────────────────
+  const [collectedLeaves, setCollectedLeaves] = useState<Array<{ id: number; x: number; y: number; z: number; color: string }>>([]);
+  const leafIdRef = useRef(0);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      const count = detail?.count || 0;
+      const colors = ["#22c55e", "#4ade80", "#86efac", "#fbbf24", "#f472b6"];
+      // Spawn a leaf at a random position near the forest
+      const leaf = {
+        id: leafIdRef.current++,
+        x: ACT_POSITIONS.forest[0] + (Math.random() - 0.5) * 10,
+        y: 1 + Math.random() * 3,
+        z: ACT_POSITIONS.forest[2] + (Math.random() - 0.5) * 10,
+        color: colors[count % colors.length],
+      };
+      setCollectedLeaves(prev => [...prev.slice(-20), leaf]);
+    };
+    window.addEventListener("collect-leaf", handler);
+    return () => window.removeEventListener("collect-leaf", handler);
+  }, []);
+
+  // ─── Celebrate particles (Act 8) ──────────────────────────────────
+  const [celebrationParticles, setCelebrationParticles] = useState<Array<{ id: number; x: number; y: number; z: number; color: string; vel: [number, number, number] }>>([]);
+  const celebIdRef = useRef(0);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      const count = detail?.count || 0;
+      const colors = ["#fbbf24", "#f472b6", "#a78bfa", "#67e8f9", "#22c55e", "#ef4444"];
+      const newParticles = Array.from({ length: 3 }, (_, i) => ({
+        id: celebIdRef.current++,
+        x: (Math.random() - 0.5) * 20,
+        y: 10 + Math.random() * 10,
+        z: (Math.random() - 0.5) * 20,
+        color: colors[(count + i) % colors.length],
+        vel: [(Math.random() - 0.5) * 2, 1 + Math.random() * 2, (Math.random() - 0.5) * 2] as [number, number, number],
+      }));
+      setCelebrationParticles(prev => [...prev.slice(-50), ...newParticles]);
+    };
+    window.addEventListener("celebrate", handler);
+    return () => window.removeEventListener("celebrate", handler);
+  }, []);
+
+  // ─── Follow-butterfly interaction (Act 7/8) ────────────────────────
+  const [butterflyTrail, setButterflyTrail] = useState<Array<{ id: number; x: number; y: number; z: number; color: string }>>([]);
+  const butterflyIdRef = useRef(0);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      const count = detail?.count || 0;
+      const colors = ["#a78bfa", "#f472b6", "#67e8f9", "#fbbf24"];
+      const angle = (count / 25) * Math.PI * 2;
+      const butterfly = {
+        id: butterflyIdRef.current++,
+        x: ACT_POSITIONS.water[0] + Math.cos(angle) * 6,
+        y: 2 + Math.sin(count * 0.5) * 2,
+        z: ACT_POSITIONS.water[2] + Math.sin(angle) * 6,
+        color: colors[count % colors.length],
+      };
+      setButterflyTrail(prev => [...prev.slice(-30), butterfly]);
+    };
+    window.addEventListener("follow-butterfly", handler);
+    return () => window.removeEventListener("follow-butterfly", handler);
+  }, []);
+
   // Poisson positions for distant landmarks
   const landmarkPositions = useMemo(() => ({
     monoliths: poissonDisk(14, 25, 140, 140),
@@ -1034,6 +1768,15 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
 
       {/* ═══ ACT 1: Cliff Edge [0, 0, 0] ═══ */}
       <CliffEdge position={ACT_POSITIONS.cliff} />
+      <PaperRockStack position={[3, -0.3, -2]} count={4} />
+      <PaperRockStack position={[-2, -0.3, 3]} count={3} />
+      <PaperFlower position={[2, 0, 2]} color="#f472b6" />
+      <PaperFlower position={[-3, 0, 1]} color="#fb923c" petalCount={6} />
+      <PaperMushroom position={[1.5, 0, -1.5]} capColor="#ef4444" />
+      <PaperButterfly position={[3, 3, 0]} color="#a78bfa" />
+      <PaperStar position={[4, 3, 2]} color="#fbbf24" radius={0.25} />
+      <PaperHouse position={[-5, 0, -3]} />
+      <PaperFrog position={[2, 0, -2]} color="#22c55e" />
       {currentAct === 1 && (
         <>
           <MiloCrane position={[0, 0.5, 0]} act={currentAct} />
@@ -1047,6 +1790,10 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
           <PaperCylinder position={[0, 0.3, 0]} color="#78716c" args={[0.3, 0.35, 0.6, 6]} />
           <PaperCylinder position={[2, 0.2, -1]} color="#a8a29e" args={[0.25, 0.3, 0.4, 6]} />
           <PaperCone position={[1, 0.15, 0.5]} color="#d6d3d1" args={[0.2, 0.3, 5]} />
+          <PaperRockStack position={[-1.5, -0.3, 2]} count={5} />
+          <PaperRockStack position={[3, -0.3, -2]} count={3} />
+          <PaperArrow position={[42, 2, 0]} direction={[0, 0, -1]} color="#94a3b8" />
+          <PaperArrow position={[38, 2, 0]} direction={[0, 0, 1]} color="#94a3b8" />
           {currentAct === 2 && <StormDebris />}
         </group>
       )}
@@ -1054,6 +1801,23 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
 
       {/* ═══ ACT 3: Forest [-40, 0, 0] ═══ */}
       {currentAct >= 3 && <Forest position={ACT_POSITIONS.forest} />}
+      {currentAct >= 3 && (
+        <>
+          <PaperFlower position={[-38, 0, 2]} color="#f472b6" />
+          <PaperFlower position={[-42, 0, -1]} color="#c084fc" petalCount={7} />
+          <PaperFlower position={[-37, 0, -3]} color="#fb923c" />
+          <PaperButterfly position={[-39, 3, 1]} color="#f472b6" />
+          <PaperButterfly position={[-41, 2.5, -2]} color="#67e8f9" />
+          <PaperMushroom position={[-38.5, 0, 3]} capColor="#a78bfa" />
+          <PaperMushroom position={[-41.5, 0, -2.5]} capColor="#f472b6" />
+          <PaperLantern position={[-40, 2, 0]} color="#fbbf24" />
+          <PaperSwan position={[-38, 0.1, -1]} color="#ffffff" scale={0.7} />
+          <PaperFrog position={[-41, 0, 2]} color="#16a34a" />
+          <PaperGem position={[-39, 1.5, -2]} color="#a78bfa" scale={0.8} />
+          <PaperLotus position={[-42, 0, 1]} color="#f472b6" />
+          <PaperWindChime position={[-40, 2.5, -3]} />
+        </>
+      )}
       {currentAct >= 3 && currentAct <= 4 && (
         <>
           <LiraFox position={[-40, 0, -3]} visible={true} />
@@ -1064,7 +1828,7 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
       {/* ═══ ACT 4/5: Unfolded Lands [0, 0, -40] ═══ */}
       {currentAct >= 4 && (
         <group position={ACT_POSITIONS.unfolded}>
-          <ConwayPaperGrid visible={currentAct >= 4} playerPos={[0, 0, -40]} />
+          <ConwayPaperGrid visible={currentAct >= 4} playerPos={[0, 0, -40]} interactive={beat?.interaction === "toggle-cells" && narrativeState.interactionState !== "complete"} />
           <group position={[0, -0.48, 0]}>
             <mesh rotation={[-Math.PI / 2, 0, 0]}>
               <circleGeometry args={[6, 24]} />
@@ -1076,6 +1840,10 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
             <PaperBox position={[0, 0.9, 0]} color="#a8a29e" size={[0.35, 0.3, 0.35]} />
             <SageOwl position={[0, 1.2, 0]} visible={currentAct >= 4} />
           </group>
+          <PaperArch position={[4, 0, -2]} color="#d6d3d1" width={1.5} height={2.5} />
+          <PaperArch position={[-4, 0, 2]} color="#a8a29e" width={1.2} height={2} />
+          <PaperWindmill position={[5, 0, 3]} color="#a78bfa" />
+          <PaperRockStack position={[-3, -0.48, -4]} count={4} />
         </group>
       )}
       {currentAct >= 4 && currentAct <= 5 && <MiloCrane position={[0, 0.5, -37]} act={currentAct} />}
@@ -1084,11 +1852,45 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
       {/* ═══ ACT 6/7: Water / Pip [0, 0, 40] ═══ */}
       <WaterSurface position={[0, -0.3, 40]} />
       <PipBoat position={[0, 0, 40]} visible={currentAct >= 6} />
+      {currentAct >= 6 && (
+        <>
+          <OrigamiCrane position={[3, 1, 42]} color="#f97316" scale={0.8} speed={1.2} />
+          <OrigamiCrane position={[-2, 1.5, 38]} color="#fb923c" scale={0.6} speed={0.8} />
+          <PaperButterfly position={[2, 2, 43]} color="#f472b6" />
+          <PaperButterfly position={[-1, 3, 37]} color="#67e8f9" />
+          <PaperLantern position={[4, 1.5, 40]} color="#fbbf24" />
+          <PaperLantern position={[-4, 1.5, 40]} color="#fbbf24" />
+          <PaperSailboat position={[3, 0.2, 42]} hullColor="#d6d3d1" sailColor="#ffffff" />
+          <PaperSailboat position={[-2, 0.3, 38]} hullColor="#a8a29e" sailColor="#f5f0e8" />
+          <PaperSwan position={[1, 0.1, 43]} color="#ffffff" scale={0.6} />
+          <PaperLotus position={[-3, 0, 42]} color="#f472b6" />
+          <PaperLotus position={[2, 0, 37]} color="#c084fc" />
+          <PaperGem position={[0, 1, 41]} color="#67e8f9" scale={0.6} />
+        </>
+      )}
       {currentAct >= 6 && currentAct <= 7 && <LiraFox position={[-3, 0, 40]} visible={true} />}
       {currentAct >= 6 && <MiloCrane position={[0, 1, 38]} act={currentAct} />}
 
       {/* ═══ ACT 8: Aerial [0, 15, 0] ═══ */}
-      {currentAct === 8 && <MiloCrane position={[0, 15, 0]} act={currentAct} />}
+      {currentAct === 8 && (
+        <>
+          <MiloCrane position={[0, 15, 0]} act={currentAct} />
+          <OrigamiCrane position={[5, 13, 3]} color="#fbbf24" scale={1.2} speed={0.5} />
+          <OrigamiCrane position={[-4, 14, -2]} color="#f97316" scale={1} speed={0.7} />
+          <PaperButterfly position={[3, 16, -4]} color="#a78bfa" />
+          <PaperButterfly position={[-5, 15, 2]} color="#f472b6" />
+          <PaperStar position={[6, 14, 0]} color="#fbbf24" radius={0.4} />
+          <PaperStar position={[-6, 16, -3]} color="#a78bfa" radius={0.35} />
+          <PaperGem position={[4, 17, -5]} color="#fbbf24" scale={1.5} />
+          <PaperGem position={[-3, 13, 4]} color="#67e8f9" scale={1.2} />
+        </>
+      )}
+
+      {/* ═══ Connecting Paths ═══ */}
+      <PaperPath start={[2, 0, 0]} end={[38, 0, 0]} count={12} />
+      <PaperPath start={[-2, 0, 0]} end={[-38, 0, 0]} count={12} />
+      <PaperPath start={[0, 0, -2]} end={[0, 0, -38]} count={12} />
+      <PaperPath start={[0, 0, 2]} end={[0, 0, 38]} count={12} />
 
       {/* ═══ Lore Nodes ═══ */}
       <LoreNodes visible={currentAct >= 3} onCollect={(entry) => onLoreCollect?.(entry)} />
@@ -1096,6 +1898,21 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
       {/* ═══ Clouds ═══ */}
       {[-40, 0, 40, -25, 25, -45, 45].map((x, i) => (
         <FloatingCloud key={i} position={[x, 10 + (i % 3) * 2, -18 - i * 5]} />
+      ))}
+
+      {/* ═══ Collected Leaves (Act 3) ═══ */}
+      {collectedLeaves.map((leaf) => (
+        <CollectedLeaf key={leaf.id} position={[leaf.x, leaf.y, leaf.z]} color={leaf.color} />
+      ))}
+
+      {/* ═══ Celebration Particles (Act 8) ═══ */}
+      {celebrationParticles.map((p) => (
+        <CelebrationParticle key={p.id} position={[p.x, p.y, p.z]} color={p.color} velocity={p.vel} />
+      ))}
+
+      {/* ═══ Butterfly Trail (Act 7/8) ═══ */}
+      {butterflyTrail.map((b) => (
+        <PaperButterfly key={b.id} position={[b.x, b.y, b.z]} color={b.color} />
       ))}
 
       {/* ═══ Distant Landmarks ═══ */}
@@ -1117,6 +1934,52 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
           })}
         </group>
       ))}
+
+      {/* ═══ Mouse Parallax (ambient depth) ═══ */}
+      <MouseParallaxEffect strength={0.2} />
+
+      {/* ═══ Ambient Dust Particles ═══ */}
+      <AmbientDust count={150} area={[80, 15, 80]} speed={0.2} />
+
+      {/* ═══ Hidden Critters (Easter Eggs) ═══ */}
+      <HiddenCritter position={[5, 0.3, 3]} type="fox" />
+      <HiddenCritter position={[-8, 0.3, -2]} type="bird" />
+      <HiddenCritter position={[38, 0.3, 2]} type="bug" />
+      <HiddenCritter position={[-35, 0.3, 5]} type="rabbit" />
+      <HiddenCritter position={[2, 0.3, -38]} type="owl" />
+      <HiddenCritter position={[5, 0.3, 42]} type="fox" />
+      <HiddenCritter position={[-3, 13, 2]} type="bird" />
+
+      {/* ═══ Push Pendulums (interactive swinging) ═══ */}
+      <PushPendulum position={[2, 4, 0]} length={1.5} color="#f472b6" />
+      <PushPendulum position={[-4, 3.5, -2]} length={2} color="#a78bfa" />
+      <PushPendulum position={[42, 3, 1]} length={1.8} color="#67e8f9" />
+      <PushPendulum position={[-38, 3.5, -1]} length={1.5} color="#fbbf24" />
+      <PushPendulum position={[1, 5, 42]} length={2.2} color="#22c55e" />
+      <PushPendulum position={[0, 12, -2]} length={1.2} color="#f97316" />
+
+      {/* ═══ Paper Shatter Barriers ═══ */}
+      <PaperShatter position={[20, 1.5, 0]} size={[2, 3, 0.15]} color="#e5e7eb" />
+      <PaperShatter position={[-20, 1.5, 0]} size={[2.5, 2.5, 0.15]} color="#d6d3d1" />
+      <PaperShatter position={[0, 1.5, -20]} size={[3, 2, 0.15]} color="#e8e0d4" />
+
+      {/* ═══ External GLB Models ═══ */}
+      {EXTERNAL_MODELS.map((model, i) => {
+        const showInAct = !model.acts || model.acts.includes(currentAct);
+        if (!showInAct) return null;
+        return (
+          <GLTFModel
+            key={`ext-${i}`}
+            path={model.path}
+            position={model.position}
+            scale={model.scale ?? 1}
+            rotation={model.rotation ?? [0, 0, 0]}
+            animate={model.animate ?? "none"}
+            animateSpeed={model.animateSpeed ?? 1}
+            tint={model.tint}
+          />
+        );
+      })}
     </group>
   );
 }
