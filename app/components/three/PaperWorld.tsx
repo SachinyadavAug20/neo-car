@@ -955,6 +955,7 @@ function LoreNodes({ visible, onCollect }: { visible: boolean; onCollect: (entry
               e.stopPropagation();
               setCollected(prev => new Set(prev).add(entry.id));
               document.body.style.cursor = "default";
+              window.dispatchEvent(new CustomEvent("gem-collect"));
               onCollect(entry);
             }}
           >
@@ -1538,13 +1539,13 @@ function InteractivePaperObject({
     <group
       ref={ref}
       position={position}
-      onClick={(e) => { e.stopPropagation(); onClick?.(); }}
+      onClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent("button-tap")); onClick?.(); }}
       onPointerOver={(e) => {
         e.stopPropagation();
         setHovered(true);
         document.body.style.cursor = "pointer";
         window.dispatchEvent(new CustomEvent("cursor-change", { detail: { cursor: "pointer" } }));
-        window.dispatchEvent(new CustomEvent("hover-in"));
+        window.dispatchEvent(new CustomEvent("button-hover"));
       }}
       onPointerOut={() => {
         setHovered(false);
@@ -1615,6 +1616,8 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
         const intersects = raycaster.intersectObject(secretFoldGroup, true);
         if (intersects.length > 0) {
           secretFoldInteracted.current = true;
+          window.dispatchEvent(new CustomEvent("crystal-resonance"));
+          window.dispatchEvent(new CustomEvent("discovery"));
           window.dispatchEvent(new CustomEvent("paper-shower"));
           onSecretFoldInteract();
         }

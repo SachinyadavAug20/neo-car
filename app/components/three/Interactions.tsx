@@ -137,7 +137,7 @@ export function PushPendulum({ position, length = 2, color = "#f472b6", label }:
       </mesh>
       <group
         ref={groupRef}
-        onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = "pointer"; window.dispatchEvent(new CustomEvent("hover-in")); }}
+        onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = "pointer"; window.dispatchEvent(new CustomEvent("tooltip")); }}
         onPointerOut={() => { setHovered(false); document.body.style.cursor = "none"; window.dispatchEvent(new CustomEvent("hover-out")); }}
         onClick={(e) => { e.stopPropagation(); push(); window.dispatchEvent(new CustomEvent("pendulum-push")); }}
       >
@@ -192,7 +192,14 @@ export function HiddenCritter({ position, type = "fox", peekDistance = 3 }: Hidd
     <group
       ref={groupRef}
       position={position}
-      onPointerOver={(e) => { e.stopPropagation(); setHovered(true); setFound(true); window.dispatchEvent(new CustomEvent("cursor-change", { detail: { cursor: "inspect" } })); window.dispatchEvent(new CustomEvent("critter-found")); window.dispatchEvent(new CustomEvent("hover-in")); }}
+      onPointerOver={(e) => {
+        e.stopPropagation(); setHovered(true); setFound(true);
+        window.dispatchEvent(new CustomEvent("cursor-change", { detail: { cursor: "inspect" } }));
+        // Different sound per creature type
+        const critterSounds: Record<string, string> = { fox: "critter-found", bird: "magic-sparkle", bug: "pop", rabbit: "bubble-pop", owl: "bell" };
+        window.dispatchEvent(new CustomEvent(critterSounds[type] || "critter-found"));
+        window.dispatchEvent(new CustomEvent("tooltip"));
+      }}
       onPointerOut={() => { setHovered(false); window.dispatchEvent(new CustomEvent("cursor-change", { detail: { cursor: "default" } })); window.dispatchEvent(new CustomEvent("hover-out")); }}
     >
       {/* Body */}
@@ -379,8 +386,13 @@ export function PaperShatter({ position, size = [3, 3, 0.2], color = "#e5e7eb", 
     <group
       ref={groupRef}
       position={position}
-      onClick={(e) => { e.stopPropagation(); shatter(); window.dispatchEvent(new CustomEvent("shatter")); }}
-      onPointerOver={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent("cursor-change", { detail: { cursor: "interact" } })); }}
+      onClick={(e) => {
+        e.stopPropagation(); shatter();
+        // Different sound per shatter
+        const shatterSounds = ["shatter", "crumple-intense", "tear", "gong"];
+        window.dispatchEvent(new CustomEvent(shatterSounds[Math.floor(Math.random() * shatterSounds.length)]));
+      }}
+      onPointerOver={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent("cursor-change", { detail: { cursor: "interact" } })); window.dispatchEvent(new CustomEvent("tooltip")); }}
       onPointerOut={() => window.dispatchEvent(new CustomEvent("cursor-change", { detail: { cursor: "default" } }))}
     >
       <mesh castShadow receiveShadow>

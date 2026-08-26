@@ -139,7 +139,7 @@ export default function CommandPalette({ visible, onClose, commands }: CommandPa
         paddingTop: "15vh",
       }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) { window.dispatchEvent(new CustomEvent("context-close")); onClose(); }
       }}
     >
       {/* Backdrop */}
@@ -150,7 +150,7 @@ export default function CommandPalette({ visible, onClose, commands }: CommandPa
           background: "rgba(0, 0, 0, 0.5)",
           backdropFilter: "blur(12px)",
         }}
-        onClick={onClose}
+        onClick={() => { window.dispatchEvent(new CustomEvent("context-close")); onClose(); }}
       />
 
       {/* Dialog */}

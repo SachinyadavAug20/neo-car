@@ -703,10 +703,12 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = "translate(-1px, -1px)";
             e.currentTarget.style.boxShadow = "5px 5px 0 #6b7280";
+            window.dispatchEvent(new CustomEvent("button-hover"));
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = "translate(0, 0)";
             e.currentTarget.style.boxShadow = "4px 4px 0 #6b7280";
+            window.dispatchEvent(new CustomEvent("hover-out"));
           }}
         >
           {folds.totalPlaythroughs > 0 ? "Enter Again" : "Begin the Story"}

@@ -1,7 +1,7 @@
 "use client";
 
-// ─── Procedural Audio Engine v2 ───────────────────────────────────────
-// 30+ unique sounds, all generated via Web Audio API.
+// ─── Procedural Audio Engine v4 ───────────────────────────────────────
+// 110 unique sounds, all generated via Web Audio API.
 
 let audioCtx: AudioContext | null = null;
 let masterGain: GainNode | null = null;
@@ -38,7 +38,7 @@ function ag() { getCtx(); return ambientGain!; }
 const N = {
   C3:130.81,D3:146.83,E3:164.81,F3:174.61,G3:196,A3:220,B3:246.94,
   C4:261.63,D4:293.66,E4:329.63,F4:349.23,G4:392,A4:440,B4:493.88,
-  C5:523.25,D5:587.33,E5:659.25,F5:698.46,G5:783.99,A5:880,
+  C5:523.25,D5:587.33,E5:659.25,F5:698.46,G5:783.99,A5:880,B5:987.77,
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────
@@ -428,6 +428,834 @@ export function playInteractComplete() {
   playArp(ctx, [N.G4, N.B4, N.D5, N.G5], "sine", 0.08, 0.15);
 }
 
+// 34. Button click (crisp UI tap)
+export function playButtonTap() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 1200, 0, 0.04);
+  gain(ctx, 0.18, 0, 0.04, o);
+  const o2 = osc(ctx, "triangle", 2400, 0.01, 0.02);
+  gain(ctx, 0.08, 0.01, 0.02, o2);
+}
+
+// 35. Button hover (soft tick)
+export function playButtonHover() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 800, 0, 0.03);
+  gain(ctx, 0.06, 0, 0.03, o);
+}
+
+// 36. Toggle on (rising ding)
+export function playToggleOn() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 600, 0, 0.15);
+  o.frequency.exponentialRampToValueAtTime(1000, ctx.currentTime + 0.1);
+  gain(ctx, 0.18, 0, 0.15, o);
+  const o2 = osc(ctx, "sine", 1200, 0.08, 0.12);
+  gain(ctx, 0.1, 0.08, 0.12, o2);
+}
+
+// 37. Toggle off (falling tone)
+export function playToggleOff() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 1000, 0, 0.12);
+  o.frequency.exponentialRampToValueAtTime(500, ctx.currentTime + 0.1);
+  gain(ctx, 0.15, 0, 0.12, o);
+}
+
+// 38. Leaf rustle (dry whisper)
+export function playLeafRustle() {
+  const ctx = getCtx();
+  const { src, filterNode } = noise(ctx, 0.25, 4000);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, ctx.currentTime);
+  g.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 0.04);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+  if (filterNode) filterNode.connect(g); else src.connect(g);
+  g.connect(sg());
+  src.start(ctx.currentTime);
+}
+
+// 39. Water droplet (plop)
+export function playWaterDrop() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 1200, 0, 0.15);
+  o.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.12);
+  gain(ctx, 0.14, 0, 0.15, o);
+  const o2 = osc(ctx, "sine", 600, 0.04, 0.1);
+  gain(ctx, 0.06, 0.04, 0.1, o2);
+}
+
+// 40. Wind chime (bright tinkle)
+export function playWindChime() {
+  const ctx = getCtx();
+  const chimes = [N.E5, N.G5, N.A5, N.C5, N.E5];
+  chimes.forEach((f, i) => {
+    const o = osc(ctx, "sine", f * (1 + Math.random() * 0.02), i * 0.12, 0.8);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, ctx.currentTime + i * 0.12);
+    g.gain.linearRampToValueAtTime(0.06, ctx.currentTime + i * 0.12 + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.8);
+    o.connect(g);
+    g.connect(sg());
+  });
+}
+
+// 41. Crumple paper (crunch)
+export function playCrumple() {
+  const ctx = getCtx();
+  for (let i = 0; i < 8; i++) {
+    const { src, filterNode } = noise(ctx, 0.06, 2000 + Math.random() * 3000);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.08, ctx.currentTime + i * 0.03);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.03 + 0.06);
+    if (filterNode) filterNode.connect(g); else src.connect(g);
+    g.connect(sg());
+    src.start(ctx.currentTime + i * 0.03);
+  }
+}
+
+// 42. Paper tear (rip)
+export function playTear() {
+  const ctx = getCtx();
+  const { src, filterNode } = noise(ctx, 0.3, 2500);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.18, ctx.currentTime);
+  g.gain.linearRampToValueAtTime(0.22, ctx.currentTime + 0.05);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+  if (filterNode) filterNode.connect(g); else src.connect(g);
+  g.connect(sg());
+  src.start(ctx.currentTime);
+  // High freq accent
+  const o = osc(ctx, "sawtooth", 3000, 0, 0.15);
+  gain(ctx, 0.04, 0, 0.15, o);
+}
+
+// 43. Paper slide (swish)
+export function playSlide() {
+  const ctx = getCtx();
+  const { src, filterNode } = noise(ctx, 0.2, 3500);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, ctx.currentTime);
+  g.gain.linearRampToValueAtTime(0.1, ctx.currentTime + 0.06);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+  if (filterNode) filterNode.connect(g); else src.connect(g);
+  g.connect(sg());
+  src.start(ctx.currentTime);
+}
+
+// 44. Wonder / Awe (ethereal swell)
+export function playWonder() {
+  const ctx = getCtx();
+  playChord(ctx, [N.C4, N.E4, N.G4, N.C5], "sine", 0, 1.2, 0.08);
+  playArp(ctx, [N.E5, N.G5, N.C5, N.E5], "sine", 0.2, 0.06);
+}
+
+// 45. Discovery (sparkle cascade)
+export function playDiscovery() {
+  const ctx = getCtx();
+  const notes = [N.C5, N.E5, N.G5, N.C5, N.E5, N.G5, N.C5];
+  notes.forEach((f, i) => {
+    const o = osc(ctx, "sine", f + Math.random() * 10, i * 0.06, 0.4);
+    gain(ctx, 0.07, i * 0.06, 0.4, o);
+  });
+}
+
+// 46. Joy (happy bounce)
+export function playJoy() {
+  const ctx = getCtx();
+  const o = osc(ctx, "triangle", 400, 0, 0.12);
+  o.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.06);
+  gain(ctx, 0.15, 0, 0.12, o);
+  const o2 = osc(ctx, "sine", 1000, 0.12, 0.1);
+  o2.frequency.exponentialRampToValueAtTime(1400, ctx.currentTime + 0.18);
+  gain(ctx, 0.12, 0.12, 0.1, o2);
+  const o3 = osc(ctx, "sine", 1600, 0.22, 0.15);
+  gain(ctx, 0.1, 0.22, 0.15, o3);
+}
+
+// 47. Sorrow (mournful tone)
+export function playSorrow() {
+  const ctx = getCtx();
+  const o = osc(ctx, "triangle", N.A4, 0, 0.8);
+  o.frequency.linearRampToValueAtTime(N.A3, ctx.currentTime + 0.8);
+  gain(ctx, 0.12, 0, 0.8, o);
+  const o2 = osc(ctx, "sine", N.C4, 0.1, 0.6);
+  gain(ctx, 0.06, 0.1, 0.6, o2);
+}
+
+// 48. Footstep (soft tap)
+export function playFootstep() {
+  const ctx = getCtx();
+  const { src, filterNode } = noise(ctx, 0.08, 800);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.15, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+  if (filterNode) filterNode.connect(g); else src.connect(g);
+  g.connect(sg());
+  src.start(ctx.currentTime);
+  const o = osc(ctx, "sine", 100, 0, 0.06);
+  gain(ctx, 0.08, 0, 0.06, o);
+}
+
+// 49. Whoosh fast (quick pass)
+export function playWhooshFast() {
+  const ctx = getCtx();
+  const { src, filterNode } = noise(ctx, 0.15, 2000);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, ctx.currentTime);
+  g.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.04);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+  if (filterNode) filterNode.connect(g); else src.connect(g);
+  g.connect(sg());
+  src.start(ctx.currentTime);
+}
+
+// 50. Coin collect (classic ding)
+export function playCoinCollect() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", N.B5, 0, 0.2);
+  gain(ctx, 0.18, 0, 0.2, o);
+  const o2 = osc(ctx, "sine", N.E5 * 2, 0.05, 0.15);
+  gain(ctx, 0.12, 0.05, 0.15, o2);
+}
+
+// 51. Star collect (twinkle)
+export function playStarCollect() {
+  const ctx = getCtx();
+  playArp(ctx, [N.C5, N.E5, N.G5, N.C5 * 2], "sine", 0.05, 0.1);
+  const { src } = noise(ctx, 0.4, 6000);
+  gain(ctx, 0.03, 0, 0.4, src);
+}
+
+// 52. Gem collect (crystalline)
+export function playGemCollect() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 1760, 0, 0.3);
+  o.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
+  gain(ctx, 0.15, 0, 0.3, o);
+  const o2 = osc(ctx, "triangle", 2640, 0.02, 0.2);
+  gain(ctx, 0.08, 0.02, 0.2, o2);
+}
+
+// 53. Notification (gentle ping)
+export function playNotification() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 880, 0, 0.2);
+  gain(ctx, 0.12, 0, 0.2, o);
+  const o2 = osc(ctx, "sine", 1100, 0.15, 0.15);
+  gain(ctx, 0.08, 0.15, 0.15, o2);
+}
+
+// 54. Error buzz (low buzz)
+export function playErrorBuzz() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sawtooth", 80, 0, 0.2);
+  gain(ctx, 0.1, 0, 0.2, o);
+  const o2 = osc(ctx, "square", 120, 0, 0.15);
+  gain(ctx, 0.06, 0, 0.15, o2);
+}
+
+// 55. Page turn (flip)
+export function playPageTurn() {
+  const ctx = getCtx();
+  const { src, filterNode } = noise(ctx, 0.12, 5000);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, ctx.currentTime);
+  g.gain.linearRampToValueAtTime(0.14, ctx.currentTime + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+  if (filterNode) filterNode.connect(g); else src.connect(g);
+  g.connect(sg());
+  src.start(ctx.currentTime);
+}
+
+// 56. Compass point (needle click)
+export function playCompassClick() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 2000, 0, 0.02);
+  gain(ctx, 0.15, 0, 0.02, o);
+  const o2 = osc(ctx, "triangle", 3000, 0.015, 0.015);
+  gain(ctx, 0.08, 0.015, 0.015, o2);
+}
+
+// 57. Map pin (drop)
+export function playMapPin() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 800, 0, 0.1);
+  o.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.08);
+  gain(ctx, 0.14, 0, 0.1, o);
+  const { src, filterNode } = noise(ctx, 0.06, 1000);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.08, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+  if (filterNode) filterNode.connect(g); else src.connect(g);
+  g.connect(sg());
+  src.start(ctx.currentTime);
+}
+
+// 58. Scroll (soft drag)
+export function playScroll() {
+  const ctx = getCtx();
+  const { src, filterNode } = noise(ctx, 0.08, 2000);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.06, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+  if (filterNode) filterNode.connect(g); else src.connect(g);
+  g.connect(sg());
+  src.start(ctx.currentTime);
+}
+
+// 59. Zoom in (rising sweep)
+export function playZoomIn() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 400, 0, 0.2);
+  o.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.15);
+  gain(ctx, 0.1, 0, 0.2, o);
+}
+
+// 60. Zoom out (falling sweep)
+export function playZoomOut() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 1200, 0, 0.2);
+  o.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.15);
+  gain(ctx, 0.1, 0, 0.2, o);
+}
+
+// 61. Level up (triumphant fanfare)
+export function playLevelUp() {
+  const ctx = getCtx();
+  playArp(ctx, [N.C4, N.E4, N.G4, N.C5, N.E5, N.G5], "sine", 0.08, 0.12);
+  playChord(ctx, [N.C5, N.E5, N.G5], "triangle", 0.5, 0.8, 0.08);
+}
+
+// 62. Achievement unlock (celebration burst)
+export function playAchievement() {
+  const ctx = getCtx();
+  // Rising sparkles
+  for (let i = 0; i < 6; i++) {
+    const o = osc(ctx, "sine", 800 + i * 200, i * 0.04, 0.3);
+    gain(ctx, 0.06, i * 0.04, 0.3, o);
+  }
+  // Final chord
+  playChord(ctx, [N.C4, N.E4, N.G4, N.C5], "sine", 0.3, 1, 0.1);
+}
+
+// 63. Ambient pulse (soft heartbeat)
+export function playAmbientPulse() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 60, 0, 0.4);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, ctx.currentTime);
+  g.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 0.1);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+  o.connect(g);
+  g.connect(sg());
+  o.start(ctx.currentTime);
+}
+
+// 64. Crystal resonance (harmonic ring)
+export function playCrystalResonance() {
+  const ctx = getCtx();
+  const freqs = [523, 659, 784, 1047];
+  freqs.forEach((f, i) => {
+    const o = osc(ctx, "sine", f, i * 0.05, 1.5);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, ctx.currentTime + i * 0.05);
+    g.gain.linearRampToValueAtTime(0.04, ctx.currentTime + i * 0.05 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.05 + 1.5);
+    o.connect(g);
+    g.connect(sg());
+  });
+}
+
+// 65. Double click (quick double tap)
+export function playDoubleClick() {
+  const ctx = getCtx();
+  const o1 = osc(ctx, "sine", 1000, 0, 0.03);
+  gain(ctx, 0.2, 0, 0.03, o1);
+  const o2 = osc(ctx, "sine", 1200, 0.05, 0.03);
+  gain(ctx, 0.15, 0.05, 0.03, o2);
+}
+
+// 66. Long press (building tension)
+export function playLongPress() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 200, 0, 0.4);
+  o.frequency.linearRampToValueAtTime(400, ctx.currentTime + 0.4);
+  gain(ctx, 0.1, 0, 0.4, o);
+  const { src, filterNode } = noise(ctx, 0.4, 300);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, ctx.currentTime);
+  g.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 0.4);
+  if (filterNode) filterNode.connect(g); else src.connect(g);
+  g.connect(sg());
+  src.start(ctx.currentTime);
+}
+
+// 67. Swipe right (whoosh right)
+export function playSwipeRight() {
+  const ctx = getCtx();
+  const { src, filterNode } = noise(ctx, 0.12, 2500);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, ctx.currentTime);
+  g.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.03);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+  if (filterNode) filterNode.connect(g); else src.connect(g);
+  g.connect(sg());
+  src.start(ctx.currentTime);
+  // Rising sine accent
+  const o = osc(ctx, "sine", 600, 0, 0.08);
+  o.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.06);
+  gain(ctx, 0.06, 0, 0.08, o);
+}
+
+// 68. Swipe left (whoosh left)
+export function playSwipeLeft() {
+  const ctx = getCtx();
+  const { src, filterNode } = noise(ctx, 0.12, 2500);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.18, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+  if (filterNode) filterNode.connect(g); else src.connect(g);
+  g.connect(sg());
+  src.start(ctx.currentTime);
+  const o = osc(ctx, "sine", 1200, 0, 0.08);
+  o.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.06);
+  gain(ctx, 0.06, 0, 0.08, o);
+}
+
+// 69. Pinch zoom (tight squeeze)
+export function playPinch() {
+  const ctx = getCtx();
+  const o1 = osc(ctx, "sine", 800, 0, 0.08);
+  o1.frequency.exponentialRampToValueAtTime(1400, ctx.currentTime + 0.04);
+  gain(ctx, 0.1, 0, 0.08, o1);
+  const o2 = osc(ctx, "sine", 800, 0.04, 0.08);
+  o2.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.12);
+  gain(ctx, 0.1, 0.04, 0.08, o2);
+}
+
+// 70. Shake (rattle)
+export function playShake() {
+  const ctx = getCtx();
+  for (let i = 0; i < 6; i++) {
+    const o = osc(ctx, "square", 150 + Math.random() * 200, i * 0.03, 0.04);
+    gain(ctx, 0.08, i * 0.03, 0.04, o);
+  }
+  const { src } = noise(ctx, 0.2, 1500);
+  gain(ctx, 0.06, 0, 0.2, src);
+}
+
+// 71. Pop (bubble burst)
+export function playPop() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 600, 0, 0.08);
+  o.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.06);
+  gain(ctx, 0.2, 0, 0.08, o);
+  const { src } = noise(ctx, 0.04, 4000);
+  gain(ctx, 0.1, 0, 0.04, src);
+}
+
+// 72. Ding (bell)
+export function playDing() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 1318.51, 0, 0.6);
+  gain(ctx, 0.15, 0, 0.6, o);
+  const o2 = osc(ctx, "sine", 2637.02, 0, 0.4);
+  gain(ctx, 0.06, 0, 0.4, o2);
+}
+
+// 73. Chime (gentle bell)
+export function playChime() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 880, 0, 0.5);
+  gain(ctx, 0.12, 0, 0.5, o);
+  const o2 = osc(ctx, "triangle", 1320, 0.02, 0.4);
+  gain(ctx, 0.06, 0.02, 0.4, o2);
+}
+
+// 74. Bell (deep resonance)
+export function playBell() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 440, 0, 1.2);
+  gain(ctx, 0.12, 0, 1.2, o);
+  const o2 = osc(ctx, "sine", 880, 0, 0.8);
+  gain(ctx, 0.06, 0, 0.8, o2);
+  const o3 = osc(ctx, "sine", 1320, 0, 0.6);
+  gain(ctx, 0.03, 0, 0.6, o3);
+}
+
+// 75. Gong (deep wash)
+export function playGong() {
+  const ctx = getCtx();
+  const freqs = [130.81, 196, 261.63, 329.63];
+  freqs.forEach((f, i) => {
+    const o = osc(ctx, "sine", f, i * 0.02, 2);
+    gain(ctx, 0.08, i * 0.02, 2, o);
+  });
+  const { src } = noise(ctx, 0.3, 800);
+  gain(ctx, 0.06, 0, 0.3, src);
+}
+
+// 76. Typewriter key (mechanical click)
+export function playTypewriterKey() {
+  const ctx = getCtx();
+  const { src, filterNode } = noise(ctx, 0.02, 6000);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.15, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.02);
+  if (filterNode) filterNode.connect(g); else src.connect(g);
+  g.connect(sg());
+  src.start(ctx.currentTime);
+  const o = osc(ctx, "square", 150, 0, 0.015);
+  gain(ctx, 0.08, 0, 0.015, o);
+}
+
+// 77. Typewriter carriage return (ding + slide)
+export function playCarriageReturn() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 1200, 0, 0.15);
+  gain(ctx, 0.12, 0, 0.15, o);
+  const { src, filterNode } = noise(ctx, 0.2, 2000);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.08, ctx.currentTime + 0.1);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+  if (filterNode) { filterNode.frequency.value = 2000; filterNode.connect(g); } else src.connect(g);
+  g.connect(sg());
+  src.start(ctx.currentTime + 0.1);
+}
+
+// 78. Laser zap (sci-fi)
+export function playLaser() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sawtooth", 1200, 0, 0.15);
+  o.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.12);
+  gain(ctx, 0.12, 0, 0.15, o);
+  const { src } = noise(ctx, 0.05, 8000);
+  gain(ctx, 0.04, 0, 0.05, src);
+}
+
+// 79. Teleport (materialize)
+export function playTeleport() {
+  const ctx = getCtx();
+  // Descending then ascending
+  const o1 = osc(ctx, "sine", 2000, 0, 0.15);
+  o1.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.1);
+  gain(ctx, 0.1, 0, 0.15, o1);
+  const o2 = osc(ctx, "sine", 200, 0.15, 0.2);
+  o2.frequency.exponentialRampToValueAtTime(2000, ctx.currentTime + 0.35);
+  gain(ctx, 0.12, 0.15, 0.2, o2);
+  // Shimmer
+  for (let i = 0; i < 4; i++) {
+    const o = osc(ctx, "sine", 1000 + i * 500, 0.3 + i * 0.02, 0.3);
+    gain(ctx, 0.04, 0.3 + i * 0.02, 0.3, o);
+  }
+}
+
+// 80. Magic sparkle (fairy dust)
+export function playMagicSparkle() {
+  const ctx = getCtx();
+  for (let i = 0; i < 8; i++) {
+    const o = osc(ctx, "sine", 1500 + Math.random() * 2000, i * 0.04, 0.2);
+    gain(ctx, 0.04, i * 0.04, 0.2, o);
+  }
+}
+
+// 81. Power up (ascending energy)
+export function playPowerUp() {
+  const ctx = getCtx();
+  for (let i = 0; i < 5; i++) {
+    const o = osc(ctx, "sawtooth", 200 + i * 150, i * 0.06, 0.15);
+    gain(ctx, 0.06, i * 0.06, 0.15, o);
+  }
+  const o = osc(ctx, "sine", 1200, 0.3, 0.3);
+  gain(ctx, 0.12, 0.3, 0.3, o);
+}
+
+// 82. Power down (descending energy)
+export function playPowerDown() {
+  const ctx = getCtx();
+  for (let i = 0; i < 5; i++) {
+    const o = osc(ctx, "sawtooth", 1000 - i * 150, i * 0.06, 0.15);
+    gain(ctx, 0.06, i * 0.06, 0.15, o);
+  }
+  const o = osc(ctx, "sine", 80, 0.3, 0.3);
+  gain(ctx, 0.1, 0.3, 0.3, o);
+}
+
+// 83. Checkmark (validation pass)
+export function playCheck() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 800, 0, 0.1);
+  gain(ctx, 0.15, 0, 0.1, o);
+  const o2 = osc(ctx, "sine", 1200, 0.06, 0.12);
+  gain(ctx, 0.12, 0.06, 0.12, o2);
+}
+
+// 84. Cross (validation fail)
+export function playCross() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sawtooth", 300, 0, 0.15);
+  gain(ctx, 0.1, 0, 0.15, o);
+  const o2 = osc(ctx, "square", 200, 0.08, 0.12);
+  gain(ctx, 0.08, 0.08, 0.12, o2);
+}
+
+// 85. Whoosh up (ascending pass)
+export function playWhooshUp() {
+  const ctx = getCtx();
+  const { src, filterNode } = noise(ctx, 0.2, 1500);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, ctx.currentTime);
+  g.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.06);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+  if (filterNode) { filterNode.frequency.value = 1500; filterNode.connect(g); } else src.connect(g);
+  g.connect(sg());
+  src.start(ctx.currentTime);
+  const o = osc(ctx, "sine", 300, 0, 0.15);
+  o.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.12);
+  gain(ctx, 0.06, 0, 0.15, o);
+}
+
+// 86. Whoosh down (descending pass)
+export function playWhooshDown() {
+  const ctx = getCtx();
+  const { src, filterNode } = noise(ctx, 0.2, 1500);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.15, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+  if (filterNode) { filterNode.frequency.value = 1500; filterNode.connect(g); } else src.connect(g);
+  g.connect(sg());
+  src.start(ctx.currentTime);
+  const o = osc(ctx, "sine", 900, 0, 0.15);
+  o.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.12);
+  gain(ctx, 0.06, 0, 0.15, o);
+}
+
+// 87. Bubble pop (cute pop)
+export function playBubblePop() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 1000, 0, 0.06);
+  o.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.04);
+  gain(ctx, 0.18, 0, 0.06, o);
+}
+
+// 88. Click meta (UI state change)
+export function playClickMeta() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 700, 0, 0.03);
+  gain(ctx, 0.12, 0, 0.03, o);
+  const o2 = osc(ctx, "triangle", 1400, 0.015, 0.02);
+  gain(ctx, 0.06, 0.015, 0.02, o2);
+}
+
+// 89. Context open (menu appear)
+export function playContextOpen() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 500, 0, 0.08);
+  o.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.06);
+  gain(ctx, 0.1, 0, 0.08, o);
+  const { src } = noise(ctx, 0.05, 4000);
+  gain(ctx, 0.04, 0.02, 0.05, src);
+}
+
+// 90. Context close (menu disappear)
+export function playContextClose() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 800, 0, 0.06);
+  o.frequency.exponentialRampToValueAtTime(500, ctx.currentTime + 0.05);
+  gain(ctx, 0.08, 0, 0.06, o);
+}
+
+// 91. Tooltip appear (subtle reveal)
+export function playTooltip() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 900, 0, 0.04);
+  gain(ctx, 0.06, 0, 0.04, o);
+}
+
+// 92. Drag start (grab)
+export function playDragStart() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 500, 0, 0.06);
+  o.frequency.exponentialRampToValueAtTime(700, ctx.currentTime + 0.04);
+  gain(ctx, 0.1, 0, 0.06, o);
+}
+
+// 93. Drag end (release)
+export function playDragEnd() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 700, 0, 0.06);
+  o.frequency.exponentialRampToValueAtTime(500, ctx.currentTime + 0.04);
+  gain(ctx, 0.08, 0, 0.06, o);
+}
+
+// 94. Drop (landing)
+export function playDrop() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 400, 0, 0.1);
+  o.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.08);
+  gain(ctx, 0.14, 0, 0.1, o);
+  const { src } = noise(ctx, 0.05, 800);
+  gain(ctx, 0.08, 0, 0.05, src);
+}
+
+// 95. Select (highlight)
+export function playSelect() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 1000, 0, 0.06);
+  gain(ctx, 0.12, 0, 0.06, o);
+  const o2 = osc(ctx, "sine", 1500, 0.03, 0.04);
+  gain(ctx, 0.08, 0.03, 0.04, o2);
+}
+
+// 96. Deselect (unhighlight)
+export function playDeselect() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 1500, 0, 0.06);
+  o.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.05);
+  gain(ctx, 0.08, 0, 0.06, o);
+}
+
+// 97. Tab switch (lateral move)
+export function playTabSwitch() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 600, 0, 0.04);
+  o.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.03);
+  gain(ctx, 0.08, 0, 0.04, o);
+}
+
+// 98. Accordion open (expand)
+export function playAccordionOpen() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 400, 0, 0.12);
+  o.frequency.linearRampToValueAtTime(700, ctx.currentTime + 0.1);
+  gain(ctx, 0.08, 0, 0.12, o);
+}
+
+// 99. Accordion close (collapse)
+export function playAccordionClose() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 700, 0, 0.1);
+  o.frequency.linearRampToValueAtTime(400, ctx.currentTime + 0.08);
+  gain(ctx, 0.06, 0, 0.1, o);
+}
+
+// 100. Game over (sad trombone)
+export function playGameOver() {
+  const ctx = getCtx();
+  const notes = [N.E4, N.D4, N.C4, N.B3];
+  notes.forEach((f, i) => {
+    const o = osc(ctx, "triangle", f, i * 0.25, 0.3);
+    o.frequency.linearRampToValueAtTime(f * 0.95, i * 0.25 + 0.3);
+    gain(ctx, 0.1, i * 0.25, 0.3, o);
+  });
+}
+
+// 101. Victory fanfare (triumphant)
+export function playVictory() {
+  const ctx = getCtx();
+  playArp(ctx, [N.C4, N.E4, N.G4, N.C5, N.E5, N.G5, N.C5 * 2], "sine", 0.07, 0.1);
+  playChord(ctx, [N.C5, N.E5, N.G5, N.C5 * 2], "triangle", 0.55, 1.5, 0.08);
+}
+
+// 102. Quest complete (reward chime)
+export function playQuestComplete() {
+  const ctx = getCtx();
+  playArp(ctx, [N.G4, N.B4, N.D5, N.G5, N.B5], "sine", 0.08, 0.1);
+  playChord(ctx, [N.G5, N.B5], "triangle", 0.4, 1, 0.06);
+}
+
+// 103. Item pickup (quick grab)
+export function playItemPickup() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 800, 0, 0.08);
+  o.frequency.exponentialRampToValueAtTime(1400, ctx.currentTime + 0.06);
+  gain(ctx, 0.15, 0, 0.08, o);
+}
+
+// 104. Item drop (quick release)
+export function playItemDrop() {
+  const ctx = getCtx();
+  const o = osc(ctx, "sine", 1400, 0, 0.08);
+  o.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.06);
+  gain(ctx, 0.12, 0, 0.08, o);
+}
+
+// 105. Paper crumple (intense)
+export function playCrumpleIntense() {
+  const ctx = getCtx();
+  for (let i = 0; i < 12; i++) {
+    const { src, filterNode } = noise(ctx, 0.05, 1500 + Math.random() * 4000);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.1, ctx.currentTime + i * 0.02);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.02 + 0.05);
+    if (filterNode) filterNode.connect(g); else src.connect(g);
+    g.connect(sg());
+    src.start(ctx.currentTime + i * 0.02);
+  }
+}
+
+// 106. Paper unfold (dramatic)
+export function playUnfoldDramatic() {
+  const ctx = getCtx();
+  const { src, filterNode } = noise(ctx, 0.4, 1200);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, ctx.currentTime);
+  g.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.1);
+  g.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 0.25);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+  if (filterNode) filterNode.connect(g); else src.connect(g);
+  g.connect(sg());
+  src.start(ctx.currentTime);
+  // Rising tone
+  const o = osc(ctx, "sine", 300, 0, 0.3);
+  o.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.25);
+  gain(ctx, 0.06, 0, 0.3, o);
+}
+
+// 107. Sticker peel (sticky release)
+export function playStickerPeel() {
+  const ctx = getCtx();
+  const { src, filterNode } = noise(ctx, 0.15, 5000);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.12, ctx.currentTime);
+  g.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.05);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+  if (filterNode) filterNode.connect(g); else src.connect(g);
+  g.connect(sg());
+  src.start(ctx.currentTime);
+}
+
+// 108. Tape rip (quick tear)
+export function playTapeRip() {
+  const ctx = getCtx();
+  const { src, filterNode } = noise(ctx, 0.1, 4000);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.16, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+  if (filterNode) filterNode.connect(g); else src.connect(g);
+  g.connect(sg());
+  src.start(ctx.currentTime);
+}
+
+// 109. Rubber band (twang)
+export function playRubberBand() {
+  const ctx = getCtx();
+  const o = osc(ctx, "triangle", 300, 0, 0.2);
+  o.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.15);
+  gain(ctx, 0.12, 0, 0.2, o);
+}
+
+// 110. Marble drop (bouncing settle)
+export function playMarbleDrop() {
+  const ctx = getCtx();
+  const bounces = [0, 0.08, 0.14, 0.18, 0.21, 0.23];
+  bounces.forEach((t, i) => {
+    const o = osc(ctx, "sine", 800 - i * 100, t, 0.05);
+    gain(ctx, 0.12 / (i + 1), t, 0.05, o);
+  });
+}
+
 // ─── Background Music ─────────────────────────────────────────────────
 
 type Mood = "warm" | "storm" | "calm" | "secret" | "sorrow" | "hope" | "final";
@@ -606,6 +1434,7 @@ export function initAudio() { getCtx(); }
 export function setupAudioEvents() {
   if (typeof window === "undefined") return;
   const on = (e: string, fn: () => void) => window.addEventListener(e, fn);
+  // Core interactions
   on("milo-jump", playJump);
   on("collect-leaf", playCollect);
   on("toggle-cell", playToggle);
@@ -632,4 +1461,97 @@ export function setupAudioEvents() {
   on("splash", playSplash);
   on("success", playSuccess);
   on("error", playError);
+  // UI feedback
+  on("button-tap", playButtonTap);
+  on("button-hover", playButtonHover);
+  on("toggle-on", playToggleOn);
+  on("toggle-off", playToggleOff);
+  on("page-turn", playPageTurn);
+  on("scroll-sound", playScroll);
+  on("zoom-in", playZoomIn);
+  on("zoom-out", playZoomOut);
+  on("notification", playNotification);
+  on("error-buzz", playErrorBuzz);
+  // Nature/environment
+  on("leaf-rustle", playLeafRustle);
+  on("water-drop", playWaterDrop);
+  on("wind-chime", playWindChime);
+  // Paper interactions
+  on("crumple", playCrumple);
+  on("tear", playTear);
+  on("slide", playSlide);
+  // Emotional responses
+  on("wonder", playWonder);
+  on("discovery", playDiscovery);
+  on("joy", playJoy);
+  on("sorrow", playSorrow);
+  // Movement
+  on("footstep", playFootstep);
+  on("whoosh-fast", playWhooshFast);
+  // Collection/reward
+  on("coin-collect", playCoinCollect);
+  on("star-collect", playStarCollect);
+  on("gem-collect", playGemCollect);
+  on("level-up", playLevelUp);
+  on("achievement", playAchievement);
+  // System
+  on("compass-click", playCompassClick);
+  on("map-pin", playMapPin);
+  on("ambient-pulse", playAmbientPulse);
+  on("crystal-resonance", playCrystalResonance);
+  // New: Gesture sounds
+  on("double-click", playDoubleClick);
+  on("long-press", playLongPress);
+  on("swipe-right", playSwipeRight);
+  on("swipe-left", playSwipeLeft);
+  on("pinch", playPinch);
+  on("shake", playShake);
+  on("pop", playPop);
+  on("ding", playDing);
+  on("chime", playChime);
+  on("bell", playBell);
+  on("gong", playGong);
+  // New: Typewriter
+  on("typewriter-key", playTypewriterKey);
+  on("carriage-return", playCarriageReturn);
+  // New: Sci-fi/fantasy
+  on("laser", playLaser);
+  on("teleport", playTeleport);
+  on("magic-sparkle", playMagicSparkle);
+  on("power-up", playPowerUp);
+  on("power-down", playPowerDown);
+  // New: Validation
+  on("check", playCheck);
+  on("cross", playCross);
+  // New: Directional
+  on("whoosh-up", playWhooshUp);
+  on("whoosh-down", playWhooshDown);
+  // New: UI state
+  on("bubble-pop", playBubblePop);
+  on("click-meta", playClickMeta);
+  on("context-open", playContextOpen);
+  on("context-close", playContextClose);
+  on("tooltip", playTooltip);
+  on("drag-start", playDragStart);
+  on("drag-end", playDragEnd);
+  on("drop", playDrop);
+  on("select", playSelect);
+  on("deselect", playDeselect);
+  on("tab-switch", playTabSwitch);
+  on("accordion-open", playAccordionOpen);
+  on("accordion-close", playAccordionClose);
+  // New: Game state
+  on("game-over", playGameOver);
+  on("victory", playVictory);
+  on("quest-complete", playQuestComplete);
+  // New: Item interactions
+  on("item-pickup", playItemPickup);
+  on("item-drop", playItemDrop);
+  on("sticker-peel", playStickerPeel);
+  on("tape-rip", playTapeRip);
+  on("rubber-band", playRubberBand);
+  on("marble-drop", playMarbleDrop);
+  // New: Paper variants
+  on("crumple-intense", playCrumpleIntense);
+  on("unfold-dramatic", playUnfoldDramatic);
 }

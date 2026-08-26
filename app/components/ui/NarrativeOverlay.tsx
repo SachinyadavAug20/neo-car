@@ -93,7 +93,19 @@ export default function NarrativeOverlay({
     if (state.isAnimating) return;
     const beat = getCurrentBeat(state);
     if (beat?.interaction && beat.interaction !== "none" && state.interactionState !== "complete") return;
-    window.dispatchEvent(new CustomEvent("success"));
+    // Different sound per beat type
+    const beatSounds: Record<string, string> = {
+      "click-jump": "coin-collect",
+      "drag-wind": "whoosh-fast",
+      "click-unfold": "paper-shower",
+      "click-reveal": "discovery",
+      "collect-leaves": "leaf-rustle",
+      "toggle-cells": "ding",
+      "row-boat": "splash",
+      "celebrate": "joy",
+      "follow-butterfly": "wind-chime",
+    };
+    window.dispatchEvent(new CustomEvent(beatSounds[beat?.interaction || ""] || "success"));
     onAdvance(nextBeat(state));
   }, [state, onAdvance]);
 
@@ -406,7 +418,7 @@ export default function NarrativeOverlay({
           {!isInteraction && !state.isAnimating && (
             <div style={{ marginTop: 12, pointerEvents: "auto" }}>
               <button onClick={handleSkip}
-                onMouseEnter={() => window.dispatchEvent(new CustomEvent("hover-in"))}
+                onMouseEnter={() => window.dispatchEvent(new CustomEvent("button-hover"))}
                 onMouseLeave={() => window.dispatchEvent(new CustomEvent("hover-out"))}
                 style={{
                   background: "#fff", border: "2px solid #1a1a2e", borderRadius: 8,

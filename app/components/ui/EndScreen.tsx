@@ -320,8 +320,8 @@ export default function EndScreen({ stats, onRestart }: EndScreenProps) {
               padding: "16px 40px", fontSize: 15, fontFamily: "Georgia, serif", cursor: "pointer",
               boxShadow: "4px 4px 0 #6b7280", fontWeight: 600, transition: "transform 0.15s, box-shadow 0.15s",
             }}
-              onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "5px 5px 0 #6b7280"; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = "translate(0,0)"; e.currentTarget.style.boxShadow = "4px 4px 0 #6b7280"; }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "5px 5px 0 #6b7280"; window.dispatchEvent(new CustomEvent("button-hover")); }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "translate(0,0)"; e.currentTarget.style.boxShadow = "4px 4px 0 #6b7280"; window.dispatchEvent(new CustomEvent("hover-out")); }}
             >
               Play Again
             </button>
@@ -332,8 +332,8 @@ export default function EndScreen({ stats, onRestart }: EndScreenProps) {
               display: "inline-flex", alignItems: "center", gap: 8,
               transition: "transform 0.15s, box-shadow 0.15s",
             }}
-              onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 #1a1a2e"; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = "translate(0,0)"; e.currentTarget.style.boxShadow = "3px 3px 0 #1a1a2e"; }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 #1a1a2e"; window.dispatchEvent(new CustomEvent("button-hover")); }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "translate(0,0)"; e.currentTarget.style.boxShadow = "3px 3px 0 #1a1a2e"; window.dispatchEvent(new CustomEvent("hover-out")); }}
             >
               About the Project
             </a>

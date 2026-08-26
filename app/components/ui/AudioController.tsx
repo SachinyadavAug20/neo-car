@@ -66,7 +66,7 @@ export default function AudioController({ mood, visible = true }: AudioControlle
           boxShadow: "0 4px 20px rgba(0,0,0,0.3)", animation: "pulse 2s ease-in-out infinite",
           cursor: "pointer",
         }}
-          onClick={() => { initAudio(); setStarted(true); setShowPrompt(false); }}
+          onClick={() => { initAudio(); setStarted(true); setShowPrompt(false); window.dispatchEvent(new CustomEvent("power-up")); }}
         >
           <span style={{ fontSize: 16 }}> </span>
           <span>Click anywhere to enable sound</span>
@@ -78,6 +78,8 @@ export default function AudioController({ mood, visible = true }: AudioControlle
       <button
         onClick={toggle}
         data-cursor="pointer"
+        onMouseEnter={(e) => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "3px 3px 0 #1a1a2e"; window.dispatchEvent(new CustomEvent("tooltip")); }}
+        onMouseLeave={(e) => { e.currentTarget.style.transform = "translate(0,0)"; e.currentTarget.style.boxShadow = "2px 2px 0 #1a1a2e"; window.dispatchEvent(new CustomEvent("hover-out")); }}
         style={{
           position: "fixed", top: 16, right: 70, zIndex: 90,
           background: "#fff", border: "2px solid #1a1a2e", borderRadius: 10,
@@ -86,8 +88,6 @@ export default function AudioController({ mood, visible = true }: AudioControlle
           fontSize: 16, boxShadow: "2px 2px 0 #1a1a2e",
           transition: "transform 0.15s, box-shadow 0.15s",
         }}
-        onMouseEnter={(e) => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "3px 3px 0 #1a1a2e"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.transform = "translate(0,0)"; e.currentTarget.style.boxShadow = "2px 2px 0 #1a1a2e"; }}
         title={muted ? "Unmute" : "Mute"}
       >
         {muted ? "🔇" : "🔊"}

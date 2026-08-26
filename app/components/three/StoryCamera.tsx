@@ -82,7 +82,9 @@ export default function StoryCamera({ narrativeState, onInteractionProgress, onI
       jumpCount.current++;
       onInteractionProgress(jumpCount.current);
 
-      window.dispatchEvent(new CustomEvent("milo-jump", { detail: { count: jumpCount.current } }));
+      // Different sound per jump count
+      const jumpSounds = ["milo-jump", "pop", "bubble-pop", "coin-collect", "star-collect"];
+      window.dispatchEvent(new CustomEvent(jumpSounds[jumpCount.current % jumpSounds.length]));
 
       gsap.to(camera.position, {
         y: camera.position.y + 1.5,
@@ -164,8 +166,9 @@ export default function StoryCamera({ narrativeState, onInteractionProgress, onI
       collectCount.current++;
       onInteractionProgress(collectCount.current);
 
-      // Dispatch event for PaperWorld to spawn collectible
-      window.dispatchEvent(new CustomEvent("collect-leaf", {
+      // Different sound per leaf collected
+      const leafSounds = ["leaf-rustle", "collect-leaf", "sticker-peel", "slide", "crumple", "water-drop", "chime", "coin-collect"];
+      window.dispatchEvent(new CustomEvent(leafSounds[collectCount.current % leafSounds.length], {
         detail: { count: collectCount.current, x: e.clientX, y: e.clientY }
       }));
 
@@ -198,7 +201,9 @@ export default function StoryCamera({ narrativeState, onInteractionProgress, onI
       toggleCount++;
       onInteractionProgress(toggleCount);
 
-      window.dispatchEvent(new CustomEvent("toggle-cell", {
+      // Different sound per toggle
+      const toggleSounds = ["toggle-on", "click-meta", "pop", "check", "select", "toggle-off", "bubble-pop", "ding", "tab-switch", "click-meta"];
+      window.dispatchEvent(new CustomEvent(toggleSounds[toggleCount % toggleSounds.length], {
         detail: { count: toggleCount, clientX: e.clientX, clientY: e.clientY }
       }));
 
@@ -222,8 +227,11 @@ export default function StoryCamera({ narrativeState, onInteractionProgress, onI
       rowCount++;
       onInteractionProgress(rowCount);
 
-      window.dispatchEvent(new CustomEvent("row-boat", { detail: { count: rowCount } }));
+      // Different sound per row stroke
+      const rowSounds = ["row-boat", "water-drop", "whoosh-fast", "splash", "slide", "row-boat", "water-drop", "whoosh-down", "splash", "bubble-pop"];
+      window.dispatchEvent(new CustomEvent(rowSounds[rowCount % rowSounds.length]));
       if (rowCount % 3 === 0) window.dispatchEvent(new CustomEvent("splash"));
+      if (rowCount % 5 === 0) window.dispatchEvent(new CustomEvent("wind-chime"));
 
       // Camera tilt to simulate rowing
       gsap.to(camera.rotation, {
@@ -255,7 +263,9 @@ export default function StoryCamera({ narrativeState, onInteractionProgress, onI
       clickCount++;
       onInteractionProgress(clickCount);
 
-      window.dispatchEvent(new CustomEvent("celebrate", {
+      // Different sound per celebration click
+      const celebSounds = ["celebrate", "joy", "magic-sparkle", "coin-collect", "star-collect", "ding", "chime", "pop", "bubble-pop", "celebrate"];
+      window.dispatchEvent(new CustomEvent(celebSounds[clickCount % celebSounds.length], {
         detail: { count: clickCount, x: e.clientX, y: e.clientY }
       }));
 
@@ -289,7 +299,9 @@ export default function StoryCamera({ narrativeState, onInteractionProgress, onI
       followCount++;
       onInteractionProgress(followCount);
 
-      window.dispatchEvent(new CustomEvent("follow-butterfly", { detail: { count: followCount } }));
+      // Different sound per butterfly follow
+      const butterflySounds = ["follow-butterfly", "wind-chime", "whoosh-fast", "magic-sparkle", "chime", "wind-chime", "whoosh-up", "magic-sparkle", "chime", "follow-butterfly"];
+      window.dispatchEvent(new CustomEvent(butterflySounds[followCount % butterflySounds.length]));
 
       // Camera follows in a gentle arc
       const angle = (followCount / 25) * Math.PI * 2;

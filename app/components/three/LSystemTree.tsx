@@ -200,6 +200,7 @@ export function LSystemTree({
   const handleClick = useCallback(() => {
     if (!grown) {
       setGrown(true);
+      window.dispatchEvent(new CustomEvent("leaf-rustle"));
     }
     onClick?.();
   }, [grown, onClick]);
