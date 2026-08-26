@@ -189,18 +189,6 @@ function PaperDodecahedron({ position, color, radius = 0.5 }: { position: [numbe
   );
 }
 
-function PaperIcosahedron({ position, color, radius = 0.5 }: { position: [number, number, number]; color: string; radius?: number }) {
-  const geo = useMemo(() => getGeo(`ico-${radius}`, () => new THREE.IcosahedronGeometry(radius, 0)), [radius]);
-  const edge = useMemo(() => getEdge(`ico-${radius}`, () => new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(radius, 0))), [radius]);
-  const mat = useMemo(() => getMat(color), [color]);
-  return (
-    <group position={position}>
-      <mesh geometry={geo} material={mat} />
-      <lineSegments geometry={edge} material={LINE_MAT} />
-    </group>
-  );
-}
-
 function PaperTetrahedron({ position, color, radius = 0.5 }: { position: [number, number, number]; color: string; radius?: number }) {
   const geo = useMemo(() => getGeo(`tet-${radius}`, () => new THREE.TetrahedronGeometry(radius)), [radius]);
   const edge = useMemo(() => getEdge(`tet-${radius}`, () => new THREE.EdgesGeometry(new THREE.TetrahedronGeometry(radius))), [radius]);
@@ -209,16 +197,6 @@ function PaperTetrahedron({ position, color, radius = 0.5 }: { position: [number
     <group position={position}>
       <mesh geometry={geo} material={mat} />
       <lineSegments geometry={edge} material={LINE_MAT} />
-    </group>
-  );
-}
-
-function PaperCircle({ position, color, radius = 1 }: { position: [number, number, number]; color: string; radius?: number }) {
-  const geo = useMemo(() => getGeo(`cir-${radius}`, () => new THREE.CircleGeometry(radius, 12)), [radius]);
-  const mat = useMemo(() => getMat(color), [color]);
-  return (
-    <group position={position}>
-      <mesh geometry={geo} material={mat} rotation={[-Math.PI / 2, 0, 0]} />
     </group>
   );
 }
