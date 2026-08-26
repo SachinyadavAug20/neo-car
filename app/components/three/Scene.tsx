@@ -593,16 +593,48 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
   const textRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const featuresRef = useRef<HTMLDivElement>(null);
+  const particlesRef = useRef<HTMLDivElement>(null);
+  const mouseRef = useRef({ x: 0, y: 0 });
+  const [particles] = useState(() => Array.from({ length: 30 }, (_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    size: 4 + Math.random() * 12,
+    delay: Math.random() * 8,
+    duration: 10 + Math.random() * 15,
+    opacity: 0.08 + Math.random() * 0.12,
+    rotation: Math.random() * 360,
+  })));
 
   useEffect(() => {
     const tl = gsap.timeline();
-    gsap.set([titleRef.current, subRef.current, textRef.current, btnRef.current, navRef.current], { opacity: 0, y: 20 });
-    tl.to(titleRef.current, { opacity: 1, y: 0, duration: 1, ease: "power3.out", delay: 0.3 })
-      .to(subRef.current, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, "-=0.5")
-      .to(textRef.current, { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" }, "-=0.3")
+    gsap.set([titleRef.current, subRef.current, textRef.current, btnRef.current, navRef.current, featuresRef.current], { opacity: 0, y: 20 });
+    tl.to(titleRef.current, { opacity: 1, y: 0, duration: 1.2, ease: "power3.out", delay: 0.3 })
+      .to(subRef.current, { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" }, "-=0.6")
+      .to(textRef.current, { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }, "-=0.4")
+      .to(featuresRef.current, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, "-=0.3")
       .to(btnRef.current, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "-=0.2")
-      .to(navRef.current, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "-=0.2");
+      .to(navRef.current, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "-=0.3");
     return () => { tl.kill(); };
+  }, []);
+
+  // Mouse parallax on card
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      mouseRef.current = { x: e.clientX, y: e.clientY };
+      if (cardRef.current) {
+        const rect = cardRef.current.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const dx = (e.clientX - cx) / rect.width;
+        const dy = (e.clientY - cy) / rect.height;
+        cardRef.current.style.transform = `perspective(1000px) rotateY(${dx * 4}deg) rotateX(${-dy * 4}deg) translateZ(10px)`;
+      }
+    };
+    window.addEventListener("mousemove", onMove);
+    return () => window.removeEventListener("mousemove", onMove);
   }, []);
 
   useEffect(() => {
@@ -617,8 +649,40 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
     <div style={{
       position: "absolute", inset: 0, display: "flex", flexDirection: "column",
       alignItems: "center", justifyContent: "center", zIndex: 30,
-      pointerEvents: "auto",
+      pointerEvents: "auto", overflow: "hidden",
     }}>
+      {/* Floating paper particles */}
+      <div ref={particlesRef} style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+        {particles.map((p) => (
+          <div key={p.id} style={{
+            position: "absolute",
+            left: `${p.x}%`,
+            top: `${p.y}%`,
+            width: p.size,
+            height: p.size,
+            background: "#1a1a2e",
+            opacity: p.opacity,
+            borderRadius: p.id % 3 === 0 ? "50%" : p.id % 3 === 1 ? "2px" : "0",
+            transform: `rotate(${p.rotation}deg)`,
+            animation: `float-particle ${p.duration}s ease-in-out ${p.delay}s infinite alternate`,
+          }} />
+        ))}
+      </div>
+
+      {/* Background gradient orbs */}
+      <div style={{
+        position: "absolute", width: 500, height: 500, borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(167,139,250,0.08) 0%, transparent 70%)",
+        top: "10%", left: "10%", pointerEvents: "none",
+        animation: "drift-slow 20s ease-in-out infinite alternate",
+      }} />
+      <div style={{
+        position: "absolute", width: 400, height: 400, borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(244,114,182,0.06) 0%, transparent 70%)",
+        bottom: "10%", right: "10%", pointerEvents: "none",
+        animation: "drift-slow 25s ease-in-out 5s infinite alternate-reverse",
+      }} />
+
       {/* Top nav bar */}
       <div ref={navRef} style={{
         position: "absolute", top: 0, left: 0, right: 0,
@@ -636,7 +700,7 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
             fontSize: 13, color: "#1a1a2e", textDecoration: "none", fontWeight: 600,
             opacity: 0.6, transition: "opacity 0.2s",
           }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; window.dispatchEvent(new CustomEvent("tooltip")); }}
             onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.6")}
           >
             About
@@ -645,7 +709,7 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
             fontSize: 13, color: "#1a1a2e", textDecoration: "none", fontWeight: 600,
             opacity: 0.6, transition: "opacity 0.2s", display: "flex", alignItems: "center", gap: 5,
           }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; window.dispatchEvent(new CustomEvent("tooltip")); }}
             onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.6")}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -656,38 +720,69 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
         </div>
       </div>
 
-      {/* Main card */}
-      <div style={{
+      {/* Main card with 3D tilt */}
+      <div ref={cardRef} style={{
         background: "rgba(255,255,255,0.92)", backdropFilter: "blur(20px)",
         border: "3px solid #1a1a2e", borderRadius: 24,
         padding: "52px 60px", boxShadow: "8px 8px 0 #1a1a2e", textAlign: "center",
-        maxWidth: 500, width: "90%",
+        maxWidth: 520, width: "90%", transition: "transform 0.1s ease-out",
+        willChange: "transform",
       }}>
+        {/* Decorative crane icon */}
+        <div style={{ marginBottom: 16, opacity: 0.4 }}>
+          <svg width="48" height="48" viewBox="0 0 60 60" fill="none" style={{ display: "block", margin: "0 auto" }}>
+            <path d="M30 8 L52 30 L30 26 L8 30 Z" fill="#1a1a2e" opacity="0.8"/>
+            <path d="M30 26 L30 52" stroke="#1a1a2e" strokeWidth="2"/>
+            <path d="M30 26 L52 30 L44 42" fill="#1a1a2e" opacity="0.6"/>
+            <path d="M30 26 L8 30 L16 42" fill="#1a1a2e" opacity="0.6"/>
+          </svg>
+        </div>
+
         <div ref={titleRef} style={{
-          fontSize: 56, fontWeight: "bold", color: "#1a1a2e", letterSpacing: -3,
-          marginBottom: 4, opacity: 0,
+          fontSize: 64, fontWeight: "bold", color: "#1a1a2e", letterSpacing: -4,
+          marginBottom: 4, opacity: 0, lineHeight: 1,
         }}>
           DRIFT
         </div>
         <div ref={subRef} style={{
-          fontSize: 16, color: "#1a1a2e", marginBottom: 28, fontStyle: "italic",
-          opacity: 0, letterSpacing: 1,
+          fontSize: 18, color: "#1a1a2e", marginBottom: 24, fontStyle: "italic",
+          opacity: 0, letterSpacing: 2,
         }}>
           A Paper World
         </div>
-        <div style={{ width: 60, height: 2, background: "#1a1a2e", margin: "0 auto 28px" }} />
+        <div style={{ width: 60, height: 2, background: "#1a1a2e", margin: "0 auto 24px", opacity: 0.3 }} />
         <div ref={textRef} style={{
-          fontSize: 14, color: "#1a1a2e", lineHeight: 1.9, marginBottom: 32,
-          opacity: 0, maxWidth: 380, margin: "0 auto 32px",
+          fontSize: 15, color: "#1a1a2e", lineHeight: 1.9, marginBottom: 28,
+          opacity: 0, maxWidth: 400, margin: "0 auto 28px",
         }}>
           There was a paper crane named Milo who could not fly.
           One wing was bigger than the other. But he never stopped jumping.
         </div>
 
+        {/* Feature highlights */}
+        <div ref={featuresRef} style={{
+          display: "flex", justifyContent: "center", gap: 20, marginBottom: 28,
+          opacity: 0, flexWrap: "wrap",
+        }}>
+          {[
+            { icon: " ", label: "8 Acts" },
+            { icon: " ", label: "110 Sounds" },
+            { icon: "✨", label: "Secrets" },
+          ].map((f, i) => (
+            <div key={i} style={{
+              display: "flex", alignItems: "center", gap: 6,
+              fontSize: 12, color: "#1a1a2e", fontWeight: 600, opacity: 0.6,
+            }}>
+              <span>{f.icon}</span>
+              <span>{f.label}</span>
+            </div>
+          ))}
+        </div>
+
         {folds.totalPlaythroughs > 0 && (
           <div style={{
             fontSize: 11, color: "#1a1a2e", marginBottom: 20,
-            fontStyle: "italic", opacity: 0.6,
+            fontStyle: "italic", opacity: 0.5,
           }}>
             The world remembers {folds.totalPlaythroughs} previous {folds.totalPlaythroughs === 1 ? "visit" : "visits"}.
             {folds.secretFoldUnlocked && " The secret fold was unlocked."}
@@ -696,13 +791,13 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
 
         <button ref={btnRef} onClick={onStart} style={{
           background: "#1a1a2e", color: "#fff", border: "none", borderRadius: 14,
-          padding: "16px 44px", fontSize: 16, fontFamily: "Georgia, serif", cursor: "pointer",
+          padding: "16px 48px", fontSize: 16, fontFamily: "Georgia, serif", cursor: "pointer",
           boxShadow: "4px 4px 0 #6b7280", fontWeight: 600, letterSpacing: 0.5,
           transition: "transform 0.15s, box-shadow 0.15s", opacity: 0,
         }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translate(-1px, -1px)";
-            e.currentTarget.style.boxShadow = "5px 5px 0 #6b7280";
+            e.currentTarget.style.transform = "translate(-2px, -2px)";
+            e.currentTarget.style.boxShadow = "6px 6px 0 #6b7280";
             window.dispatchEvent(new CustomEvent("button-hover"));
           }}
           onMouseLeave={(e) => {
@@ -713,17 +808,29 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
         >
           {folds.totalPlaythroughs > 0 ? "Enter Again" : "Begin the Story"}
         </button>
-        <div style={{ fontSize: 11, color: "#1a1a2e", marginTop: 20, fontWeight: 600, opacity: 0.5 }}>
-          or press Enter
+        <div style={{ fontSize: 11, color: "#1a1a2e", marginTop: 16, fontWeight: 600, opacity: 0.4, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <kbd style={{ padding: "2px 8px", border: "1px solid #d1d5db", borderRadius: 4, fontSize: 10, background: "#f9fafb" }}>Enter</kbd>
+          <span>to start</span>
+          <span style={{ margin: "0 4px", opacity: 0.3 }}>|</span>
+          <kbd style={{ padding: "2px 8px", border: "1px solid #d1d5db", borderRadius: 4, fontSize: 10, background: "#f9fafb" }}>Space</kbd>
+          <span>also works</span>
         </div>
       </div>
 
-      {/* Bottom hint */}
+      {/* Bottom features strip */}
       <div style={{
-        position: "absolute", bottom: 24, left: 0, right: 0,
-        textAlign: "center", fontSize: 11, color: "#1a1a2e", opacity: 0.35,
+        position: "absolute", bottom: 32, left: 0, right: 0,
+        display: "flex", justifyContent: "center", gap: 32, opacity: 0.3,
       }}>
-        3D interactive experience — Best on desktop
+        {["Paper Craft Aesthetic", "Procedural Audio", "Hidden Discoveries", "Journey Tracking"].map((feat, i) => (
+          <div key={i} style={{
+            fontSize: 10, color: "#1a1a2e", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase",
+            display: "flex", alignItems: "center", gap: 6,
+          }}>
+            <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#1a1a2e" }} />
+            {feat}
+          </div>
+        ))}
       </div>
     </div>
   );

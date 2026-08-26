@@ -4,6 +4,7 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import gsap from "gsap";
 import { NarrativeState, getCurrentAct, getCurrentBeat, nextBeat, STORY_ACTS } from "@/app/lib/narrative";
 import EndScreen from "./EndScreen";
+import HowToPlay from "./HowToPlay";
 import { JourneyStats } from "@/app/lib/useJourneyTracker";
 
 interface NarrativeOverlayProps {
@@ -25,6 +26,7 @@ export default function NarrativeOverlay({
   const interactionUIRef = useRef<HTMLDivElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const [showEnd, setShowEnd] = useState(false);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [flashOpacity, setFlashOpacity] = useState(0);
   const [floatTexts, setFloatTexts] = useState<Array<{ id: number; x: number; y: number }>>([]);
   const floatIdRef = useRef(0);
@@ -444,11 +446,29 @@ export default function NarrativeOverlay({
         }}>
           DRIFT
         </div>
-        <div style={{
-          background: "#fff", border: "3px solid #1a1a2e", borderRadius: 12,
-          padding: "8px 14px", boxShadow: "3px 3px 0 #1a1a2e", fontSize: 12, color: "#1a1a2e", fontWeight: 600,
-        }}>
-          {act ? `${act.id} / ${STORY_ACTS.length}` : ""}
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {/* Help button */}
+          <button
+            onClick={() => { setShowHowToPlay(true); window.dispatchEvent(new CustomEvent("context-open")); }}
+            onMouseEnter={() => window.dispatchEvent(new CustomEvent("tooltip"))}
+            onMouseLeave={() => window.dispatchEvent(new CustomEvent("hover-out"))}
+            style={{
+              background: "#fff", border: "2px solid #1a1a2e", borderRadius: 10,
+              width: 32, height: 32, cursor: "pointer", fontSize: 14, fontWeight: 700,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "#1a1a2e", boxShadow: "2px 2px 0 #1a1a2e",
+              transition: "transform 0.15s, box-shadow 0.15s",
+            }}
+            title="How to play"
+          >
+            ?
+          </button>
+          <div style={{
+            background: "#fff", border: "3px solid #1a1a2e", borderRadius: 12,
+            padding: "8px 14px", boxShadow: "3px 3px 0 #1a1a2e", fontSize: 12, color: "#1a1a2e", fontWeight: 600,
+          }}>
+            {act ? `${act.id} / ${STORY_ACTS.length}` : ""}
+          </div>
         </div>
       </div>
 
@@ -491,6 +511,9 @@ export default function NarrativeOverlay({
           Press Space or Enter to continue
         </div>
       )}
+
+      {/* How to Play overlay */}
+      {showHowToPlay && <HowToPlay onClose={() => setShowHowToPlay(false)} />}
     </div>
   );
 }

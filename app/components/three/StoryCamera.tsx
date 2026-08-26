@@ -24,7 +24,6 @@ export default function StoryCamera({ narrativeState, onInteractionProgress, onI
 
   // Refs
   const keys = useRef(new Set<string>());
-  const isLocked = useRef(false);
   const velocity = useRef(new THREE.Vector3());
   const isAnimatingRef = useRef(false);
   const prevBeatId = useRef("");
@@ -329,7 +328,7 @@ export default function StoryCamera({ narrativeState, onInteractionProgress, onI
     jumpCount.current = 0;
   }, [narrativeState.currentAct, narrativeState.currentBeat]);
 
-  // ─── Keyboard + pointer lock ───────────────────────────────────────
+  // ─── Keyboard input (no pointer lock — cursor always visible) ─────────
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       keys.current.add(e.key.toLowerCase());
@@ -338,25 +337,12 @@ export default function StoryCamera({ narrativeState, onInteractionProgress, onI
     const onKeyUp = (e: KeyboardEvent) => {
       keys.current.delete(e.key.toLowerCase());
     };
-    const onPointerLockChange = () => {
-      isLocked.current = document.pointerLockElement === gl.domElement;
-    };
-    const onClick = () => {
-      if (isAnimatingRef.current) return;
-      const beat = getCurrentBeat(narrativeState);
-      if (beat?.interaction === "click-unfold") return;
-      if (!isLocked.current) gl.domElement.requestPointerLock();
-    };
 
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("keyup", onKeyUp);
-    document.addEventListener("pointerlockchange", onPointerLockChange);
-    gl.domElement.addEventListener("click", onClick);
     return () => {
       document.removeEventListener("keydown", onKeyDown);
       document.removeEventListener("keyup", onKeyUp);
-      document.removeEventListener("pointerlockchange", onPointerLockChange);
-      gl.domElement.removeEventListener("click", onClick);
     };
   }, [gl, narrativeState]);
 

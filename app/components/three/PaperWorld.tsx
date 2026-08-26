@@ -9,7 +9,7 @@ import { ConeTree, BonsaiTree } from "./LSystemTree";
 import FluidWater from "./FluidWater";
 import GLTFModel from "./GLTFModel";
 import { MouseParallaxEffect, PushPendulum, HiddenCritter, AmbientDust, PaperShatter, RippleEffect } from "./Interactions";
-import { ProceduralCrystal, MengerSponge, MobiusStrip, KleinBottle, SpiralTower, VoronoiTerrain, PaperWindmill, LissajousCurve } from "./ProceduralShapes";
+import { ProceduralCrystal, MengerSponge, MobiusStrip, KleinBottle, SpiralTower, VoronoiTerrain, PaperWindmill, LissajousCurve, GeodesicDome, DNAHelix, FractalIcosahedron } from "./ProceduralShapes";
 import { InstancedParticles, PhysicsPendulum, OrigamiCrane, TetrahedronChain, WaveSurface } from "./InteractiveElements";
 
 // ─── External Models Config ───────────────────────────────────────────
@@ -1500,7 +1500,7 @@ function InteractivePaperObject({
       }}
       onPointerOut={() => {
         setHovered(false);
-        document.body.style.cursor = "none";
+        document.body.style.cursor = "default";
         window.dispatchEvent(new CustomEvent("cursor-change", { detail: { cursor: "default" } }));
         window.dispatchEvent(new CustomEvent("hover-out"));
       }}
@@ -1958,6 +1958,8 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
         <group position={ACT_POSITIONS.storm}>
           {/* Menger sponge in storm */}
           <MengerSponge position={[5, 2, -3]} level={2} size={1.5} color="#64748b" rotationSpeed={0.1} />
+          {/* Geodesic dome as shelter */}
+          <GeodesicDome position={[-3, 1.5, 2]} radius={1.8} frequency={2} color="#94a3b8" wireframe />
         </group>
       )}
 
@@ -1968,6 +1970,9 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
 
           {/* Wave surface as a pond */}
           <WaveSurface position={[0, 0.1, 5]} width={4} depth={4} amplitude={0.2} color="#7dd3fc" />
+
+          {/* DNA helix as a tree-like structure */}
+          <DNAHelix position={[-4, 3, -2]} turns={2} radius={0.8} height={4} color1="#22c55e" color2="#86efac" />
         </group>
       )}
 
@@ -1981,6 +1986,9 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
 
           {/* Tetrahedron chain */}
           <TetrahedronChain position={[-5, 4, 0]} count={12} radius={1} color="#a78bfa" />
+
+          {/* Fractal icosahedron */}
+          <FractalIcosahedron position={[6, 2, 1]} level={2} size={1.2} color="#fbbf24" />
         </group>
       )}
 
@@ -2018,6 +2026,11 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
           <InstancedParticles position={[0, 5, 0]} count={300} spread={12} behavior="boid" color="#fbbf24" size={0.06} speed={0.5} />
           <WaveSurface position={[0, -0.3, 12]} width={10} depth={10} resolution={30} amplitude={0.3} color="#a5b4fc" />
           <TetrahedronChain position={[0, 8, 0]} count={20} radius={2} color="#f9a8d4" />
+          <GeodesicDome position={[-8, 2, -6]} radius={2.5} frequency={3} color="#67e8f9" />
+          <DNAHelix position={[6, 4, 6]} turns={4} radius={1} height={8} color1="#f472b6" color2="#a78bfa" />
+          <FractalIcosahedron position={[-6, 6, 4]} level={2} size={1.5} color="#fbbf24" />
+          <MobiusStrip position={[3, 6, -4]} radius={2} width={0.3} color="#c084fc" />
+          <KleinBottle position={[-3, 8, 2]} scale={0.3} color="#f9a8d4" />
         </group>
       )}
     </group>

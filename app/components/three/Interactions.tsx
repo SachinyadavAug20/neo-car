@@ -138,7 +138,7 @@ export function PushPendulum({ position, length = 2, color = "#f472b6", label }:
       <group
         ref={groupRef}
         onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = "pointer"; window.dispatchEvent(new CustomEvent("tooltip")); }}
-        onPointerOut={() => { setHovered(false); document.body.style.cursor = "none"; window.dispatchEvent(new CustomEvent("hover-out")); }}
+        onPointerOut={() => { setHovered(false); document.body.style.cursor = "default"; window.dispatchEvent(new CustomEvent("hover-out")); }}
         onClick={(e) => { e.stopPropagation(); push(); window.dispatchEvent(new CustomEvent("pendulum-push")); }}
       >
         <group position={[0, -length, 0]}>

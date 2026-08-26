@@ -731,3 +731,264 @@ function easeOutBack(t: number): number {
   const c3 = c1 + 1;
   return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
 }
+
+// ─── Geodesic Dome ────────────────────────────────────────────────────
+// Buckminster Fuller's geodesic dome: subdivided icosahedron projected onto sphere
+
+interface GeodesicDomeProps {
+  position?: [number, number, number];
+  radius?: number;
+  frequency?: number;
+  color?: string;
+  wireframe?: boolean;
+  autoRotate?: boolean;
+  rotationSpeed?: number;
+}
+
+export function GeodesicDome({
+  position = [0, 0, 0],
+  radius = 2,
+  frequency = 2,
+  color = "#67e8f9",
+  wireframe = false,
+  autoRotate = true,
+  rotationSpeed = 0.15,
+}: GeodesicDomeProps) {
+  const groupRef = useRef<THREE.Group>(null);
+
+  useFrame((_, delta) => {
+    if (groupRef.current && autoRotate) {
+      groupRef.current.rotation.y += delta * rotationSpeed;
+    }
+  });
+
+  const geo = useMemo(() => {
+    // Start with icosahedron
+    const ico = new THREE.IcosahedronGeometry(radius, frequency);
+    const pos = ico.attributes.position;
+    // Project onto sphere (already done by IcosahedronGeometry with detail > 0)
+    // But we can add slight random displacement for organic feel
+    const rng = mulberry32(99);
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i);
+      const y = pos.getY(i);
+      const z = pos.getZ(i);
+      const len = Math.sqrt(x * x + y * y + z * z);
+      const noise = 1 + (rng() - 0.5) * 0.03;
+      pos.setXYZ(i, (x / len) * radius * noise, (y / len) * radius * noise, (z / len) * radius * noise);
+    }
+    ico.computeVertexNormals();
+    return ico;
+  }, [radius, frequency]);
+
+  return (
+    <group ref={groupRef} position={position}>
+      <mesh geometry={geo} castShadow>
+        <meshToonMaterial color={color} side={THREE.DoubleSide} transparent opacity={wireframe ? 0.6 : 0.85} wireframe={wireframe} />
+      </mesh>
+      {!wireframe && (
+        <lineSegments geometry={new THREE.EdgesGeometry(geo, 15)}>
+          <lineBasicMaterial color="#1a1a2e" transparent opacity={0.2} />
+        </lineSegments>
+      )}
+    </group>
+  );
+}
+
+// ─── DNA Helix ────────────────────────────────────────────────────────
+// Double helix with base pair rungs, like real DNA
+
+interface DNAHelixProps {
+  position?: [number, number, number];
+  turns?: number;
+  pointsPerTurn?: number;
+  radius?: number;
+  height?: number;
+  color1?: string;
+  color2?: string;
+  autoRotate?: boolean;
+  rotationSpeed?: number;
+}
+
+export function DNAHelix({
+  position = [0, 0, 0],
+  turns = 3,
+  pointsPerTurn = 20,
+  radius = 1,
+  height = 6,
+  color1 = "#f472b6",
+  color2 = "#67e8f9",
+  autoRotate = true,
+  rotationSpeed = 0.2,
+}: DNAHelixProps) {
+  const groupRef = useRef<THREE.Group>(null);
+
+  useFrame((_, delta) => {
+    if (groupRef.current && autoRotate) {
+      groupRef.current.rotation.y += delta * rotationSpeed;
+    }
+  });
+
+  const helixData = useMemo(() => {
+    const total = turns * pointsPerTurn;
+    const strand1: THREE.Vector3[] = [];
+    const strand2: THREE.Vector3[] = [];
+    const rungs: { pos: [number, number, number]; rotation: [number, number, number] }[] = [];
+
+    for (let i = 0; i <= total; i++) {
+      const t = i / total;
+      const angle = t * turns * Math.PI * 2;
+      const y = (t - 0.5) * height;
+      const x1 = Math.cos(angle) * radius;
+      const z1 = Math.sin(angle) * radius;
+      const x2 = Math.cos(angle + Math.PI) * radius;
+      const z2 = Math.sin(angle + Math.PI) * radius;
+
+      strand1.push(new THREE.Vector3(x1, y, z1));
+      strand2.push(new THREE.Vector3(x2, y, z2));
+
+      // Base pair rungs every N points
+      if (i % 4 === 0 && i > 0 && i < total) {
+        rungs.push({
+          pos: [(x1 + x2) / 2, y, (z1 + z2) / 2],
+          rotation: [0, -angle, 0],
+        });
+      }
+    }
+
+    return { strand1, strand2, rungs };
+  }, [turns, pointsPerTurn, radius, height]);
+
+  const strandGeo1 = useMemo(() => {
+    return new THREE.BufferGeometry().setFromPoints(helixData.strand1);
+  }, [helixData]);
+
+  const strandGeo2 = useMemo(() => {
+    return new THREE.BufferGeometry().setFromPoints(helixData.strand2);
+  }, [helixData]);
+
+  return (
+    <group ref={groupRef} position={position}>
+      {/* Strand 1 */}
+      <lineSegments geometry={strandGeo1}>
+        <lineBasicMaterial color={color1} linewidth={2} />
+      </lineSegments>
+      {/* Strand 2 */}
+      <lineSegments geometry={strandGeo2}>
+        <lineBasicMaterial color={color2} linewidth={2} />
+      </lineSegments>
+      {/* Backbone nodes */}
+      {helixData.strand1.filter((_, i) => i % 3 === 0).map((p, i) => (
+        <mesh key={`n1-${i}`} position={[p.x, p.y, p.z]}>
+          <sphereGeometry args={[0.06, 6, 4]} />
+          <meshToonMaterial color={color1} emissive={color1} emissiveIntensity={0.3} />
+        </mesh>
+      ))}
+      {helixData.strand2.filter((_, i) => i % 3 === 0).map((p, i) => (
+        <mesh key={`n2-${i}`} position={[p.x, p.y, p.z]}>
+          <sphereGeometry args={[0.06, 6, 4]} />
+          <meshToonMaterial color={color2} emissive={color2} emissiveIntensity={0.3} />
+        </mesh>
+      ))}
+      {/* Base pair rungs */}
+      {helixData.rungs.map((r, i) => (
+        <group key={`rung-${i}`} position={r.pos} rotation={r.rotation}>
+          <mesh>
+            <cylinderGeometry args={[0.015, 0.015, radius * 2, 4]} />
+            <meshToonMaterial color="#1a1a2e" transparent opacity={0.3} />
+          </mesh>
+          {/* Base pair nucleotides */}
+          <mesh position={[0, 0, radius * 0.4]}>
+            <sphereGeometry args={[0.04, 6, 4]} />
+            <meshToonMaterial color={i % 2 === 0 ? "#fbbf24" : "#a78bfa"} />
+          </mesh>
+          <mesh position={[0, 0, -radius * 0.4]}>
+            <sphereGeometry args={[0.04, 6, 4]} />
+            <meshToonMaterial color={i % 2 === 0 ? "#a78bfa" : "#fbbf24"} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
+
+// ─── Fractal Icosahedron (Sierpinski-like) ────────────────────────────
+// Recursive icosahedron fractal with golden ratio spacing
+
+interface FractalIcosahedronProps {
+  position?: [number, number, number];
+  level?: number;
+  size?: number;
+  color?: string;
+  autoRotate?: boolean;
+  rotationSpeed?: number;
+}
+
+export function FractalIcosahedron({
+  position = [0, 0, 0],
+  level = 2,
+  size = 1.5,
+  color = "#c084fc",
+  autoRotate = true,
+  rotationSpeed = 0.2,
+}: FractalIcosahedronProps) {
+  const groupRef = useRef<THREE.Group>(null);
+
+  const PHI = 1.618033988749895;
+
+  useFrame((_, delta) => {
+    if (groupRef.current && autoRotate) {
+      groupRef.current.rotation.y += delta * rotationSpeed;
+      groupRef.current.rotation.x += delta * rotationSpeed * 0.3;
+    }
+  });
+
+  const elements = useMemo(() => {
+    const arr: { pos: [number, number, number]; scale: number; hue: number }[] = [];
+
+    function recurse(cx: number, cy: number, cz: number, s: number, depth: number, hue: number) {
+      if (depth >= level || s < 0.1) {
+        arr.push({ pos: [cx, cy, cz], scale: s, hue });
+        return;
+      }
+      // 12 vertices of icosahedron scaled by golden ratio
+      const vertices: [number, number, number][] = [
+        [0, 1, PHI], [0, 1, -PHI], [0, -1, PHI], [0, -1, -PHI],
+        [1, PHI, 0], [1, -PHI, 0], [-1, PHI, 0], [-1, -PHI, 0],
+        [PHI, 0, 1], [PHI, 0, -1], [-PHI, 0, 1], [-PHI, 0, -1],
+      ];
+      const childScale = s * 0.4;
+      vertices.forEach((v, i) => {
+        const len = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+        const nx = (v[0] / len) * s * 0.7;
+        const ny = (v[1] / len) * s * 0.7;
+        const nz = (v[2] / len) * s * 0.7;
+        recurse(cx + nx, cy + ny, cz + nz, childScale, depth + 1, hue + 0.02);
+      });
+    }
+
+    recurse(0, 0, 0, size, 0, 0);
+    return arr;
+  }, [level, size]);
+
+  return (
+    <group ref={groupRef} position={position}>
+      {elements.map((el, i) => {
+        const c = new THREE.Color(color);
+        c.offsetHSL(el.hue % 0.3, 0, 0);
+        return (
+          <group key={i} position={el.pos}>
+            <mesh castShadow>
+              <icosahedronGeometry args={[el.scale * 0.3, 0]} />
+              <meshToonMaterial color={c} emissive={c} emissiveIntensity={0.1} transparent opacity={0.85} />
+            </mesh>
+            <lineSegments>
+              <edgesGeometry args={[new THREE.IcosahedronGeometry(el.scale * 0.3, 0)]} />
+              <lineBasicMaterial color="#1a1a2e" transparent opacity={0.3} />
+            </lineSegments>
+          </group>
+        );
+      })}
+    </group>
+  );
+}
