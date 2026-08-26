@@ -143,7 +143,7 @@ export default function EndScreen({ stats, onRestart }: EndScreenProps) {
         scale: 2,
         useCORS: true,
         logging: false,
-      });
+      } as any);
       const url = canvas.toDataURL("image/png");
       setScreenshotUrl(url);
       setShowShareModal(true);
@@ -154,7 +154,7 @@ export default function EndScreen({ stats, onRestart }: EndScreenProps) {
     }
   }, [isCapturing]);
 
-  const shareText = `I completed DRIFT — A Paper World! 🏔️⭐🌊\n\n⏱ ${formatTime(totalTime)} |  ${totalBeats} story beats |  ${stats.secretsFound.length} secrets discovered\n\nCan you find all the secrets?`;
+  const shareText = `I completed DRIFT -- A Paper World\n\n${formatTime(totalTime)} | ${totalBeats} story beats | ${stats.secretsFound.length} secrets discovered\n\nCan you find all the secrets? drift-paper.vercel.app`;
 
   const shareToWhatsApp = useCallback(() => {
     window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
@@ -249,19 +249,19 @@ export default function EndScreen({ stats, onRestart }: EndScreenProps) {
           {showDetails && (
             <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginBottom: 20 }}>
               <StatBlock icon="⏱" value={formatTime(totalTime)} label="Total Time" sub="story duration" delay={0} />
-              <StatBlock icon="👆" value={String(stats.totalClicks)} label="Clicks" sub={`${Math.round(stats.totalClicks / Math.max(totalTime / 1000, 1))}/sec`} delay={0.1} />
-              <StatBlock icon="🖱" value={`${Math.round(stats.totalMouseMoveDistance)}m`} label="Distance" sub="cursor traveled" delay={0.2} />
-              <StatBlock icon="⌨" value={String(stats.totalKeys)} label="Keys Typed" sub="keyboard input" delay={0.3} />
+              <StatBlock icon=">" value={String(stats.totalClicks)} label="Clicks" sub={`${Math.round(stats.totalClicks / Math.max(totalTime / 1000, 1))}/sec`} delay={0.1} />
+              <StatBlock icon="~" value={`${Math.round(stats.totalMouseMoveDistance)}m`} label="Distance" sub="cursor traveled" delay={0.2} />
+              <StatBlock icon="K" value={String(stats.totalKeys)} label="Keys Typed" sub="keyboard input" delay={0.3} />
             </div>
           )}
 
           {/* Secondary stats */}
           {showDetails && (
             <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginBottom: 24 }}>
-              <StatBlock icon="📖" value={String(totalBeats)} label="Beats Visited" sub={`of ${32} total`} delay={0.4} color="#6b7280" />
-              <StatBlock icon="🎯" value={String(totalInteractions)} label="Interactions" sub="completed" delay={0.5} color="#6b7280" />
-              <StatBlock icon="🌟" value={String(stats.secretsFound.length)} label="Secrets" sub="words typed" delay={0.6} color="#fbbf24" />
-              <StatBlock icon="📚" value={String(stats.loreCollected)} label="Lore" sub="fragments" delay={0.7} color="#a78bfa" />
+              <StatBlock icon="B" value={String(totalBeats)} label="Beats Visited" sub={`of ${32} total`} delay={0.4} color="#6b7280" />
+              <StatBlock icon="X" value={String(totalInteractions)} label="Interactions" sub="completed" delay={0.5} color="#6b7280" />
+              <StatBlock icon="!" value={String(stats.secretsFound.length)} label="Secrets" sub="words typed" delay={0.6} color="#fbbf24" />
+              <StatBlock icon="L" value={String(stats.loreCollected)} label="Lore" sub="fragments" delay={0.7} color="#a78bfa" />
             </div>
           )}
 
@@ -302,16 +302,16 @@ export default function EndScreen({ stats, onRestart }: EndScreenProps) {
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 8, textAlign: "left" }}>
                 {[
-                  { icon: "🦘", label: "Jumps", val: stats.jumpsMade },
-                  { icon: "🌬", label: "Wind Power", val: stats.windGenerated },
-                  { icon: "🍃", label: "Leaves", val: stats.leavesCollected },
-                  { icon: "🔲", label: "Cells Toggled", val: stats.cellsToggled },
-                  { icon: "🚣", label: "Boat Strokes", val: stats.boatStrokes },
-                  { icon: "🦋", label: "Butterflies", val: stats.butterfliesFollowed },
-                  { icon: " paper", label: "Cranes", val: stats.cranesReleased },
-                  { icon: "💥", label: "Shatters", val: stats.shattersTriggered },
-                  { icon: "🔔", label: "Pendulums", val: stats.pendulumsPushed },
-                  { icon: "🦊", label: "Critters", val: stats.crittersFound },
+                  { icon: "J", label: "Jumps", val: stats.jumpsMade },
+                  { icon: "W", label: "Wind Power", val: stats.windGenerated },
+                  { icon: "L", label: "Leaves", val: stats.leavesCollected },
+                  { icon: "[]", label: "Cells Toggled", val: stats.cellsToggled },
+                  { icon: ">>", label: "Boat Strokes", val: stats.boatStrokes },
+                  { icon: "B", label: "Butterflies", val: stats.butterfliesFollowed },
+                  { icon: "*", label: "Cranes", val: stats.cranesReleased },
+                  { icon: "X", label: "Shatters", val: stats.shattersTriggered },
+                  { icon: "!", label: "Pendulums", val: stats.pendulumsPushed },
+                  { icon: "F", label: "Critters", val: stats.crittersFound },
                 ].map((item, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 0" }}>
                     <span style={{ fontSize: 14 }}>{item.icon}</span>
@@ -333,18 +333,18 @@ export default function EndScreen({ stats, onRestart }: EndScreenProps) {
                 Badges Earned
               </div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-start" }}>
-                <Badge icon=" paper" label="First Fold" delay={0} unlocked={stats.jumpsMade > 0} />
-                <Badge icon="🌊" label="Storm Rider" delay={0.1} unlocked={stats.windGenerated > 10} />
-                <Badge icon="🍃" label="Leaf Collector" delay={0.2} unlocked={stats.leavesCollected >= 8} />
-                <Badge icon="🔲" label="Cell Master" delay={0.3} unlocked={stats.cellsToggled >= 10} />
-                <Badge icon="🚣" label="Rowing Pro" delay={0.4} unlocked={stats.boatStrokes >= 20} />
-                <Badge icon="🦋" label="Butterfly Chaser" delay={0.5} unlocked={stats.butterfliesFollowed >= 25} />
-                <Badge icon="🎉" label="Celebration" delay={0.6} unlocked={stats.cranesReleased >= 15} />
-                <Badge icon=" secret" label="Secret Keeper" delay={0.7} unlocked={stats.secretsFound.length > 0} />
-                <Badge icon="📚" label="Lore Master" delay={0.8} unlocked={stats.loreCollected >= 3} />
-                <Badge icon="💥" label="Breakthrough" delay={0.9} unlocked={stats.shattersTriggered > 0} />
-                <Badge icon="🦊" label="Critter Friend" delay={1.0} unlocked={stats.crittersFound >= 3} />
-                <Badge icon=" complete" label="Full Journey" delay={1.1} unlocked={totalBeats >= 30} />
+                <Badge icon="*" label="First Fold" delay={0} unlocked={stats.jumpsMade > 0} />
+                <Badge icon="W" label="Storm Rider" delay={0.1} unlocked={stats.windGenerated > 10} />
+                <Badge icon="L" label="Leaf Collector" delay={0.2} unlocked={stats.leavesCollected >= 8} />
+                <Badge icon="[]" label="Cell Master" delay={0.3} unlocked={stats.cellsToggled >= 10} />
+                <Badge icon=">>" label="Rowing Pro" delay={0.4} unlocked={stats.boatStrokes >= 20} />
+                <Badge icon="B" label="Butterfly Chaser" delay={0.5} unlocked={stats.butterfliesFollowed >= 25} />
+                <Badge icon="!" label="Celebration" delay={0.6} unlocked={stats.cranesReleased >= 15} />
+                <Badge icon="S" label="Secret Keeper" delay={0.7} unlocked={stats.secretsFound.length > 0} />
+                <Badge icon="L" label="Lore Master" delay={0.8} unlocked={stats.loreCollected >= 3} />
+                <Badge icon="X" label="Breakthrough" delay={0.9} unlocked={stats.shattersTriggered > 0} />
+                <Badge icon="F" label="Critter Friend" delay={1.0} unlocked={stats.crittersFound >= 3} />
+                <Badge icon="*" label="Full Journey" delay={1.1} unlocked={totalBeats >= 30} />
               </div>
             </div>
           )}

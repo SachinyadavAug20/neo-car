@@ -8,14 +8,14 @@ interface HowToPlayProps {
 }
 
 const CONTROLS = [
-  { key: "W A S D", action: "Move camera", icon: "⌨️" },
-  { key: "Click", action: "Interact with objects", icon: " " },
-  { key: "Hover", action: "Discover hidden things", icon: "✨" },
-  { key: "Space / Enter", action: "Advance story", icon: "▶️" },
-  { key: "J K H L", action: "Vim-style movement", icon: " " },
-  { key: "Shift", action: "Sprint faster", icon: "⚡" },
-  { key: "Ctrl K", action: "Command palette", icon: " " },
-  { key: "Type words", action: "Secret discoveries", icon: " " },
+  { key: "W A S D", action: "Move camera", icon: "K" },
+  { key: "Click", action: "Interact with objects", icon: ">" },
+  { key: "Hover", action: "Discover hidden things", icon: "*" },
+  { key: "Space / Enter", action: "Advance story", icon: ">" },
+  { key: "J K H L", action: "Vim-style movement", icon: "H" },
+  { key: "Shift", action: "Sprint faster", icon: ">>" },
+  { key: "Ctrl K", action: "Command palette", icon: ">" },
+  { key: "Type words", action: "Secret discoveries", icon: "*" },
 ];
 
 export default function HowToPlay({ onClose }: HowToPlayProps) {

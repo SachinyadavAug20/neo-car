@@ -767,7 +767,7 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
           {[
             { icon: " ", label: "8 Acts" },
             { icon: " ", label: "110 Sounds" },
-            { icon: "✨", label: "Secrets" },
+            { icon: "*", label: "Secrets" },
           ].map((f, i) => (
             <div key={i} style={{
               display: "flex", alignItems: "center", gap: 6,
