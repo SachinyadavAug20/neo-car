@@ -2,11 +2,13 @@
 
 // ─── Narrative State Machine ──────────────────────────────────────────
 
+export type Mood = "warm" | "storm" | "calm" | "secret" | "sorrow" | "hope" | "final";
+
 export interface Beat {
   id: string;
   text: string;
   character?: string;
-  mood: "warm" | "storm" | "calm" | "secret" | "sorrow" | "hope" | "final";
+  mood: Mood;
   camera: {
     position: [number, number, number];
     lookAt: [number, number, number];
@@ -381,6 +383,13 @@ export const STORY_ACTS: Act[] = [
         interaction: "celebrate",
         interactionTarget: 15,
         camera: { position: [5, 20, 5], lookAt: [0, 10, 0] },
+      },
+      {
+        id: "8-closing",
+        text: "Every fold was a choice. Every choice was the wind.",
+        character: "narrator",
+        mood: "final",
+        camera: { position: [0, 22, 0], lookAt: [0, 8, 0] },
       },
     ],
   },

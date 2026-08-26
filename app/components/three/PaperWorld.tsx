@@ -1544,11 +1544,13 @@ function InteractivePaperObject({
         setHovered(true);
         document.body.style.cursor = "pointer";
         window.dispatchEvent(new CustomEvent("cursor-change", { detail: { cursor: "pointer" } }));
+        window.dispatchEvent(new CustomEvent("hover-in"));
       }}
       onPointerOut={() => {
         setHovered(false);
         document.body.style.cursor = "none";
         window.dispatchEvent(new CustomEvent("cursor-change", { detail: { cursor: "default" } }));
+        window.dispatchEvent(new CustomEvent("hover-out"));
       }}
     >
       <mesh castShadow>
@@ -1613,6 +1615,7 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
         const intersects = raycaster.intersectObject(secretFoldGroup, true);
         if (intersects.length > 0) {
           secretFoldInteracted.current = true;
+          window.dispatchEvent(new CustomEvent("paper-shower"));
           onSecretFoldInteract();
         }
       }

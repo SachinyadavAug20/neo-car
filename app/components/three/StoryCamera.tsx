@@ -51,6 +51,7 @@ export default function StoryCamera({ narrativeState, onInteractionProgress, onI
 
     isAnimatingRef.current = true;
     window.dispatchEvent(new CustomEvent("cinematic-start"));
+    window.dispatchEvent(new CustomEvent("camera-swoosh"));
 
     const target = beat.camera.position;
     const lookAt = beat.camera.lookAt;
@@ -222,6 +223,7 @@ export default function StoryCamera({ narrativeState, onInteractionProgress, onI
       onInteractionProgress(rowCount);
 
       window.dispatchEvent(new CustomEvent("row-boat", { detail: { count: rowCount } }));
+      if (rowCount % 3 === 0) window.dispatchEvent(new CustomEvent("splash"));
 
       // Camera tilt to simulate rowing
       gsap.to(camera.rotation, {

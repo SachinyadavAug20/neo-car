@@ -3,15 +3,22 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import gsap from "gsap";
 import { NarrativeState, getCurrentAct, getCurrentBeat, nextBeat, STORY_ACTS } from "@/app/lib/narrative";
+import EndScreen from "./EndScreen";
+import { JourneyStats } from "@/app/lib/useJourneyTracker";
 
 interface NarrativeOverlayProps {
   state: NarrativeState;
   onAdvance: (newState: NarrativeState) => void;
   onInteractionProgress: (progress: number) => void;
   onInteractionComplete: () => void;
+  journeyStats?: JourneyStats;
+  onRestart?: () => void;
 }
 
-export default function NarrativeOverlay({ state, onAdvance, onInteractionProgress, onInteractionComplete }: NarrativeOverlayProps) {
+export default function NarrativeOverlay({
+  state, onAdvance, onInteractionProgress, onInteractionComplete,
+  journeyStats, onRestart = () => window.location.reload(),
+}: NarrativeOverlayProps) {
   const textRef = useRef<HTMLDivElement>(null);
   const charRef = useRef<HTMLDivElement>(null);
   const actTitleRef = useRef<HTMLDivElement>(null);
@@ -71,13 +78,14 @@ export default function NarrativeOverlay({ state, onAdvance, onInteractionProgre
     if (!interactionUIRef.current) return;
     if (isInteraction) {
       gsap.fromTo(interactionUIRef.current, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" });
+      window.dispatchEvent(new CustomEvent("interaction-start"));
     }
   }, [isInteraction, state.interactionState]);
 
   // End screen
   useEffect(() => {
     if (state.ended) {
-      setTimeout(() => setShowEnd(true), 1000);
+      setTimeout(() => setShowEnd(true), 2500);
     }
   }, [state.ended]);
 
@@ -85,6 +93,7 @@ export default function NarrativeOverlay({ state, onAdvance, onInteractionProgre
     if (state.isAnimating) return;
     const beat = getCurrentBeat(state);
     if (beat?.interaction && beat.interaction !== "none" && state.interactionState !== "complete") return;
+    window.dispatchEvent(new CustomEvent("success"));
     onAdvance(nextBeat(state));
   }, [state, onAdvance]);
 
@@ -100,44 +109,52 @@ export default function NarrativeOverlay({ state, onAdvance, onInteractionProgre
     return () => window.removeEventListener("keydown", handler);
   }, [handleSkip]);
 
+  // Cinematic fade-to-white when story ends
+  const [fadeOpacity, setFadeOpacity] = useState(0);
+  useEffect(() => {
+    if (state.ended) {
+      // Slow cinematic fade to white
+      gsap.to({}, {
+        duration: 2.5,
+        onUpdate: function () {
+          setFadeOpacity(this.progress());
+        },
+        ease: "power2.inOut",
+      });
+    }
+  }, [state.ended]);
+
   if (showEnd) {
     return (
-      <div style={{
-        position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
-        zIndex: 50, fontFamily: "Georgia, serif", background: "rgba(253,246,227,0.95)",
-      }}>
-        <div ref={endRef} style={{ textAlign: "center", maxWidth: 500, padding: "40px" }}>
-          <div style={{ fontSize: 11, letterSpacing: 4, textTransform: "uppercase", fontWeight: 600, marginBottom: 12, color: "#1a1a2e" }}>
-            The End
-          </div>
-          <div style={{ fontSize: 48, fontWeight: "bold", color: "#1a1a2e", letterSpacing: -2, marginBottom: 16 }}>DRIFT</div>
-          <div style={{ fontSize: 18, color: "#1a1a2e", lineHeight: 1.8, marginBottom: 24, fontStyle: "italic" }}>
-            You are not your folds. You are the paper. You are everything.
-          </div>
-          <div style={{ width: 60, height: 2, background: "#1a1a2e", margin: "0 auto 24px" }} />
-          <div style={{ fontSize: 13, color: "#1a1a2e", marginBottom: 32, opacity: 0.6 }}>A Paper World</div>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <button
-              onClick={() => { setShowEnd(false); window.location.reload(); }}
-              style={{
-                background: "#1a1a2e", color: "#fff", border: "none", borderRadius: 12,
-                padding: "14px 36px", fontSize: 15, fontFamily: "Georgia, serif", cursor: "pointer",
-                boxShadow: "3px 3px 0 #6b7280", fontWeight: 600,
-              }}
-            >
-              Play Again
-            </button>
-            <a href="/about" style={{
-              background: "#fff", color: "#1a1a2e", border: "2px solid #1a1a2e", borderRadius: 12,
-              padding: "12px 28px", fontSize: 15, fontFamily: "Georgia, serif", cursor: "pointer",
-              boxShadow: "2px 2px 0 #1a1a2e", fontWeight: 600, textDecoration: "none",
-              display: "inline-flex", alignItems: "center",
-            }}>
-              About the Project
-            </a>
-          </div>
-        </div>
-      </div>
+      <EndScreen
+        stats={journeyStats || {
+          startTime: Date.now() - 1000,
+          endTime: Date.now(),
+          totalClicks: 0,
+          totalKeys: 0,
+          totalMouseMoveDistance: 0,
+          actTimes: [0, 0, 0, 0, 0, 0, 0, 0],
+          actClicks: [0, 0, 0, 0, 0, 0, 0, 0],
+          actInteractions: [0, 0, 0, 0, 0, 0, 0, 0],
+          actBeatCount: [0, 0, 0, 0, 0, 0, 0, 0],
+          secretsFound: [],
+          currentAct: 7,
+          loreCollected: 0,
+          charactersMet: [],
+          jumpsMade: 0,
+          windGenerated: 0,
+          leavesCollected: 0,
+          cellsToggled: 0,
+          boatStrokes: 0,
+          butterfliesFollowed: 0,
+          cranesReleased: 0,
+          shattersTriggered: 0,
+          pendulumsPushed: 0,
+          crittersFound: 0,
+          foldsUnlocked: false,
+        }}
+        onRestart={onRestart}
+      />
     );
   }
 
@@ -160,6 +177,14 @@ export default function NarrativeOverlay({ state, onAdvance, onInteractionProgre
           +1
         </div>
       ))}
+
+      {/* Cinematic fade-to-white overlay */}
+      {state.ended && (
+        <div style={{
+          position: "absolute", inset: 0, background: "#fdf6e3",
+          opacity: fadeOpacity, pointerEvents: "none", zIndex: 100,
+        }} />
+      )}
 
       {/* Act title overlay */}
       {act && (
@@ -380,11 +405,14 @@ export default function NarrativeOverlay({ state, onAdvance, onInteractionProgre
           {/* Skip button (only for non-interactive beats) */}
           {!isInteraction && !state.isAnimating && (
             <div style={{ marginTop: 12, pointerEvents: "auto" }}>
-              <button onClick={handleSkip} style={{
-                background: "#fff", border: "2px solid #1a1a2e", borderRadius: 8,
-                padding: "6px 16px", fontSize: 11, fontFamily: "Georgia, serif", cursor: "pointer",
-                color: "#1a1a2e", fontWeight: 600, boxShadow: "2px 2px 0 #1a1a2e",
-              }}>
+              <button onClick={handleSkip}
+                onMouseEnter={() => window.dispatchEvent(new CustomEvent("hover-in"))}
+                onMouseLeave={() => window.dispatchEvent(new CustomEvent("hover-out"))}
+                style={{
+                  background: "#fff", border: "2px solid #1a1a2e", borderRadius: 8,
+                  padding: "6px 16px", fontSize: 11, fontFamily: "Georgia, serif", cursor: "pointer",
+                  color: "#1a1a2e", fontWeight: 600, boxShadow: "2px 2px 0 #1a1a2e",
+                }}>
                 Continue ▸
               </button>
             </div>
@@ -415,15 +443,20 @@ export default function NarrativeOverlay({ state, onAdvance, onInteractionProgre
       {/* Progress dots */}
       <div style={{
         position: "absolute", bottom: 16, left: "50%", transform: "translateX(-50%)",
-        display: "flex", gap: 6,
+        display: "flex", gap: 6, alignItems: "center",
       }}>
-        {STORY_ACTS.map((_, i) => (
-          <div key={i} style={{
-            width: i + 1 === (act?.id || 0) ? 20 : 8, height: 8, borderRadius: 4,
-            background: i + 1 <= (act?.id || 0) ? "#1a1a2e" : "#e5e7eb",
-            border: "1.5px solid #1a1a2e", transition: "all 0.3s",
-          }} />
-        ))}
+        {STORY_ACTS.map((a, i) => {
+          const isCurrent = a.id === (act?.id || 0);
+          const isComplete = a.id < (act?.id || 0);
+          return (
+            <div key={i} style={{
+              width: isCurrent ? 24 : 8, height: 8, borderRadius: 4,
+              background: isCurrent ? "#fbbf24" : isComplete ? "#1a1a2e" : "#e5e7eb",
+              border: "1.5px solid #1a1a2e", transition: "all 0.4s ease",
+              boxShadow: isCurrent ? "0 0 8px rgba(251,191,36,0.5)" : "none",
+            }} />
+          );
+        })}
       </div>
 
       {/* Keyboard hints */}
@@ -435,6 +468,17 @@ export default function NarrativeOverlay({ state, onAdvance, onInteractionProgre
         <div>Ctrl+K — commands</div>
         <div>Ctrl+~ — terminal</div>
       </div>
+
+      {/* Space/Enter hint */}
+      {!isInteraction && !state.isAnimating && (
+        <div style={{
+          position: "absolute", bottom: 50, left: "50%", transform: "translateX(-50%)",
+          fontSize: 10, color: "#1a1a2e", opacity: 0.3, fontWeight: 600,
+          animation: "pulse 2s ease-in-out infinite",
+        }}>
+          Press Space or Enter to continue
+        </div>
+      )}
     </div>
   );
 }

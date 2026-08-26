@@ -137,9 +137,9 @@ export function PushPendulum({ position, length = 2, color = "#f472b6", label }:
       </mesh>
       <group
         ref={groupRef}
-        onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = "pointer"; }}
-        onPointerOut={() => { setHovered(false); document.body.style.cursor = "none"; }}
-        onClick={(e) => { e.stopPropagation(); push(); }}
+        onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = "pointer"; window.dispatchEvent(new CustomEvent("hover-in")); }}
+        onPointerOut={() => { setHovered(false); document.body.style.cursor = "none"; window.dispatchEvent(new CustomEvent("hover-out")); }}
+        onClick={(e) => { e.stopPropagation(); push(); window.dispatchEvent(new CustomEvent("pendulum-push")); }}
       >
         <group position={[0, -length, 0]}>
           <mesh castShadow>
@@ -192,8 +192,8 @@ export function HiddenCritter({ position, type = "fox", peekDistance = 3 }: Hidd
     <group
       ref={groupRef}
       position={position}
-      onPointerOver={(e) => { e.stopPropagation(); setHovered(true); setFound(true); window.dispatchEvent(new CustomEvent("cursor-change", { detail: { cursor: "inspect" } })); }}
-      onPointerOut={() => { setHovered(false); window.dispatchEvent(new CustomEvent("cursor-change", { detail: { cursor: "default" } })); }}
+      onPointerOver={(e) => { e.stopPropagation(); setHovered(true); setFound(true); window.dispatchEvent(new CustomEvent("cursor-change", { detail: { cursor: "inspect" } })); window.dispatchEvent(new CustomEvent("critter-found")); window.dispatchEvent(new CustomEvent("hover-in")); }}
+      onPointerOut={() => { setHovered(false); window.dispatchEvent(new CustomEvent("cursor-change", { detail: { cursor: "default" } })); window.dispatchEvent(new CustomEvent("hover-out")); }}
     >
       {/* Body */}
       <mesh>
@@ -379,7 +379,7 @@ export function PaperShatter({ position, size = [3, 3, 0.2], color = "#e5e7eb", 
     <group
       ref={groupRef}
       position={position}
-      onClick={(e) => { e.stopPropagation(); shatter(); }}
+      onClick={(e) => { e.stopPropagation(); shatter(); window.dispatchEvent(new CustomEvent("shatter")); }}
       onPointerOver={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent("cursor-change", { detail: { cursor: "interact" } })); }}
       onPointerOut={() => window.dispatchEvent(new CustomEvent("cursor-change", { detail: { cursor: "default" } }))}
     >

@@ -9,7 +9,11 @@ import NarrativeOverlay from "../ui/NarrativeOverlay";
 import DraftingTerminal from "../ui/DraftingTerminal";
 import CommandPalette from "../ui/CommandPalette";
 import CustomCursor from "../ui/CustomCursor";
+import AudioController from "../ui/AudioController";
+import LoadingScreen from "../ui/LoadingScreen";
 import { useKeyboardSecrets } from "../ui/useInteractions";
+import { useJourneyTracker } from "@/app/lib/useJourneyTracker";
+import { setupAudioEvents, playBeatAdvance, playActTransition } from "@/app/lib/audio";
 import Fog from "./Fog";
 import { NarrativeState, INITIAL_STATE, getCurrentBeat, getCurrentAct, nextBeat, STORY_ACTS } from "@/app/lib/narrative";
 import { usePersistentFolds } from "@/app/lib/usePersistentFolds";
@@ -30,8 +34,23 @@ export default function Scene() {
   const [windForce, setWindForce] = useState(0.3);
   const [currentMood, setCurrentMood] = useState("warm");
   const [cameraPos, setCameraPos] = useState<[number, number, number]>([3, 2, 5]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Hide loading screen after mount
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Journey tracker
+  const { stats: journeyStats, setCurrentAct, visitBeat, completeInteraction, trackEvent } = useJourneyTracker();
 
   const { folds, unlockSecretFold, completeAct, incrementPlaythrough, resetFolds } = usePersistentFolds();
+
+  // Setup audio events on mount
+  useEffect(() => {
+    setupAudioEvents();
+  }, []);
 
   // Toggle terminal with Ctrl+~
   useEffect(() => {
@@ -52,11 +71,13 @@ export default function Scene() {
   // Keyboard secrets (type "wind", "paper", "fold", etc.)
   const [secretNotification, setSecretNotification] = useState<string | null>(null);
   useKeyboardSecrets(useCallback((word: string) => {
+    trackEvent("secret-found", { word });
     // Trigger hidden events based on typed word
     switch (word) {
       case "wind":
         setWindForce(prev => Math.min(10, prev + 2));
         window.dispatchEvent(new CustomEvent("set-wind-force", { detail: { force: Math.min(10, windForce + 2) } }));
+        trackEvent("wind-generated", { force: 2 });
         break;
       case "paper":
         window.dispatchEvent(new CustomEvent("paper-shower"));
@@ -111,8 +132,15 @@ export default function Scene() {
   }, [incrementPlaythrough]);
 
   const handleAdvance = useCallback((newState: NarrativeState) => {
+    const prevAct = narrativeState.currentAct;
     setNarrativeState(newState);
-  }, []);
+    // Audio: beat advance
+    window.dispatchEvent(new CustomEvent("beat-advance"));
+    // Audio: act transition
+    if (newState.currentAct !== prevAct) {
+      window.dispatchEvent(new CustomEvent("act-transition"));
+    }
+  }, [narrativeState.currentAct]);
 
   const handleInteractionProgress = useCallback((progress: number) => {
     setNarrativeState(prev => ({ ...prev, interactionProgress: progress }));
@@ -121,6 +149,8 @@ export default function Scene() {
   const handleInteractionComplete = useCallback(() => {
     setNarrativeState(prev => {
       const beat = getCurrentBeat(prev);
+      completeInteraction(prev.currentAct);
+      trackEvent("interaction-complete", { type: beat?.interaction });
       // Auto-advance after both interaction types complete
       if (beat?.interaction === "drag-wind" || beat?.interaction === "click-jump") {
         setTimeout(() => {
@@ -129,7 +159,7 @@ export default function Scene() {
       }
       return { ...prev, interactionState: "complete" };
     });
-  }, []);
+  }, [completeInteraction, trackEvent]);
 
   const handleSecretFoldInteract = useCallback(() => {
     setNarrativeState(prev => ({ ...prev, interactionState: "complete" }));
@@ -143,12 +173,29 @@ export default function Scene() {
     setLoreModal(entry);
   }, []);
 
-  // Track act completion
+  // Track act completion and journey
   useEffect(() => {
     if (narrativeState.started) {
       completeAct(narrativeState.currentAct);
+      setCurrentAct(narrativeState.currentAct);
+      visitBeat(narrativeState.currentAct, narrativeState.currentBeat);
     }
-  }, [narrativeState.currentAct, narrativeState.started, completeAct]);
+  }, [narrativeState.currentAct, narrativeState.currentBeat, narrativeState.started, completeAct, setCurrentAct, visitBeat]);
+
+  // Track specific interaction events
+  useEffect(() => {
+    const events = [
+      "milo-jump", "collect-leaf", "toggle-cell", "row-boat",
+      "follow-butterfly", "celebrate", "shatter", "pendulum-push",
+      "critter-found", "lore-collected",
+    ];
+    const handlers = events.map(evt => {
+      const handler = () => trackEvent(evt);
+      window.addEventListener(evt, handler);
+      return { evt, handler };
+    });
+    return () => handlers.forEach(({ evt, handler }) => window.removeEventListener(evt, handler));
+  }, [trackEvent]);
 
   // Listen for cinematic events
   useEffect(() => {
@@ -273,6 +320,11 @@ export default function Scene() {
     { id: "reset", label: "Reset All Progress", category: "Tools", action: () => { resetFolds(); window.location.reload(); } },
   ], [windForce, resetFolds]);
 
+  // Loading screen
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
   // Title screen
   if (showTitle) {
     return (
@@ -289,6 +341,9 @@ export default function Scene() {
     <>
       {/* Custom cursor */}
       <CustomCursor />
+
+      {/* Audio controller */}
+      <AudioController mood={currentMood as any} />
       <Canvas
         camera={{ position: [3, 2, 5], fov: 50 }}
         gl={{ antialias: true, alpha: false, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.2 }}
@@ -357,6 +412,8 @@ export default function Scene() {
         onAdvance={handleAdvance}
         onInteractionProgress={handleInteractionProgress}
         onInteractionComplete={handleInteractionComplete}
+        journeyStats={{ ...journeyStats, foldsUnlocked: folds.secretFoldUnlocked }}
+        onRestart={() => { window.location.reload(); }}
       />
 
       {/* Persistent folds indicator */}
