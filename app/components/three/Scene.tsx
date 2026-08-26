@@ -641,7 +641,7 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
           >
             About
           </a>
-          <a href="https://github.com/sachin" target="_blank" rel="noopener noreferrer" style={{
+          <a href="https://github.com/SachinyadavAug20/neo-car" target="_blank" rel="noopener noreferrer" style={{
             fontSize: 13, color: "#1a1a2e", textDecoration: "none", fontWeight: 600,
             opacity: 0.6, transition: "opacity 0.2s", display: "flex", alignItems: "center", gap: 5,
           }}

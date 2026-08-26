@@ -76,7 +76,7 @@ export default function AboutPage() {
             About
           </Link>
           <a
-            href="https://github.com/sachin"
+            href="https://github.com/SachinyadavAug20/neo-car"
             target="_blank"
             rel="noopener noreferrer"
             style={{
@@ -297,7 +297,7 @@ export default function AboutPage() {
           web experiences into a single cohesive narrative.
         </p>
         <a
-          href="https://github.com/sachin"
+          href="https://github.com/SachinyadavAug20/neo-car"
           target="_blank"
           rel="noopener noreferrer"
           style={{

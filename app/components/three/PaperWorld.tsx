@@ -9,6 +9,8 @@ import { ConeTree, BonsaiTree } from "./LSystemTree";
 import FluidWater from "./FluidWater";
 import GLTFModel from "./GLTFModel";
 import { MouseParallaxEffect, PushPendulum, HiddenCritter, AmbientDust, PaperShatter, RippleEffect } from "./Interactions";
+import { ProceduralCrystal, MengerSponge, MobiusStrip, KleinBottle, SpiralTower, VoronoiTerrain, PaperWindmill, LissajousCurve } from "./ProceduralShapes";
+import { InstancedParticles, PhysicsPendulum, OrigamiCrane, TetrahedronChain, WaveSurface } from "./InteractiveElements";
 
 // ─── External Models Config ───────────────────────────────────────────
 // Polyfork models (CC0, no attribution required).
@@ -990,27 +992,6 @@ function logConsoleEasterEggs() {
   );
 }
 
-// ─── Paper Origami Crane (decorative, non-interactive) ────────────────
-
-function OrigamiCrane({ position, color = "#f97316", scale = 1, speed = 1 }: { position: [number, number, number]; color?: string; scale?: number; speed?: number }) {
-  const ref = useRef<THREE.Group>(null);
-  useFrame((state) => {
-    if (!ref.current) return;
-    const t = state.clock.elapsedTime;
-    ref.current.position.y = position[1] + Math.sin(t * speed + position[0]) * 0.3;
-    ref.current.rotation.y = t * speed * 0.3;
-  });
-  return (
-    <group ref={ref} position={position} scale={scale}>
-      <PaperBox position={[0, 0, 0]} color={color} size={[0.3, 0.04, 0.15]} />
-      <PaperCone position={[0.2, 0, 0]} color={color} args={[0.03, 0.12, 3]} />
-      <PaperBox position={[-0.05, 0.03, 0.1]} color={color} size={[0.2, 0.01, 0.18]} />
-      <PaperBox position={[-0.05, 0.03, -0.1]} color={color} size={[0.15, 0.01, 0.12]} />
-      <PaperBox position={[-0.18, 0, 0]} color={color} size={[0.08, 0.04, 0.04]} rotation={[0, 0, -0.3]} />
-    </group>
-  );
-}
-
 // ─── Paper Flower ─────────────────────────────────────────────────────
 
 function PaperFlower({ position, color = "#f472b6", petalCount = 5 }: { position: [number, number, number]; color?: string; petalCount?: number }) {
@@ -1143,36 +1124,6 @@ function PaperButterfly({ position, color = "#a78bfa" }: { position: [number, nu
       <group ref={wingR} position={[0, 0, -0.04]}>
         <PaperBox position={[-0.06, 0.02, 0]} color={color} size={[0.12, 0.01, 0.08]} />
         <PaperBox position={[-0.04, -0.02, 0]} color={color} size={[0.08, 0.01, 0.06]} />
-      </group>
-    </group>
-  );
-}
-
-// ─── Paper Windmill ───────────────────────────────────────────────────
-
-function PaperWindmill({ position, color = "#67e8f9" }: { position: [number, number, number]; color?: string }) {
-  const bladesRef = useRef<THREE.Group>(null);
-  useFrame((state) => {
-    if (!bladesRef.current) return;
-    bladesRef.current.rotation.z = state.clock.elapsedTime * 2;
-  });
-  return (
-    <group position={position}>
-      <PaperCylinder position={[0, 0.6, 0]} color="#a8a29e" args={[0.04, 0.06, 1.2, 6]} />
-      <group ref={bladesRef} position={[0, 1.3, 0]}>
-        {[0, 1, 2, 3].map((i) => {
-          const a = (i / 4) * Math.PI * 2;
-          return (
-            <PaperBox
-              key={i}
-              position={[Math.cos(a) * 0.3, Math.sin(a) * 0.3, 0]}
-              color={i % 2 === 0 ? color : "#ffffff"}
-              size={[0.15, 0.08, 0.01]}
-              rotation={[0, 0, a]}
-            />
-          );
-        })}
-        <PaperSphere position={[0, 0, 0.02]} color="#fbbf24" radius={0.04} />
       </group>
     </group>
   );
@@ -1860,8 +1811,8 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
       <PipBoat position={[0, 0, 40]} visible={currentAct >= 6} />
       {currentAct >= 6 && (
         <>
-          <OrigamiCrane position={[3, 1, 42]} color="#f97316" scale={0.8} speed={1.2} />
-          <OrigamiCrane position={[-2, 1.5, 38]} color="#fb923c" scale={0.6} speed={0.8} />
+          <OrigamiCrane position={[3, 1, 42]} color="#f97316" size={0.5} />
+          <OrigamiCrane position={[-2, 1.5, 38]} color="#fb923c" size={0.4} />
           <PaperButterfly position={[2, 2, 43]} color="#f472b6" />
           <PaperButterfly position={[-1, 3, 37]} color="#67e8f9" />
           <PaperLantern position={[4, 1.5, 40]} color="#fbbf24" />
@@ -1881,8 +1832,8 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
       {currentAct === 8 && (
         <>
           <MiloCrane position={[0, 15, 0]} act={currentAct} />
-          <OrigamiCrane position={[5, 13, 3]} color="#fbbf24" scale={1.2} speed={0.5} />
-          <OrigamiCrane position={[-4, 14, -2]} color="#f97316" scale={1} speed={0.7} />
+          <OrigamiCrane position={[5, 13, 3]} color="#fbbf24" size={0.7} />
+          <OrigamiCrane position={[-4, 14, -2]} color="#f97316" size={0.6} />
           <PaperButterfly position={[3, 16, -4]} color="#a78bfa" />
           <PaperButterfly position={[-5, 15, 2]} color="#f472b6" />
           <PaperStar position={[6, 14, 0]} color="#fbbf24" radius={0.4} />
@@ -1986,6 +1937,89 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
           />
         );
       })}
+
+      {/* ═══ Procedural Shapes (mathematical beauty) ═══ */}
+      {currentAct >= 1 && (
+        <group>
+          {/* Crystal formation near cliff */}
+          <ProceduralCrystal position={[6, 0, -3]} count={8} maxHeight={1.5} color="#a78bfa" />
+          <ProceduralCrystal position={[-5, 0, 5]} count={6} maxHeight={1} color="#c084fc" />
+
+          {/* Golden spiral tower */}
+          <SpiralTower position={[-8, 4, -5]} steps={20} scale={0.25} color="#fbbf24" />
+
+          {/* Paper windmill */}
+          <PaperWindmill position={[3, 2.5, 3]} size={1} color="#fb923c" />
+          <PaperWindmill position={[-6, 2, 2]} size={0.8} color="#f472b6" />
+        </group>
+      )}
+
+      {currentAct >= 2 && (
+        <group position={ACT_POSITIONS.storm}>
+          {/* Menger sponge in storm */}
+          <MengerSponge position={[5, 2, -3]} level={2} size={1.5} color="#64748b" rotationSpeed={0.1} />
+        </group>
+      )}
+
+      {currentAct >= 3 && (
+        <group position={ACT_POSITIONS.forest}>
+          {/* Möbius strip in forest clearing */}
+          <MobiusStrip position={[3, 2, 2]} radius={1.5} width={0.4} color="#67e8f9" />
+
+          {/* Wave surface as a pond */}
+          <WaveSurface position={[0, 0.1, 5]} width={4} depth={4} amplitude={0.2} color="#7dd3fc" />
+        </group>
+      )}
+
+      {currentAct >= 4 && (
+        <group position={ACT_POSITIONS.unfolded}>
+          {/* Klein bottle as art piece */}
+          <KleinBottle position={[-3, 2, 3]} scale={0.35} color="#f9a8d4" />
+
+          {/* Lissajous curve */}
+          <LissajousCurve position={[4, 3, -2]} freqX={3} freqY={2} freqZ={5} scale={1.5} color="#c084fc" />
+
+          {/* Tetrahedron chain */}
+          <TetrahedronChain position={[-5, 4, 0]} count={12} radius={1} color="#a78bfa" />
+        </group>
+      )}
+
+      {currentAct >= 5 && (
+        <group position={ACT_POSITIONS.unfolded}>
+          {/* Voronoi terrain */}
+          <VoronoiTerrain position={[6, -0.5, 4]} width={6} depth={6} resolution={24} maxHeight={1} color="#86efac" />
+        </group>
+      )}
+
+      {currentAct >= 6 && (
+        <group position={ACT_POSITIONS.water}>
+          {/* Origami cranes floating */}
+          <OrigamiCrane position={[2, 1, -2]} size={0.6} animate />
+          <OrigamiCrane position={[-3, 1.5, 1]} size={0.4} color="#fbbf24" animate />
+
+          {/* Instanced particles over water */}
+          <InstancedParticles position={[0, 2, 0]} count={100} spread={8} behavior="swirl" color="#67e8f9" size={0.05} />
+        </group>
+      )}
+
+      {currentAct >= 7 && (
+        <group position={ACT_POSITIONS.water}>
+          {/* Physics pendulum near Pip */}
+          <PhysicsPendulum position={[3, 5, 0]} length={2} color="#f472bfa" bobSize={0.2} />
+        </group>
+      )}
+
+      {currentAct >= 8 && (
+        <group>
+          {/* Grand finale: everything together */}
+          <ProceduralCrystal position={[10, 0, 10]} count={15} maxHeight={2} color="#fbbf24" />
+          <MengerSponge position={[-10, 3, 8]} level={2} size={2} color="#c084fc" rotationSpeed={0.2} />
+          <SpiralTower position={[8, 5, -8]} steps={25} scale={0.3} color="#f472b6" />
+          <InstancedParticles position={[0, 5, 0]} count={300} spread={12} behavior="boid" color="#fbbf24" size={0.06} speed={0.5} />
+          <WaveSurface position={[0, -0.3, 12]} width={10} depth={10} resolution={30} amplitude={0.3} color="#a5b4fc" />
+          <TetrahedronChain position={[0, 8, 0]} count={20} radius={2} color="#f9a8d4" />
+        </group>
+      )}
     </group>
   );
 }
