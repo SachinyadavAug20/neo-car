@@ -107,22 +107,35 @@ export default function NarrativeOverlay({ state, onAdvance, onInteractionProgre
         zIndex: 50, fontFamily: "Georgia, serif", background: "rgba(253,246,227,0.95)",
       }}>
         <div ref={endRef} style={{ textAlign: "center", maxWidth: 500, padding: "40px" }}>
+          <div style={{ fontSize: 11, letterSpacing: 4, textTransform: "uppercase", fontWeight: 600, marginBottom: 12, color: "#1a1a2e" }}>
+            The End
+          </div>
           <div style={{ fontSize: 48, fontWeight: "bold", color: "#1a1a2e", letterSpacing: -2, marginBottom: 16 }}>DRIFT</div>
-          <div style={{ fontSize: 18, color: "#1a1a2e", lineHeight: 1.8, marginBottom: 24 }}>
+          <div style={{ fontSize: 18, color: "#1a1a2e", lineHeight: 1.8, marginBottom: 24, fontStyle: "italic" }}>
             You are not your folds. You are the paper. You are everything.
           </div>
           <div style={{ width: 60, height: 2, background: "#1a1a2e", margin: "0 auto 24px" }} />
-          <div style={{ fontSize: 13, color: "#1a1a2e", marginBottom: 32 }}>A Paper World</div>
-          <button
-            onClick={() => { setShowEnd(false); window.location.reload(); }}
-            style={{
-              background: "#1a1a2e", color: "#fff", border: "none", borderRadius: 12,
-              padding: "14px 36px", fontSize: 16, fontFamily: "Georgia, serif", cursor: "pointer",
-              boxShadow: "3px 3px 0 #6b7280",
-            }}
-          >
-            Play Again
-          </button>
+          <div style={{ fontSize: 13, color: "#1a1a2e", marginBottom: 32, opacity: 0.6 }}>A Paper World</div>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <button
+              onClick={() => { setShowEnd(false); window.location.reload(); }}
+              style={{
+                background: "#1a1a2e", color: "#fff", border: "none", borderRadius: 12,
+                padding: "14px 36px", fontSize: 15, fontFamily: "Georgia, serif", cursor: "pointer",
+                boxShadow: "3px 3px 0 #6b7280", fontWeight: 600,
+              }}
+            >
+              Play Again
+            </button>
+            <a href="/about" style={{
+              background: "#fff", color: "#1a1a2e", border: "2px solid #1a1a2e", borderRadius: 12,
+              padding: "12px 28px", fontSize: 15, fontFamily: "Georgia, serif", cursor: "pointer",
+              boxShadow: "2px 2px 0 #1a1a2e", fontWeight: 600, textDecoration: "none",
+              display: "inline-flex", alignItems: "center",
+            }}>
+              About the Project
+            </a>
+          </div>
         </div>
       </div>
     );

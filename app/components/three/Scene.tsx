@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { Suspense, useState, useCallback, useRef, useEffect } from "react";
+import { Suspense, useState, useCallback, useRef, useEffect, useMemo } from "react";
 import PaperWorld from "./PaperWorld";
 import { LoreEntry } from "./PaperWorld";
 import StoryCamera from "./StoryCamera";
@@ -217,6 +217,25 @@ export default function Scene() {
     }
   }, [folds, resetFolds]);
 
+  // Memoized command palette commands — stable reference
+  const paletteCommands = useMemo(() => [
+    { id: "act-1", label: "Jump to Act 1: The Crane Who Couldn't Fly", category: "Chapters", shortcut: "1", action: () => setNarrativeState(prev => ({ ...prev, currentAct: 0, currentBeat: 0, interactionState: "idle" })) },
+    { id: "act-2", label: "Jump to Act 2: The Storm", category: "Chapters", shortcut: "2", action: () => setNarrativeState(prev => ({ ...prev, currentAct: 1, currentBeat: 0, interactionState: "idle" })) },
+    { id: "act-3", label: "Jump to Act 3: The Fox Who Was Hiding", category: "Chapters", shortcut: "3", action: () => setNarrativeState(prev => ({ ...prev, currentAct: 2, currentBeat: 0, interactionState: "idle" })) },
+    { id: "act-4", label: "Jump to Act 4: The Unfolded Lands", category: "Chapters", shortcut: "4", action: () => setNarrativeState(prev => ({ ...prev, currentAct: 3, currentBeat: 0, interactionState: "idle" })) },
+    { id: "act-5", label: "Jump to Act 5: The Secret Fold", category: "Chapters", shortcut: "5", action: () => setNarrativeState(prev => ({ ...prev, currentAct: 4, currentBeat: 0, interactionState: "idle" })) },
+    { id: "act-6", label: "Jump to Act 6: The Return", category: "Chapters", shortcut: "6", action: () => setNarrativeState(prev => ({ ...prev, currentAct: 5, currentBeat: 0, interactionState: "idle" })) },
+    { id: "act-7", label: "Jump to Act 7: The Boat Named Pip", category: "Chapters", shortcut: "7", action: () => setNarrativeState(prev => ({ ...prev, currentAct: 6, currentBeat: 0, interactionState: "idle" })) },
+    { id: "act-8", label: "Jump to Act 8: The Moral Fold", category: "Chapters", shortcut: "8", action: () => setNarrativeState(prev => ({ ...prev, currentAct: 7, currentBeat: 0, interactionState: "idle" })) },
+    { id: "wind-up", label: "Increase Wind Force", category: "Scene", action: () => { setWindForce(prev => Math.min(10, prev + 1)); window.dispatchEvent(new CustomEvent("set-wind-force", { detail: { force: Math.min(10, windForce + 1) } })); } },
+    { id: "wind-down", label: "Decrease Wind Force", category: "Scene", action: () => { setWindForce(prev => Math.max(0, prev - 1)); window.dispatchEvent(new CustomEvent("set-wind-force", { detail: { force: Math.max(0, windForce - 1) } })); } },
+    { id: "mood-storm", label: "Set Mood: Storm", category: "Scene", action: () => { setCurrentMood("storm"); window.dispatchEvent(new CustomEvent("set-mood", { detail: { mood: "storm" } })); } },
+    { id: "mood-calm", label: "Set Mood: Calm", category: "Scene", action: () => { setCurrentMood("calm"); window.dispatchEvent(new CustomEvent("set-mood", { detail: { mood: "calm" } })); } },
+    { id: "mood-hope", label: "Set Mood: Hope", category: "Scene", action: () => { setCurrentMood("hope"); window.dispatchEvent(new CustomEvent("set-mood", { detail: { mood: "hope" } })); } },
+    { id: "terminal", label: "Open Drafting Terminal", category: "Tools", shortcut: "Ctrl + ~", action: () => setTerminalOpen(true) },
+    { id: "reset", label: "Reset All Progress", category: "Tools", action: () => { resetFolds(); window.location.reload(); } },
+  ], [windForce, resetFolds]);
+
   // Title screen
   if (showTitle) {
     return (
@@ -320,23 +339,7 @@ export default function Scene() {
       <CommandPalette
         visible={paletteOpen}
         onClose={() => setPaletteOpen(false)}
-        commands={[
-          { id: "act-1", label: "Jump to Act 1: The Crane Who Couldn't Fly", category: "Chapters", shortcut: "1", action: () => setNarrativeState(prev => ({ ...prev, currentAct: 0, currentBeat: 0, interactionState: "idle" })) },
-          { id: "act-2", label: "Jump to Act 2: The Storm", category: "Chapters", shortcut: "2", action: () => setNarrativeState(prev => ({ ...prev, currentAct: 1, currentBeat: 0, interactionState: "idle" })) },
-          { id: "act-3", label: "Jump to Act 3: The Fox Who Was Hiding", category: "Chapters", shortcut: "3", action: () => setNarrativeState(prev => ({ ...prev, currentAct: 2, currentBeat: 0, interactionState: "idle" })) },
-          { id: "act-4", label: "Jump to Act 4: The Unfolded Lands", category: "Chapters", shortcut: "4", action: () => setNarrativeState(prev => ({ ...prev, currentAct: 3, currentBeat: 0, interactionState: "idle" })) },
-          { id: "act-5", label: "Jump to Act 5: The Secret Fold", category: "Chapters", shortcut: "5", action: () => setNarrativeState(prev => ({ ...prev, currentAct: 4, currentBeat: 0, interactionState: "idle" })) },
-          { id: "act-6", label: "Jump to Act 6: The Return", category: "Chapters", shortcut: "6", action: () => setNarrativeState(prev => ({ ...prev, currentAct: 5, currentBeat: 0, interactionState: "idle" })) },
-          { id: "act-7", label: "Jump to Act 7: The Boat Named Pip", category: "Chapters", shortcut: "7", action: () => setNarrativeState(prev => ({ ...prev, currentAct: 6, currentBeat: 0, interactionState: "idle" })) },
-          { id: "act-8", label: "Jump to Act 8: The Moral Fold", category: "Chapters", shortcut: "8", action: () => setNarrativeState(prev => ({ ...prev, currentAct: 7, currentBeat: 0, interactionState: "idle" })) },
-          { id: "wind-up", label: "Increase Wind Force", category: "Scene", action: () => { setWindForce(prev => Math.min(10, prev + 1)); window.dispatchEvent(new CustomEvent("set-wind-force", { detail: { force: Math.min(10, windForce + 1) } })); } },
-          { id: "wind-down", label: "Decrease Wind Force", category: "Scene", action: () => { setWindForce(prev => Math.max(0, prev - 1)); window.dispatchEvent(new CustomEvent("set-wind-force", { detail: { force: Math.max(0, windForce - 1) } })); } },
-          { id: "mood-storm", label: "Set Mood: Storm", category: "Scene", action: () => { setCurrentMood("storm"); window.dispatchEvent(new CustomEvent("set-mood", { detail: { mood: "storm" } })); } },
-          { id: "mood-calm", label: "Set Mood: Calm", category: "Scene", action: () => { setCurrentMood("calm"); window.dispatchEvent(new CustomEvent("set-mood", { detail: { mood: "calm" } })); } },
-          { id: "mood-hope", label: "Set Mood: Hope", category: "Scene", action: () => { setCurrentMood("hope"); window.dispatchEvent(new CustomEvent("set-mood", { detail: { mood: "hope" } })); } },
-          { id: "terminal", label: "Open Drafting Terminal", category: "Tools", shortcut: "Ctrl+~", action: () => setTerminalOpen(true) },
-          { id: "reset", label: "Reset All Progress", category: "Tools", action: () => { resetFolds(); window.location.reload(); } },
-        ]}
+        commands={paletteCommands}
       />
     </>
   );
@@ -458,14 +461,16 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
   const subRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
+  const navRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const tl = gsap.timeline();
-    gsap.set([titleRef.current, subRef.current, textRef.current, btnRef.current], { opacity: 0, y: 20 });
-    tl.to(titleRef.current, { opacity: 1, y: 0, duration: 0.8, ease: "power3.out", delay: 0.2 })
-      .to(subRef.current, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "-=0.4")
-      .to(textRef.current, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, "-=0.2")
-      .to(btnRef.current, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "-=0.2");
+    gsap.set([titleRef.current, subRef.current, textRef.current, btnRef.current, navRef.current], { opacity: 0, y: 20 });
+    tl.to(titleRef.current, { opacity: 1, y: 0, duration: 1, ease: "power3.out", delay: 0.3 })
+      .to(subRef.current, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, "-=0.5")
+      .to(textRef.current, { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" }, "-=0.3")
+      .to(btnRef.current, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "-=0.2")
+      .to(navRef.current, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "-=0.2");
     return () => { tl.kill(); };
   }, []);
 
@@ -479,41 +484,114 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
 
   return (
     <div style={{
-      background: "#fff", border: "3px solid #1a1a2e", borderRadius: 20,
-      padding: "48px 56px", boxShadow: "6px 6px 0 #1a1a2e", textAlign: "center",
-      maxWidth: 460, width: "90%",
+      position: "absolute", inset: 0, display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center", zIndex: 30,
+      pointerEvents: "auto",
     }}>
-      <div ref={titleRef} style={{ fontSize: 52, fontWeight: "bold", color: "#1a1a2e", letterSpacing: -2, marginBottom: 4 }}>
-        DRIFT
-      </div>
-      <div ref={subRef} style={{ fontSize: 15, color: "#1a1a2e", marginBottom: 24, fontStyle: "italic" }}>
-        A Paper World
-      </div>
-      <div style={{ width: 60, height: 2, background: "#1a1a2e", margin: "0 auto 24px" }} />
-      <div ref={textRef} style={{ fontSize: 14, color: "#1a1a2e", lineHeight: 1.8, marginBottom: 28 }}>
-        There was a paper crane named Milo who could not fly. One wing was bigger than the other.
-        But he never stopped jumping.
-      </div>
-
-      {/* Persistent state hint */}
-      {folds.totalPlaythroughs > 0 && (
-        <div style={{
-          fontSize: 11, color: "#1a1a2e", marginBottom: 16,
-          fontStyle: "italic", fontFamily: "Georgia, serif",
-        }}>
-          The world remembers {folds.totalPlaythroughs} previous {folds.totalPlaythroughs === 1 ? "visit" : "visits"}.
-          {folds.secretFoldUnlocked && " The secret fold was unlocked."}
-        </div>
-      )}
-
-      <button ref={btnRef} onClick={onStart} style={{
-        background: "#1a1a2e", color: "#fff", border: "none", borderRadius: 12,
-        padding: "14px 36px", fontSize: 16, fontFamily: "Georgia, serif", cursor: "pointer",
-        boxShadow: "3px 3px 0 #6b7280",
+      {/* Top nav bar */}
+      <div ref={navRef} style={{
+        position: "absolute", top: 0, left: 0, right: 0,
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        padding: "20px 32px", opacity: 0,
       }}>
-        {folds.totalPlaythroughs > 0 ? "Enter Again" : "Begin the Story"}
-      </button>
-      <div style={{ fontSize: 11, color: "#1a1a2e", marginTop: 20, fontWeight: 600 }}>or press Enter</div>
+        <div style={{
+          fontSize: 18, fontWeight: "bold", color: "#1a1a2e", letterSpacing: -1,
+        }}>
+          DRIFT
+        </div>
+        <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
+          <span style={{ fontSize: 13, color: "#1a1a2e", fontWeight: 600 }}>Home</span>
+          <a href="/about" style={{
+            fontSize: 13, color: "#1a1a2e", textDecoration: "none", fontWeight: 600,
+            opacity: 0.6, transition: "opacity 0.2s",
+          }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.6")}
+          >
+            About
+          </a>
+          <a href="https://github.com/sachin" target="_blank" rel="noopener noreferrer" style={{
+            fontSize: 13, color: "#1a1a2e", textDecoration: "none", fontWeight: 600,
+            opacity: 0.6, transition: "opacity 0.2s", display: "flex", alignItems: "center", gap: 5,
+          }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.6")}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+            </svg>
+            GitHub
+          </a>
+        </div>
+      </div>
+
+      {/* Main card */}
+      <div style={{
+        background: "rgba(255,255,255,0.92)", backdropFilter: "blur(20px)",
+        border: "3px solid #1a1a2e", borderRadius: 24,
+        padding: "52px 60px", boxShadow: "8px 8px 0 #1a1a2e", textAlign: "center",
+        maxWidth: 500, width: "90%",
+      }}>
+        <div ref={titleRef} style={{
+          fontSize: 56, fontWeight: "bold", color: "#1a1a2e", letterSpacing: -3,
+          marginBottom: 4, opacity: 0,
+        }}>
+          DRIFT
+        </div>
+        <div ref={subRef} style={{
+          fontSize: 16, color: "#1a1a2e", marginBottom: 28, fontStyle: "italic",
+          opacity: 0, letterSpacing: 1,
+        }}>
+          A Paper World
+        </div>
+        <div style={{ width: 60, height: 2, background: "#1a1a2e", margin: "0 auto 28px" }} />
+        <div ref={textRef} style={{
+          fontSize: 14, color: "#1a1a2e", lineHeight: 1.9, marginBottom: 32,
+          opacity: 0, maxWidth: 380, margin: "0 auto 32px",
+        }}>
+          There was a paper crane named Milo who could not fly.
+          One wing was bigger than the other. But he never stopped jumping.
+        </div>
+
+        {folds.totalPlaythroughs > 0 && (
+          <div style={{
+            fontSize: 11, color: "#1a1a2e", marginBottom: 20,
+            fontStyle: "italic", opacity: 0.6,
+          }}>
+            The world remembers {folds.totalPlaythroughs} previous {folds.totalPlaythroughs === 1 ? "visit" : "visits"}.
+            {folds.secretFoldUnlocked && " The secret fold was unlocked."}
+          </div>
+        )}
+
+        <button ref={btnRef} onClick={onStart} style={{
+          background: "#1a1a2e", color: "#fff", border: "none", borderRadius: 14,
+          padding: "16px 44px", fontSize: 16, fontFamily: "Georgia, serif", cursor: "pointer",
+          boxShadow: "4px 4px 0 #6b7280", fontWeight: 600, letterSpacing: 0.5,
+          transition: "transform 0.15s, box-shadow 0.15s", opacity: 0,
+        }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translate(-1px, -1px)";
+            e.currentTarget.style.boxShadow = "5px 5px 0 #6b7280";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translate(0, 0)";
+            e.currentTarget.style.boxShadow = "4px 4px 0 #6b7280";
+          }}
+        >
+          {folds.totalPlaythroughs > 0 ? "Enter Again" : "Begin the Story"}
+        </button>
+        <div style={{ fontSize: 11, color: "#1a1a2e", marginTop: 20, fontWeight: 600, opacity: 0.5 }}>
+          or press Enter
+        </div>
+      </div>
+
+      {/* Bottom hint */}
+      <div style={{
+        position: "absolute", bottom: 24, left: 0, right: 0,
+        textAlign: "center", fontSize: 11, color: "#1a1a2e", opacity: 0.35,
+      }}>
+        3D interactive experience — Best on desktop
+      </div>
     </div>
   );
 }
