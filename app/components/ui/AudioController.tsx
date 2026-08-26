@@ -81,7 +81,7 @@ export default function AudioController({ mood, visible = true }: AudioControlle
         onMouseEnter={(e) => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "3px 3px 0 #1a1a2e"; window.dispatchEvent(new CustomEvent("tooltip")); }}
         onMouseLeave={(e) => { e.currentTarget.style.transform = "translate(0,0)"; e.currentTarget.style.boxShadow = "2px 2px 0 #1a1a2e"; window.dispatchEvent(new CustomEvent("hover-out")); }}
         style={{
-          position: "fixed", top: 16, right: 70, zIndex: 90,
+          position: "fixed", top: 16, right: 110, zIndex: 90,
           background: "#fff", border: "2px solid #1a1a2e", borderRadius: 10,
           width: 36, height: 36, cursor: "pointer",
           display: "flex", alignItems: "center", justifyContent: "center",

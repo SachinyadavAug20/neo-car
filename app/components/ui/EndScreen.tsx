@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import gsap from "gsap";
+import html2canvas from "html2canvas";
 import { JourneyStats, formatTime, getMostEngagedAct, getActEngagementLabel, getActColor } from "@/app/lib/useJourneyTracker";
 
 interface EndScreenProps {
@@ -118,15 +119,73 @@ function Badge({ icon, label, delay, unlocked }: { icon: string; label: string; 
 
 export default function EndScreen({ stats, onRestart }: EndScreenProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const shareCardRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showBadges, setShowBadges] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
 
   const totalTime = stats.endTime - stats.startTime;
   const mostEngaged = getMostEngagedAct(stats);
   const maxClicks = Math.max(...stats.actClicks, 1);
   const totalInteractions = stats.actInteractions.reduce((a, b) => a + b, 0);
   const totalBeats = stats.actBeatCount.reduce((a, b) => a + b, 0);
+
+  const captureScreenshot = useCallback(async () => {
+    if (!shareCardRef.current || isCapturing) return;
+    setIsCapturing(true);
+    window.dispatchEvent(new CustomEvent("magic-sparkle"));
+    try {
+      const canvas = await html2canvas(shareCardRef.current, {
+        background: "#fdf6e3",
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+      const url = canvas.toDataURL("image/png");
+      setScreenshotUrl(url);
+      setShowShareModal(true);
+    } catch (err) {
+      console.error("Screenshot failed:", err);
+    } finally {
+      setIsCapturing(false);
+    }
+  }, [isCapturing]);
+
+  const shareText = `I completed DRIFT — A Paper World! 🏔️⭐🌊\n\n⏱ ${formatTime(totalTime)} |  ${totalBeats} story beats |  ${stats.secretsFound.length} secrets discovered\n\nCan you find all the secrets?`;
+
+  const shareToWhatsApp = useCallback(() => {
+    window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
+    window.dispatchEvent(new CustomEvent("star-collect"));
+  }, [shareText]);
+
+  const shareToTwitter = useCallback(() => {
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent("https://drift-paper.vercel.app")}`, "_blank");
+    window.dispatchEvent(new CustomEvent("star-collect"));
+  }, [shareText]);
+
+  const shareToFacebook = useCallback(() => {
+    window.open(`https://www.facebook.com/sharer/sharer.php?quote=${encodeURIComponent(shareText)}&u=${encodeURIComponent("https://drift-paper.vercel.app")}`, "_blank");
+    window.dispatchEvent(new CustomEvent("star-collect"));
+  }, [shareText]);
+
+  const downloadImage = useCallback(() => {
+    if (!screenshotUrl) return;
+    const link = document.createElement("a");
+    link.download = "drift-journey.png";
+    link.href = screenshotUrl;
+    link.click();
+    window.dispatchEvent(new CustomEvent("coin-collect"));
+  }, [screenshotUrl]);
+
+  const copyToClipboard = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(shareText);
+      window.dispatchEvent(new CustomEvent("bubble-pop"));
+    } catch {}
+  }, [shareText]);
 
   useEffect(() => {
     const tl = gsap.timeline();
@@ -325,6 +384,17 @@ export default function EndScreen({ stats, onRestart }: EndScreenProps) {
             >
               Play Again
             </button>
+            <button onClick={captureScreenshot} disabled={isCapturing} style={{
+              background: "#fbbf24", color: "#1a1a2e", border: "2px solid #1a1a2e", borderRadius: 14,
+              padding: "14px 28px", fontSize: 15, fontFamily: "Georgia, serif", cursor: isCapturing ? "wait" : "pointer",
+              boxShadow: "3px 3px 0 #1a1a2e", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 8,
+              transition: "transform 0.15s, box-shadow 0.15s", opacity: isCapturing ? 0.7 : 1,
+            }}
+              onMouseEnter={e => { if (!isCapturing) { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 #1a1a2e"; window.dispatchEvent(new CustomEvent("button-hover")); } }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "translate(0,0)"; e.currentTarget.style.boxShadow = "3px 3px 0 #1a1a2e"; window.dispatchEvent(new CustomEvent("hover-out")); }}
+            >
+              {isCapturing ? "📸 Capturing..." : "📤 Share Your Journey"}
+            </button>
             <a href="/about" style={{
               background: "#fff", color: "#1a1a2e", border: "2px solid #1a1a2e", borderRadius: 14,
               padding: "14px 28px", fontSize: 15, fontFamily: "Georgia, serif", cursor: "pointer",
@@ -338,6 +408,146 @@ export default function EndScreen({ stats, onRestart }: EndScreenProps) {
               About the Project
             </a>
           </div>
+
+          {/* Hidden share card for screenshot */}
+          <div ref={shareCardRef} style={{
+            position: "fixed", left: "-9999px", top: 0, width: 500, padding: "32px 28px",
+            background: "#fdf6e3", fontFamily: "Georgia, serif", color: "#1a1a2e",
+            border: "3px solid #1a1a2e", borderRadius: 20,
+          }}>
+            <div style={{ fontSize: 28, fontWeight: "bold", letterSpacing: -2, marginBottom: 4 }}>DRIFT</div>
+            <div style={{ fontSize: 12, opacity: 0.5, marginBottom: 20 }}>A Paper World — Journey Complete</div>
+
+            <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
+              <div style={{ flex: 1, minWidth: 90, padding: "12px 14px", background: "rgba(255,255,255,0.7)", borderRadius: 12, border: "2px solid #1a1a2e", textAlign: "center" }}>
+                <div style={{ fontSize: 24, fontWeight: "bold", fontFamily: "monospace" }}>{formatTime(totalTime)}</div>
+                <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: 1.5, fontWeight: 700, opacity: 0.6 }}>Time</div>
+              </div>
+              <div style={{ flex: 1, minWidth: 90, padding: "12px 14px", background: "rgba(255,255,255,0.7)", borderRadius: 12, border: "2px solid #1a1a2e", textAlign: "center" }}>
+                <div style={{ fontSize: 24, fontWeight: "bold", fontFamily: "monospace" }}>{totalBeats}</div>
+                <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: 1.5, fontWeight: 700, opacity: 0.6 }}>Beats</div>
+              </div>
+              <div style={{ flex: 1, minWidth: 90, padding: "12px 14px", background: "rgba(255,255,255,0.7)", borderRadius: 12, border: "2px solid #1a1a2e", textAlign: "center" }}>
+                <div style={{ fontSize: 24, fontWeight: "bold", fontFamily: "monospace" }}> {stats.secretsFound.length}</div>
+                <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: 1.5, fontWeight: 700, opacity: 0.6 }}>Secrets</div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+              <div style={{ padding: "8px 14px", background: "#1a1a2e", color: "#fdf6e3", borderRadius: 8, fontSize: 11, fontWeight: 700 }}>
+                {stats.totalClicks} clicks
+              </div>
+              <div style={{ padding: "8px 14px", background: "#1a1a2e", color: "#fdf6e3", borderRadius: 8, fontSize: 11, fontWeight: 700 }}>
+                {stats.leavesCollected} leaves
+              </div>
+              <div style={{ padding: "8px 14px", background: "#1a1a2e", color: "#fdf6e3", borderRadius: 8, fontSize: 11, fontWeight: 700 }}>
+                {stats.butterfliesFollowed} butterflies
+              </div>
+              <div style={{ padding: "8px 14px", background: "#1a1a2e", color: "#fdf6e3", borderRadius: 8, fontSize: 11, fontWeight: 700 }}>
+                {stats.secretsFound.length} secrets
+              </div>
+            </div>
+
+            <div style={{ fontSize: 11, opacity: 0.5, textAlign: "center" }}>
+              drift-paper.vercel.app — Can you find all the secrets?
+            </div>
+          </div>
+
+          {/* Share modal */}
+          {showShareModal && (
+            <div onClick={() => setShowShareModal(false)} style={{
+              position: "fixed", inset: 0, zIndex: 200,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              background: "rgba(26,26,46,0.6)", backdropFilter: "blur(8px)",
+            }}>
+              <div onClick={e => e.stopPropagation()} style={{
+                background: "#fff", border: "3px solid #1a1a2e", borderRadius: 20,
+                padding: "32px 36px", boxShadow: "8px 8px 0 #1a1a2e",
+                maxWidth: 440, width: "92%", position: "relative",
+              }}>
+                <button onClick={() => setShowShareModal(false)} style={{
+                  position: "absolute", top: 12, right: 12, background: "none", border: "none",
+                  fontSize: 18, cursor: "pointer", color: "#1a1a2e", opacity: 0.4,
+                  width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
+                  borderRadius: 8, transition: "opacity 0.2s",
+                }}
+                  onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+                  onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.4")}
+                >
+                  ✕
+                </button>
+
+                <div style={{ fontSize: 22, fontWeight: "bold", color: "#1a1a2e", letterSpacing: -1, marginBottom: 4 }}>
+                  Share Your Journey
+                </div>
+                <div style={{ fontSize: 12, color: "#1a1a2e", opacity: 0.5, marginBottom: 20 }}>
+                  Show the world your paper adventure
+                </div>
+
+                {/* Screenshot preview */}
+                {screenshotUrl && (
+                  <div style={{ marginBottom: 20, borderRadius: 12, overflow: "hidden", border: "2px solid #1a1a2e" }}>
+                    <img src={screenshotUrl} alt="Journey screenshot" style={{ width: "100%", display: "block" }} />
+                  </div>
+                )}
+
+                {/* Share buttons */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+                  <button onClick={shareToWhatsApp} style={{
+                    background: "#25D366", color: "#fff", border: "2px solid #1a1a2e", borderRadius: 12,
+                    padding: "12px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer",
+                    boxShadow: "2px 2px 0 #1a1a2e", transition: "transform 0.15s",
+                  }}
+                    onMouseEnter={e => e.currentTarget.style.transform = "translate(-1px,-1px)"}
+                    onMouseLeave={e => e.currentTarget.style.transform = "translate(0,0)"}
+                  >
+                    WhatsApp
+                  </button>
+                  <button onClick={shareToTwitter} style={{
+                    background: "#1DA1F2", color: "#fff", border: "2px solid #1a1a2e", borderRadius: 12,
+                    padding: "12px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer",
+                    boxShadow: "2px 2px 0 #1a1a2e", transition: "transform 0.15s",
+                  }}
+                    onMouseEnter={e => e.currentTarget.style.transform = "translate(-1px,-1px)"}
+                    onMouseLeave={e => e.currentTarget.style.transform = "translate(0,0)"}
+                  >
+                    Twitter / X
+                  </button>
+                  <button onClick={shareToFacebook} style={{
+                    background: "#4267B2", color: "#fff", border: "2px solid #1a1a2e", borderRadius: 12,
+                    padding: "12px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer",
+                    boxShadow: "2px 2px 0 #1a1a2e", transition: "transform 0.15s",
+                  }}
+                    onMouseEnter={e => e.currentTarget.style.transform = "translate(-1px,-1px)"}
+                    onMouseLeave={e => e.currentTarget.style.transform = "translate(0,0)"}
+                  >
+                    Facebook
+                  </button>
+                  <button onClick={copyToClipboard} style={{
+                    background: "#1a1a2e", color: "#fff", border: "2px solid #1a1a2e", borderRadius: 12,
+                    padding: "12px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer",
+                    boxShadow: "2px 2px 0 #6b7280", transition: "transform 0.15s",
+                  }}
+                    onMouseEnter={e => e.currentTarget.style.transform = "translate(-1px,-1px)"}
+                    onMouseLeave={e => e.currentTarget.style.transform = "translate(0,0)"}
+                  >
+                    Copy Text
+                  </button>
+                </div>
+
+                <button onClick={downloadImage} style={{
+                  width: "100%", background: "#fff", color: "#1a1a2e", border: "2px solid #1a1a2e",
+                  borderRadius: 12, padding: "12px 0", fontSize: 13, fontWeight: 700, cursor: "pointer",
+                  boxShadow: "2px 2px 0 #1a1a2e", transition: "transform 0.15s",
+                }}
+                  onMouseEnter={e => e.currentTarget.style.transform = "translate(-1px,-1px)"}
+                  onMouseLeave={e => e.currentTarget.style.transform = "translate(0,0)"}
+                >
+                  Download Screenshot
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Footer */}
           <div style={{ fontSize: 11, color: "#1a1a2e", marginTop: 24, opacity: 0 }}
