@@ -3,28 +3,63 @@
 /* === RESET === */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* === THEME VARIABLES === */
+:root {
+  --bg: #fdf6e3;
+  --bg-card: #ffffff;
+  --bg-elevated: #f9f9f9;
+  --text: #1a1a2e;
+  --text-muted: #6b7280;
+  --text-faint: #9ca3af;
+  --border: #1a1a2e;
+  --border-light: #e5e7eb;
+  --shadow: #1a1a2e;
+  --shadow-color: rgba(26,26,46,1);
+  --accent: #fbbf24;
+  --accent-hover: #f59e0b;
+  --link: #1a1a2e;
+}
+
+[data-theme="dark"] {
+  --bg: #0f0f1a;
+  --bg-card: #1a1a2e;
+  --bg-elevated: #252540;
+  --text: #e8e6e3;
+  --text-muted: #9ca3af;
+  --text-faint: #6b7280;
+  --border: #e8e6e3;
+  --border-light: #2d2d4a;
+  --shadow: #000000;
+  --shadow-color: rgba(0,0,0,0.6);
+  --accent: #fbbf24;
+  --accent-hover: #fcd34d;
+  --link: #e8e6e3;
+}
+
 html, body {
   overflow: hidden;
-  background: #fdf6e3;
+  background: var(--bg);
   font-family: Georgia, serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: var(--text);
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 ::selection {
-  background: #fbbf24;
-  color: #1a1a2e;
+  background: var(--accent);
+  color: var(--text);
 }
 
 /* === SCROLLBAR === */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(26,26,46,0.12); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(26,26,46,0.25); }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
 /* === FOCUS === */
 a:focus-visible, button:focus-visible {
-  outline: 2px solid #1a1a2e;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 

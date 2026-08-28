@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "./lib/ThemeContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -115,8 +116,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body style={{ margin: 0, padding: 0, background: "#fdf6e3", overflow: "hidden" }}>
-        {children}
+      <body style={{ margin: 0, padding: 0, background: "var(--bg)", overflow: "hidden" }}>
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
