@@ -90,7 +90,7 @@ export default function EndScreen({ stats, onRestart }: EndScreenProps) {
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
 
-  const totalTime = stats.endTime - stats.startTime;
+  const totalTime = Math.max(0, stats.endTime - stats.startTime);
   const maxClicks = Math.max(...stats.actClicks, 1);
   const totalInteractions = stats.actInteractions.reduce((a, b) => a + b, 0);
   const totalBeats = stats.actBeatCount.reduce((a, b) => a + b, 0);

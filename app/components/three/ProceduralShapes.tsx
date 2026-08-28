@@ -230,9 +230,6 @@ export function MengerSponge({
         }
       });
       keep.clear();
-      keep.forEach((k) => newKeep.add(k));
-      // Copy newKeep back
-      keep.clear();
       newKeep.forEach((k) => keep.add(k));
     }
 

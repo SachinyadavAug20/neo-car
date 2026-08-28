@@ -159,7 +159,7 @@ export function formatTime(ms: number): string {
   const totalSec = Math.floor(ms / 1000);
   const min = Math.floor(totalSec / 60);
   const sec = totalSec % 60;
-  if (min > 60) {
+  if (min >= 60) {
     const hr = Math.floor(min / 60);
     const remainMin = min % 60;
     return `${hr}h ${remainMin}m`;

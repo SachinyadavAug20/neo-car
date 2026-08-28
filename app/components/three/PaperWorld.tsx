@@ -1489,6 +1489,8 @@ function InteractivePaperObject({
     ref.current.scale.lerp(_scaleVec, 0.1);
     if (hovered) {
       ref.current.position.y = position[1] + Math.sin(clock.current * 3) * 0.1;
+    } else {
+      ref.current.position.y += (position[1] - ref.current.position.y) * 0.1;
     }
   });
 

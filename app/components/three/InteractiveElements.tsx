@@ -7,6 +7,9 @@ import * as THREE from "three";
 // ─── GPU-Instanced Particle System ────────────────────────────────────
 // High-performance instanced particles with custom behavior
 
+const _boidSep = new THREE.Vector3();
+const _boidAli = new THREE.Vector3();
+
 interface InstancedParticlesProps {
   position?: [number, number, number];
   count?: number;
@@ -85,25 +88,50 @@ export function InstancedParticles({
           if (Math.abs(p.pos.y) > spread) p.pos.y *= -0.9;
           if (Math.abs(p.pos.z) > spread) p.pos.z *= -0.9;
           break;
-        case "boid":
-          // Simple flocking: move toward center + avoid neighbors
-          const center = new THREE.Vector3();
-          particles.forEach((other, j) => {
-            if (i !== j) {
-              const dist = p.pos.distanceTo(other.pos);
-              if (dist < 2) {
-                p.vel.add(other.pos.clone().sub(p.pos).multiplyScalar(0.001));
-                if (dist < 0.5) p.vel.sub(other.pos.clone().sub(p.pos).multiplyScalar(0.003));
+        case "boid": {
+          let neighborCount = 0;
+          const _sep = _boidSep.set(0, 0, 0);
+          const _ali = _boidAli.set(0, 0, 0);
+          for (let j = 0; j < particles.length; j++) {
+            if (i === j) continue;
+            const other = particles[j];
+            const dx = p.pos.x - other.pos.x;
+            const dy = p.pos.y - other.pos.y;
+            const dz = p.pos.z - other.pos.z;
+            const distSq = dx * dx + dy * dy + dz * dz;
+            if (distSq < 4) {
+              const dist = Math.sqrt(distSq);
+              if (dist < 0.5 && dist > 0.001) {
+                _sep.x += dx / dist * 0.003;
+                _sep.y += dy / dist * 0.003;
+                _sep.z += dz / dist * 0.003;
               }
+              _ali.x += other.vel.x;
+              _ali.y += other.vel.y;
+              _ali.z += other.vel.z;
+              neighborCount++;
+              if (neighborCount >= 8) break;
             }
-          });
-          p.vel.add(center.sub(p.pos).multiplyScalar(0.0005));
+          }
+          if (neighborCount > 0) {
+            _ali.multiplyScalar(1 / neighborCount);
+            _ali.x = (_ali.x - p.vel.x) * 0.001;
+            _ali.y = (_ali.y - p.vel.y) * 0.001;
+            _ali.z = (_ali.z - p.vel.z) * 0.001;
+            p.vel.x += _sep.x + _ali.x;
+            p.vel.y += _sep.y + _ali.y;
+            p.vel.z += _sep.z + _ali.z;
+          }
+          p.vel.x -= p.pos.x * 0.0005;
+          p.vel.y -= p.pos.y * 0.0005;
+          p.vel.z -= p.pos.z * 0.0005;
           p.vel.clampLength(0, 0.05);
           p.pos.add(p.vel);
           if (Math.abs(p.pos.x) > spread) p.vel.x *= -1;
           if (Math.abs(p.pos.y) > spread) p.vel.y *= -1;
           if (Math.abs(p.pos.z) > spread) p.vel.z *= -1;
           break;
+        }
       }
 
       dummy.position.copy(p.pos);
@@ -221,11 +249,10 @@ export function OrigamiCrane({
   const groupRef = useRef<THREE.Group>(null);
   const progress = useRef(foldProgress);
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     if (!animate || !groupRef.current) return;
     progress.current = Math.min(1, progress.current + delta * 0.3);
-    // Gentle bobbing
-    groupRef.current.position.y = position[1] + Math.sin(Date.now() * 0.002) * 0.1;
+    groupRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.1;
   });
 
   const fold = animate ? progress.current : foldProgress;
@@ -388,6 +415,8 @@ export function WaveSurface({
     return g;
   }, [width, depth, resolution]);
 
+  const _waveEdgeGeo = useMemo(() => new THREE.EdgesGeometry(geo, 20), [geo]);
+
   useFrame((state) => {
     if (!meshRef.current || !basePositions.current || !autoAnimate) return;
     const time = state.clock.elapsedTime;
@@ -412,7 +441,7 @@ export function WaveSurface({
       <mesh ref={meshRef} geometry={geo} receiveShadow castShadow>
         <meshToonMaterial color={color} side={THREE.DoubleSide} />
       </mesh>
-      <lineSegments geometry={new THREE.EdgesGeometry(geo, 20)}>
+      <lineSegments geometry={_waveEdgeGeo}>
         <lineBasicMaterial color="#1a1a2e" transparent opacity={0.15} />
       </lineSegments>
     </group>

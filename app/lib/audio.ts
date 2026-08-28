@@ -1407,7 +1407,6 @@ export function setupAudioEvents() {
   on("ui-open", playUIOpen);
   on("ui-close", playUIClose);
   on("interaction-start", playInteractStart);
-  on("interaction-complete", playInteractComplete);
   on("camera-swoosh", playSwoosh);
   on("splash", playSplash);
   on("success", playSuccess);
