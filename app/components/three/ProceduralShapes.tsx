@@ -106,6 +106,8 @@ export function ProceduralCrystal({
     return new THREE.ConeGeometry(1, 0.6, 6);
   }, []);
 
+  const hexEdgeGeo = useMemo(() => new THREE.EdgesGeometry(hexGeo), [hexGeo]);
+
   return (
     <group ref={groupRef} position={position}>
       {crystals.map((c, i) => {
@@ -135,7 +137,7 @@ export function ProceduralCrystal({
             </mesh>
             {/* Edge outlines */}
             <lineSegments
-              geometry={new THREE.EdgesGeometry(hexGeo)}
+              geometry={hexEdgeGeo}
               scale={[w, h, w]}
             >
               <lineBasicMaterial color="#1a1a2e" transparent opacity={0.4} />
@@ -250,6 +252,19 @@ export function MengerSponge({
     return result;
   }, [level, size]);
 
+  const cubeEdgeGeos = useMemo(() => {
+    const cache = new Map<number, THREE.EdgesGeometry>();
+    return cubes.map((c) => {
+      const key = Math.round(c.scale * 1000);
+      let edge = cache.get(key);
+      if (!edge) {
+        edge = new THREE.EdgesGeometry(new THREE.BoxGeometry(c.scale, c.scale, c.scale));
+        cache.set(key, edge);
+      }
+      return edge;
+    });
+  }, [cubes]);
+
   return (
     <group ref={groupRef} position={position}>
       {cubes.map((c, i) => (
@@ -258,8 +273,7 @@ export function MengerSponge({
             <boxGeometry args={[c.scale, c.scale, c.scale]} />
             <meshToonMaterial color={color} />
           </mesh>
-          <lineSegments>
-            <edgesGeometry args={[new THREE.BoxGeometry(c.scale, c.scale, c.scale)]} />
+          <lineSegments geometry={cubeEdgeGeos[i]}>
             <lineBasicMaterial color="#1a1a2e" transparent opacity={0.3} />
           </lineSegments>
         </group>
@@ -411,12 +425,14 @@ export function KleinBottle({
     }
   });
 
+  const edgeGeo = useMemo(() => new THREE.EdgesGeometry(geo, 20), [geo]);
+
   return (
     <group position={position}>
       <mesh ref={meshRef} geometry={geo} castShadow>
         <meshToonMaterial color={color} side={THREE.DoubleSide} transparent opacity={0.8} />
       </mesh>
-      <lineSegments geometry={new THREE.EdgesGeometry(geo, 20)}>
+      <lineSegments geometry={edgeGeo}>
         <lineBasicMaterial color="#1a1a2e" transparent opacity={0.2} />
       </lineSegments>
     </group>
@@ -470,6 +486,19 @@ export function SpiralTower({
     return arr;
   }, [steps, scale]);
 
+  const spiralEdgeGeos = useMemo(() => {
+    const cache = new Map<number, THREE.EdgesGeometry>();
+    return elements.map((el) => {
+      const key = Math.round(el.size * 1000);
+      let edge = cache.get(key);
+      if (!edge) {
+        edge = new THREE.EdgesGeometry(new THREE.BoxGeometry(el.size, el.size, el.size));
+        cache.set(key, edge);
+      }
+      return edge;
+    });
+  }, [elements]);
+
   return (
     <group ref={groupRef} position={position}>
       {elements.map((el, i) => {
@@ -481,8 +510,7 @@ export function SpiralTower({
               <boxGeometry args={[el.size, el.size, el.size]} />
               <meshToonMaterial color={c} emissive={c} emissiveIntensity={0.1} />
             </mesh>
-            <lineSegments>
-              <edgesGeometry args={[new THREE.BoxGeometry(el.size, el.size, el.size)]} />
+            <lineSegments geometry={spiralEdgeGeos[i]}>
               <lineBasicMaterial color="#1a1a2e" transparent opacity={0.3} />
             </lineSegments>
           </group>
@@ -549,12 +577,14 @@ export function VoronoiTerrain({
     return geometry;
   }, [width, depth, resolution, maxHeight]);
 
+  const voronoiEdgeGeo = useMemo(() => new THREE.EdgesGeometry(geo, 30), [geo]);
+
   return (
     <group position={position}>
       <mesh geometry={geo} receiveShadow castShadow>
         <meshToonMaterial color={color} />
       </mesh>
-      <lineSegments geometry={new THREE.EdgesGeometry(geo, 30)}>
+      <lineSegments geometry={voronoiEdgeGeo}>
         <lineBasicMaterial color="#1a1a2e" transparent opacity={0.15} />
       </lineSegments>
     </group>
@@ -778,13 +808,15 @@ export function GeodesicDome({
     return ico;
   }, [radius, frequency]);
 
+  const _geodesicEdgeGeo = useMemo(() => new THREE.EdgesGeometry(geo, 15), [geo]);
+
   return (
     <group ref={groupRef} position={position}>
       <mesh geometry={geo} castShadow>
         <meshToonMaterial color={color} side={THREE.DoubleSide} transparent opacity={wireframe ? 0.6 : 0.85} wireframe={wireframe} />
       </mesh>
       {!wireframe && (
-        <lineSegments geometry={new THREE.EdgesGeometry(geo, 15)}>
+        <lineSegments geometry={_geodesicEdgeGeo}>
           <lineBasicMaterial color="#1a1a2e" transparent opacity={0.2} />
         </lineSegments>
       )}
@@ -968,6 +1000,19 @@ export function FractalIcosahedron({
     return arr;
   }, [level, size]);
 
+  const fractalEdgeGeos = useMemo(() => {
+    const cache = new Map<number, THREE.EdgesGeometry>();
+    return elements.map((el) => {
+      const key = Math.round(el.scale * 0.3 * 1000);
+      let edge = cache.get(key);
+      if (!edge) {
+        edge = new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(key / 1000, 0));
+        cache.set(key, edge);
+      }
+      return edge;
+    });
+  }, [elements]);
+
   return (
     <group ref={groupRef} position={position}>
       {elements.map((el, i) => {
@@ -979,8 +1024,7 @@ export function FractalIcosahedron({
               <icosahedronGeometry args={[el.scale * 0.3, 0]} />
               <meshToonMaterial color={c} emissive={c} emissiveIntensity={0.1} transparent opacity={0.85} />
             </mesh>
-            <lineSegments>
-              <edgesGeometry args={[new THREE.IcosahedronGeometry(el.scale * 0.3, 0)]} />
+            <lineSegments geometry={fractalEdgeGeos[i]}>
               <lineBasicMaterial color="#1a1a2e" transparent opacity={0.3} />
             </lineSegments>
           </group>

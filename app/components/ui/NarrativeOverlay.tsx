@@ -30,7 +30,11 @@ export default function NarrativeOverlay({
   const [floatTexts, setFloatTexts] = useState<Array<{ id: number; x: number; y: number }>>([]);
   const floatIdRef = useRef(0);
   const startTimeRef = useRef(Date.now());
-  const [elapsed, setElapsed] = useState(0);
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  const onAdvanceRef = useRef(onAdvance);
+  onAdvanceRef.current = onAdvance;
+  const timerRef = useRef<HTMLSpanElement>(null);
 
   const act = getCurrentAct(state);
   const beat = getCurrentBeat(state);
@@ -39,7 +43,9 @@ export default function NarrativeOverlay({
   useEffect(() => {
     if (state.ended) return;
     const interval = setInterval(() => {
-      setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
+      if (!timerRef.current) return;
+      const secs = Math.floor((Date.now() - startTimeRef.current) / 1000);
+      timerRef.current.textContent = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
     }, 1000);
     return () => clearInterval(interval);
   }, [state.ended]);
@@ -90,17 +96,18 @@ export default function NarrativeOverlay({
   }, [state.ended]);
 
   const handleSkip = useCallback(() => {
-    if (state.isAnimating) return;
-    const beat = getCurrentBeat(state);
-    if (beat?.interaction && beat.interaction !== "none" && state.interactionState !== "complete") return;
+    const s = stateRef.current;
+    if (s.isAnimating) return;
+    const b = getCurrentBeat(s);
+    if (b?.interaction && b.interaction !== "none" && s.interactionState !== "complete") return;
     const beatSounds: Record<string, string> = {
       "click-jump": "coin-collect", "drag-wind": "whoosh-fast", "click-unfold": "paper-shower",
       "click-reveal": "discovery", "collect-leaves": "leaf-rustle", "toggle-cells": "ding",
       "row-boat": "splash", "celebrate": "joy", "follow-butterfly": "wind-chime",
     };
-    window.dispatchEvent(new CustomEvent(beatSounds[beat?.interaction || ""] || "success"));
-    onAdvance(nextBeat(state));
-  }, [state, onAdvance]);
+    window.dispatchEvent(new CustomEvent(beatSounds[b?.interaction || ""] || "success"));
+    onAdvanceRef.current(nextBeat(s));
+  }, []);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -333,7 +340,7 @@ export default function NarrativeOverlay({
             padding: "4px 10px", fontFamily: "monospace", whiteSpace: "nowrap",
             transition: "background 0.3s, color 0.3s, border-color 0.3s",
           }}>
-            {act ? `${state.currentAct + 1}/${STORY_ACTS.length}` : ""} &middot; {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}
+            {act ? `${state.currentAct + 1}/${STORY_ACTS.length}` : ""} &middot; <span ref={timerRef}>{Math.floor((Date.now() - startTimeRef.current) / 1000 / 60)}:{String(Math.floor((Date.now() - startTimeRef.current) / 1000) % 60).padStart(2, "0")}</span>
           </div>
           {/* Help */}
           <button

@@ -924,6 +924,8 @@ function LoreNodes({ visible, onCollect }: { visible: boolean; onCollect: (entry
   const [collected, setCollected] = useState<Set<string>>(new Set());
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
+  const loreOctaEdge = useMemo(() => new THREE.EdgesGeometry(new THREE.OctahedronGeometry(0.2, 0)), []);
+
   const positions = useMemo(() => {
     const pts = poissonDisk(8, 20, 80, 80);
     return pts.slice(0, LORE_ENTRIES.length).map(([x, z]) => [x, 1.5, z] as [number, number, number]);
@@ -969,8 +971,7 @@ function LoreNodes({ visible, onCollect }: { visible: boolean; onCollect: (entry
               <octahedronGeometry args={[0.2, 0]} />
               <meshToonMaterial color="#a78bfa" emissive="#7c3aed" emissiveIntensity={0.3} />
             </mesh>
-            <lineSegments>
-              <edgesGeometry args={[new THREE.OctahedronGeometry(0.2, 0)]} />
+            <lineSegments geometry={loreOctaEdge}>
               <lineBasicMaterial color="#c4b5fd" transparent opacity={0.6} />
             </lineSegments>
             <pointLight position={[0, 0, 0]} intensity={0.5} color="#a78bfa" distance={2} />
@@ -1276,6 +1277,8 @@ function PaperHouse({ position, wallColor = "#f5f0e8", roofColor = "#ef4444" }: 
 
 function PaperGem({ position, color = "#a78bfa", scale = 1 }: { position: [number, number, number]; color?: string; scale?: number }) {
   const ref = useRef<THREE.Group>(null);
+  const geo = useMemo(() => getGeo("gem-0.2", () => new THREE.OctahedronGeometry(0.2)), []);
+  const edge = useMemo(() => getEdge("gem-0.2", () => new THREE.EdgesGeometry(new THREE.OctahedronGeometry(0.2))), []);
   useFrame((state) => {
     if (!ref.current) return;
     ref.current.rotation.y = state.clock.elapsedTime * 0.8;
@@ -1283,12 +1286,10 @@ function PaperGem({ position, color = "#a78bfa", scale = 1 }: { position: [numbe
   });
   return (
     <group ref={ref} position={position} scale={scale}>
-      <mesh>
-        <octahedronGeometry args={[0.2, 0]} />
+      <mesh geometry={geo}>
         <meshToonMaterial color={color} emissive={color} emissiveIntensity={0.2} transparent opacity={0.85} />
       </mesh>
-      <lineSegments>
-        <edgesGeometry args={[new THREE.OctahedronGeometry(0.2, 0)]} />
+      <lineSegments geometry={edge}>
         <lineBasicMaterial color="#1a1a2e" transparent opacity={0.5} />
       </lineSegments>
       <pointLight position={[0, 0, 0]} intensity={0.4} color={color} distance={2} />
@@ -1480,6 +1481,8 @@ function InteractivePaperObject({
   const [hovered, setHovered] = useState(false);
   const matRef = useRef<THREE.MeshToonMaterial>(null);
 
+  const edgeGeo = useMemo(() => new THREE.EdgesGeometry(new THREE.BoxGeometry(...size)), [size[0], size[1], size[2]]);
+
   const clock = useRef(0);
   useFrame((_, delta) => {
     if (!ref.current) return;
@@ -1521,8 +1524,7 @@ function InteractivePaperObject({
           emissiveIntensity={hovered ? 0.4 : 0}
         />
       </mesh>
-      <lineSegments>
-        <edgesGeometry args={[new THREE.BoxGeometry(...size)]} />
+      <lineSegments geometry={edgeGeo}>
         <lineBasicMaterial color="#1a1a2e" transparent opacity={hovered ? 0.8 : 0.5} />
       </lineSegments>
       {hovered && (

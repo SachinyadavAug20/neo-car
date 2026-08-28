@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, Component, Suspense } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
@@ -98,6 +98,28 @@ export default function GLTFModel({
   animateSpeed = 1,
   tint,
 }: GLTFModelProps) {
+  return (
+    <GLTFErrorBoundary path={path}>
+      <Suspense fallback={null}>
+        <GLTFModelInner path={path} position={position} scale={scale} rotation={rotation} animate={animate} animateSpeed={animateSpeed} tint={tint} />
+      </Suspense>
+    </GLTFErrorBoundary>
+  );
+}
+
+class GLTFErrorBoundary extends Component<{ children: React.ReactNode; path: string }, { hasError: boolean }> {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(error: Error) {
+    console.warn(`GLTFModel failed to load "${this.props.path}":`, error.message);
+  }
+  render() {
+    if (this.state.hasError) return null;
+    return this.props.children;
+  }
+}
+
+function GLTFModelInner({ path, position = [0,0,0], scale = 1, rotation = [0,0,0], animate = "none", animateSpeed = 1, tint }: GLTFModelProps) {
   const ref = useRef<THREE.Group>(null);
   const { scene } = useGLTF(path);
 
