@@ -72,7 +72,7 @@ export default function AudioController({ mood, visible = true }: AudioControlle
         onMouseEnter={(e) => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "3px 3px 0 var(--shadow)"; }}
         onMouseLeave={(e) => { e.currentTarget.style.transform = "translate(0,0)"; e.currentTarget.style.boxShadow = "2px 2px 0 var(--shadow)"; }}
         style={{
-          position: "fixed", top: 14, right: 80, zIndex: 90,
+          position: "fixed", bottom: 14, left: 14, zIndex: 90,
           background: "var(--bg-card)", border: "2px solid var(--border)", borderRadius: 8,
           width: 28, height: 28, cursor: "pointer",
           display: "flex", alignItems: "center", justifyContent: "center",

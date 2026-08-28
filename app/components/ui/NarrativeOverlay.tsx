@@ -177,7 +177,7 @@ export default function NarrativeOverlay({
       {/* Act title */}
       {act && (
         <div ref={actTitleRef} style={{
-          position: "absolute", top: "14%", left: 0, right: 0, textAlign: "center",
+          position: "absolute", top: "18%", left: 0, right: 0, textAlign: "center",
           opacity: 0, pointerEvents: "none",
         }}>
           <div style={{ fontSize: 11, color: "var(--text-muted)", letterSpacing: 3, textTransform: "uppercase", marginBottom: 8, fontWeight: 600, transition: "color 0.3s" }}>
@@ -217,106 +217,62 @@ export default function NarrativeOverlay({
           {/* Interaction prompt */}
           {isInteraction && (
             <div ref={interactionUIRef} style={{ marginBottom: 14, opacity: 0 }}>
-              {beat.interaction === "click-jump" && (
-                <div style={{ ...card, borderRadius: 12, padding: "14px 24px", boxShadow: "3px 3px 0 var(--shadow)", textAlign: "center" }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Click anywhere to make Milo jump</div>
-                  <div style={{ display: "flex", gap: 5, justifyContent: "center" }}>
+              <div style={{ ...card, borderRadius: 12, padding: "12px 20px", boxShadow: "3px 3px 0 var(--shadow)", textAlign: "center", maxWidth: 360 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>
+                  {beat.interaction === "click-jump" && "Click to make Milo jump"}
+                  {beat.interaction === "drag-wind" && "Click and drag to create wind"}
+                  {beat.interaction === "click-unfold" && "Click the glowing paper"}
+                  {beat.interaction === "collect-leaves" && "Collect the glowing leaves"}
+                  {beat.interaction === "toggle-cells" && "Click cells to awaken the pattern"}
+                  {beat.interaction === "row-boat" && "Click rapidly to row"}
+                  {beat.interaction === "celebrate" && "Click to release cranes"}
+                  {beat.interaction === "follow-butterfly" && "Follow the butterfly"}
+                </div>
+                {(beat.interaction === "click-jump" || beat.interaction === "collect-leaves" || beat.interaction === "celebrate" || beat.interaction === "follow-butterfly") && (
+                  <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
                     {Array.from({ length: beat.interactionTarget || 5 }).map((_, i) => (
                       <div key={i} style={{
-                        width: 10, height: 10, borderRadius: "50%", border: "2px solid var(--border)",
-                        background: i < state.interactionProgress ? "var(--accent)" : "transparent",
+                        width: 8, height: 8, borderRadius: "50%", border: "1.5px solid var(--border)",
+                        background: i < state.interactionProgress
+                          ? (beat.interaction === "celebrate" ? ["#fbbf24", "#f472b6", "#a78bfa"][i % 3]
+                            : beat.interaction === "collect-leaves" ? "#22c55e"
+                            : beat.interaction === "follow-butterfly" ? "#a78bfa"
+                            : "var(--accent)")
+                          : "transparent",
                         transition: "background 0.2s, border-color 0.3s",
                       }} />
                     ))}
                   </div>
-                </div>
-              )}
-              {beat.interaction === "drag-wind" && (
-                <div style={{ ...card, borderRadius: 12, padding: "14px 24px", boxShadow: "3px 3px 0 var(--shadow)", textAlign: "center" }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Click and drag to create wind</div>
-                  <div style={{ width: 140, height: 6, background: "var(--border-light)", borderRadius: 3, overflow: "hidden", border: "1px solid var(--border-light)", margin: "0 auto", transition: "background 0.3s" }}>
-                    <div style={{ width: `${progress * 100}%`, height: "100%", background: "var(--text)", borderRadius: 3, transition: "width 0.1s, background 0.3s" }} />
-                  </div>
-                  <div style={{ fontSize: 11, marginTop: 6, fontWeight: 600 }}>{state.interactionProgress} / {beat.interactionTarget}</div>
-                </div>
-              )}
-              {beat.interaction === "click-unfold" && (
-                <div style={{ ...card, background: "var(--accent)", borderRadius: 12, padding: "14px 24px", boxShadow: "3px 3px 0 var(--shadow)", textAlign: "center", color: "#1a1a2e" }}>
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>Click the glowing golden paper</div>
-                </div>
-              )}
-              {beat.interaction === "collect-leaves" && (
-                <div style={{ ...card, borderRadius: 12, padding: "14px 24px", boxShadow: "3px 3px 0 var(--shadow)", textAlign: "center" }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Collect the glowing leaves</div>
-                  <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
-                    {Array.from({ length: beat.interactionTarget || 8 }).map((_, i) => (
-                      <div key={i} style={{
-                        width: 8, height: 8, borderRadius: "50%", border: "2px solid var(--border)",
-                        background: i < state.interactionProgress ? "#22c55e" : "transparent",
-                        transition: "background 0.2s, border-color 0.3s",
+                )}
+                {(beat.interaction === "drag-wind" || beat.interaction === "toggle-cells" || beat.interaction === "row-boat") && (
+                  <>
+                    <div style={{ width: 120, height: 5, background: "var(--border-light)", borderRadius: 3, overflow: "hidden", margin: "0 auto", transition: "background 0.3s" }}>
+                      <div style={{
+                        width: `${progress * 100}%`, height: "100%", borderRadius: 3,
+                        background: beat.interaction === "toggle-cells" ? "#a78bfa" : beat.interaction === "row-boat" ? "#67e8f9" : "var(--text)",
+                        transition: "width 0.1s",
                       }} />
-                    ))}
-                  </div>
-                </div>
-              )}
-              {beat.interaction === "toggle-cells" && (
-                <div style={{ ...card, borderRadius: 12, padding: "14px 24px", boxShadow: "3px 3px 0 var(--shadow)", textAlign: "center" }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Click the grid cells to awaken the pattern</div>
-                  <div style={{ width: 140, height: 6, background: "var(--border-light)", borderRadius: 3, overflow: "hidden", border: "1px solid var(--border-light)", margin: "0 auto", transition: "background 0.3s" }}>
-                    <div style={{ width: `${progress * 100}%`, height: "100%", background: "#a78bfa", borderRadius: 3, transition: "width 0.1s" }} />
-                  </div>
-                </div>
-              )}
-              {beat.interaction === "row-boat" && (
-                <div style={{ ...card, borderRadius: 12, padding: "14px 24px", boxShadow: "3px 3px 0 var(--shadow)", textAlign: "center" }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Click rapidly to row to Pip</div>
-                  <div style={{ width: 140, height: 6, background: "var(--border-light)", borderRadius: 3, overflow: "hidden", border: "1px solid var(--border-light)", margin: "0 auto", transition: "background 0.3s" }}>
-                    <div style={{ width: `${progress * 100}%`, height: "100%", background: "#67e8f9", borderRadius: 3, transition: "width 0.1s" }} />
-                  </div>
-                </div>
-              )}
-              {beat.interaction === "celebrate" && (
-                <div style={{ ...card, background: "linear-gradient(135deg, #fbbf24, #f472b6, #a78bfa)", borderRadius: 12, padding: "14px 24px", boxShadow: "3px 3px 0 var(--shadow)", textAlign: "center", color: "#1a1a2e" }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Click to release paper cranes</div>
-                  <div style={{ display: "flex", gap: 3, justifyContent: "center" }}>
-                    {Array.from({ length: beat.interactionTarget || 15 }).map((_, i) => (
-                      <div key={i} style={{
-                        width: 6, height: 6, borderRadius: "50%", border: "1.5px solid #1a1a2e",
-                        background: i < state.interactionProgress ? ["#fbbf24", "#f472b6", "#a78bfa"][i % 3] : "transparent",
-                        transition: "background 0.2s",
-                      }} />
-                    ))}
-                  </div>
-                </div>
-              )}
-              {beat.interaction === "follow-butterfly" && (
-                <div style={{ ...card, borderRadius: 12, padding: "14px 24px", boxShadow: "3px 3px 0 var(--shadow)", textAlign: "center" }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Follow the butterfly through the world</div>
-                  <div style={{ display: "flex", gap: 3, justifyContent: "center" }}>
-                    {Array.from({ length: beat.interactionTarget || 25 }).map((_, i) => (
-                      <div key={i} style={{
-                        width: 5, height: 5, borderRadius: "50%", border: "1.5px solid var(--border)",
-                        background: i < state.interactionProgress ? "#a78bfa" : "transparent",
-                        transition: "background 0.2s, border-color 0.3s",
-                      }} />
-                    ))}
-                  </div>
-                </div>
-              )}
+                    </div>
+                    <div style={{ fontSize: 10, marginTop: 4, fontWeight: 600, color: "var(--text-muted)" }}>
+                      {state.interactionProgress} / {beat.interactionTarget}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           )}
 
           {/* Story text card */}
           <div style={{
-            ...card, maxWidth: 500, width: "100%", textAlign: "center",
-            borderRadius: 14, padding: "18px 28px", boxShadow: "4px 4px 0 var(--shadow)",
-            marginBottom: 14,
+            ...card, maxWidth: 480, width: "100%", textAlign: "center",
+            borderRadius: 12, padding: "16px 24px", boxShadow: "3px 3px 0 var(--shadow)",
+            marginBottom: 12,
           }}>
-            <div ref={textRef} style={{ fontSize: 15, lineHeight: 1.8, opacity: 0 }}>
+            <div ref={textRef} style={{ fontSize: 15, lineHeight: 1.7, opacity: 0 }}>
               {beat.text}
             </div>
             <div ref={charRef} style={{
-              fontSize: 11, marginTop: 10, fontStyle: "italic", opacity: 0,
+              fontSize: 11, marginTop: 8, fontStyle: "italic", opacity: 0,
               fontWeight: 700, textTransform: "lowercase", letterSpacing: 0.5, color: "var(--text-muted)",
             }}>
               {beat.character && beat.character !== "narrator" && beat.character !== "prompt"
@@ -339,16 +295,15 @@ export default function NarrativeOverlay({
           )}
 
           {/* Progress dots */}
-          <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
             {STORY_ACTS.map((a, i) => {
               const isCurrent = a.id === (act?.id || 0);
               const isComplete = a.id < (act?.id || 0);
               return (
                 <div key={i} style={{
-                  width: isCurrent ? 20 : 8, height: 8, borderRadius: 4,
+                  width: isCurrent ? 18 : 6, height: 6, borderRadius: 3,
                   background: isCurrent ? "var(--accent)" : isComplete ? "var(--text)" : "var(--border-light)",
-                  border: "1.5px solid var(--border)", transition: "all 0.3s ease",
-                  boxShadow: isCurrent ? "0 0 8px var(--accent)" : "none",
+                  transition: "all 0.3s ease",
                 }} />
               );
             })}
@@ -360,14 +315,27 @@ export default function NarrativeOverlay({
       <div style={{
         position: "absolute", top: 14, left: 14, right: 14,
         display: "flex", justifyContent: "space-between", alignItems: "center",
+        gap: 12,
       }}>
         <div style={{
           ...card, borderRadius: 8, padding: "6px 14px", boxShadow: "2px 2px 0 var(--shadow)",
-          fontSize: 15, fontWeight: 700, letterSpacing: -0.5,
+          fontSize: 15, fontWeight: 700, letterSpacing: -0.5, flexShrink: 0,
         }}>
           DRIFT
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
+          <div style={{
+            ...card, borderRadius: 8, padding: "6px 12px", boxShadow: "2px 2px 0 var(--shadow)",
+            fontSize: 12, fontWeight: 700, whiteSpace: "nowrap",
+          }}>
+            {act ? `${state.currentAct + 1}/${STORY_ACTS.length}` : ""}
+          </div>
+          <div style={{
+            ...card, borderRadius: 8, padding: "6px 10px", boxShadow: "2px 2px 0 var(--shadow)",
+            fontSize: 11, fontWeight: 600, fontFamily: "monospace", whiteSpace: "nowrap",
+          }}>
+            {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}
+          </div>
           <button
             onClick={() => { setShowHowToPlay(true); window.dispatchEvent(new CustomEvent("context-open")); }}
             onMouseEnter={() => window.dispatchEvent(new CustomEvent("button-hover"))}
@@ -375,24 +343,12 @@ export default function NarrativeOverlay({
             style={{
               ...card, borderRadius: 8, width: 28, height: 28, cursor: "pointer",
               fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "2px 2px 0 var(--shadow)",
+              boxShadow: "2px 2px 0 var(--shadow)", flexShrink: 0,
             }}
             title="How to play"
           >
             ?
           </button>
-          <div style={{
-            ...card, borderRadius: 8, padding: "6px 12px", boxShadow: "2px 2px 0 var(--shadow)",
-            fontSize: 12, fontWeight: 700,
-          }}>
-            {act ? `${state.currentAct + 1} / ${STORY_ACTS.length}` : ""}
-          </div>
-          <div style={{
-            ...card, borderRadius: 8, padding: "6px 12px", boxShadow: "2px 2px 0 var(--shadow)",
-            fontSize: 11, fontWeight: 600, fontFamily: "monospace",
-          }}>
-            {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}
-          </div>
         </div>
       </div>
 
