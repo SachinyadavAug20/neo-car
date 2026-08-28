@@ -46,6 +46,7 @@ export function PushPendulum({ position, length = 2, color = "#f472b6", label }:
   const pendRef = useRef<{ angle: number; angularVel: number }>({ angle: 0, angularVel: 0 });
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
+  const boxEdgeGeo = useMemo(() => new THREE.EdgesGeometry(new THREE.BoxGeometry(0.5, 0.4, 0.5)), []);
 
   useFrame((_, delta) => {
     const s = pendRef.current;
@@ -79,8 +80,7 @@ export function PushPendulum({ position, length = 2, color = "#f472b6", label }:
             <boxGeometry args={[0.5, 0.4, 0.5]} />
             <meshToonMaterial color={hovered ? "#fbbf24" : color} emissive={hovered ? "#fbbf24" : "#000"} emissiveIntensity={hovered ? 0.3 : 0} />
           </mesh>
-          <lineSegments>
-            <edgesGeometry args={[new THREE.BoxGeometry(0.5, 0.4, 0.5)]} />
+          <lineSegments geometry={boxEdgeGeo}>
             <lineBasicMaterial color="#1a1a2e" />
           </lineSegments>
         </group>
@@ -102,6 +102,7 @@ export function HiddenCritter({ position, type = "fox", peekDistance = 3 }: Hidd
   const groupRef = useRef<THREE.Group>(null);
   const [found, setFound] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const bodyEdgeGeo = useMemo(() => new THREE.EdgesGeometry(new THREE.SphereGeometry(0.15, 8, 6)), []);
 
   useFrame((state) => {
     if (!groupRef.current) return;
@@ -140,8 +141,7 @@ export function HiddenCritter({ position, type = "fox", peekDistance = 3 }: Hidd
         <sphereGeometry args={[0.15, 8, 6]} />
         <meshToonMaterial color={colors[type]} />
       </mesh>
-      <lineSegments>
-        <edgesGeometry args={[new THREE.SphereGeometry(0.15, 8, 6)]} />
+      <lineSegments geometry={bodyEdgeGeo}>
         <lineBasicMaterial color="#1a1a2e" transparent opacity={0.4} />
       </lineSegments>
       {/* Eyes */}
@@ -206,10 +206,11 @@ export function AmbientDust({ count = 200, area = [60, 20, 60], speed = 0.3, col
     side: THREE.DoubleSide,
   }), [color]);
 
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+
   useFrame((state) => {
     if (!meshRef.current) return;
     const t = state.clock.elapsedTime;
-    const dummy = new THREE.Object3D();
 
     for (let i = 0; i < count; i++) {
       const p = particles[i];
@@ -251,6 +252,7 @@ interface PaperShatterProps {
 
 export function PaperShatter({ position, size = [3, 3, 0.2], color = "#e5e7eb", onShatter }: PaperShatterProps) {
   const groupRef = useRef<THREE.Group>(null);
+  const shatterEdgeGeo = useMemo(() => new THREE.EdgesGeometry(new THREE.BoxGeometry(...size)), [size[0], size[1], size[2]]);
   const [shattered, setShattered] = useState(false);
   const fragmentsRef = useRef<Array<{
     pos: THREE.Vector3;
@@ -332,8 +334,7 @@ export function PaperShatter({ position, size = [3, 3, 0.2], color = "#e5e7eb", 
         <boxGeometry args={size} />
         <meshToonMaterial color={color} />
       </mesh>
-      <lineSegments>
-        <edgesGeometry args={[new THREE.BoxGeometry(...size)]} />
+      <lineSegments geometry={shatterEdgeGeo}>
         <lineBasicMaterial color="#1a1a2e" />
       </lineSegments>
       {/* Glow hint */}
@@ -354,10 +355,11 @@ interface RippleEffectProps {
 export function RippleEffect({ position, color = "#fbbf24", onComplete }: RippleEffectProps) {
   const groupRef = useRef<THREE.Group>(null);
   const ringRefs = useRef<THREE.Mesh[]>([]);
-  const startTime = useRef(Date.now());
+  const startTime = useRef(-1);
 
-  useFrame(() => {
-    const elapsed = (Date.now() - startTime.current) / 1000;
+  useFrame((state) => {
+    if (startTime.current < 0) startTime.current = state.clock.elapsedTime;
+    const elapsed = state.clock.elapsedTime - startTime.current;
     ringRefs.current.forEach((ring, i) => {
       if (!ring) return;
       const delay = i * 0.15;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo, useCallback } from "react";
+import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -177,6 +177,7 @@ export function PhysicsPendulum({
   const groupRef = useRef<THREE.Group>(null);
   const angleRef = useRef(initialAngle);
   const velocityRef = useRef(0);
+  const bobEdgeGeo = useMemo(() => new THREE.EdgesGeometry(new THREE.SphereGeometry(bobSize, 12, 8)), [bobSize]);
   const lastPush = useRef(0);
 
   useFrame((state, delta) => {
@@ -217,8 +218,7 @@ export function PhysicsPendulum({
             <sphereGeometry args={[bobSize, 12, 8]} />
             <meshToonMaterial color={color} emissive={color} emissiveIntensity={0.15} />
           </mesh>
-          <lineSegments>
-            <edgesGeometry args={[new THREE.SphereGeometry(bobSize, 12, 8)]} />
+          <lineSegments geometry={bobEdgeGeo}>
             <lineBasicMaterial color="#1a1a2e" transparent opacity={0.4} />
           </lineSegments>
           <pointLight intensity={0.3} color={color} distance={2} />
@@ -247,6 +247,7 @@ export function OrigamiCrane({
   animate = false,
 }: OrigamiCraneProps) {
   const groupRef = useRef<THREE.Group>(null);
+  const craneEdgeGeo = useMemo(() => new THREE.EdgesGeometry(new THREE.BoxGeometry(size * 0.6, 0.01, size * 1)), [size]);
   const progress = useRef(foldProgress);
 
   useFrame((state, delta) => {
@@ -307,8 +308,7 @@ export function OrigamiCrane({
         </mesh>
       </group>
       {/* Edge outlines */}
-      <lineSegments>
-        <edgesGeometry args={[new THREE.BoxGeometry(size * 0.6, 0.01, size * 1)]} />
+      <lineSegments geometry={craneEdgeGeo}>
         <lineBasicMaterial color="#1a1a2e" transparent opacity={0.3} />
       </lineSegments>
     </group>
@@ -337,6 +337,15 @@ export function TetrahedronChain({
 }: TetrahedronChainProps) {
   const groupRef = useRef<THREE.Group>(null);
 
+  const tetEdgeGeo = useMemo(() => new THREE.EdgesGeometry(new THREE.TetrahedronGeometry(0.2, 0)), []);
+  const chainColors = useMemo(() =>
+    Array.from({ length: count }, (_, i) => {
+      const t = i / count;
+      const c = new THREE.Color(color);
+      c.offsetHSL(t * 0.2, 0, 0);
+      return c;
+    }), [color, count]);
+
   useFrame((_, delta) => {
     if (groupRef.current && autoRotate) {
       groupRef.current.rotation.y += delta * 0.3;
@@ -354,17 +363,14 @@ export function TetrahedronChain({
         const r = radius * (1 - Math.abs(t - 0.5) * 0.5);
         const x = Math.cos(angle) * r;
         const z = Math.sin(angle) * r;
-        const hue = t * 0.2;
-        const c = new THREE.Color(color);
-        c.offsetHSL(hue, 0, 0);
+        const c = chainColors[i];
         return (
           <group key={i} position={[x, y, z]} rotation={[angle, 0, 0]}>
             <mesh castShadow>
               <tetrahedronGeometry args={[0.2, 0]} />
               <meshToonMaterial color={c} emissive={c} emissiveIntensity={0.1} />
             </mesh>
-            <lineSegments>
-              <edgesGeometry args={[new THREE.TetrahedronGeometry(0.2, 0)]} />
+            <lineSegments geometry={tetEdgeGeo}>
               <lineBasicMaterial color="#1a1a2e" transparent opacity={0.4} />
             </lineSegments>
             {/* Connect to next */}

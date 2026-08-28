@@ -610,6 +610,7 @@ export function PaperWindmill({
   const groupRef = useRef<THREE.Group>(null);
   const speedRef = useRef(0);
   const isHovered = useRef(false);
+  const bladeEdgeGeo = useMemo(() => new THREE.EdgesGeometry(new THREE.ConeGeometry(size * 0.35, size * 0.5, 3)), [size]);
 
   useFrame((_, delta) => {
     if (groupRef.current) {
@@ -652,8 +653,7 @@ export function PaperWindmill({
               <coneGeometry args={[size * 0.35, size * 0.5, 3]} />
               <meshToonMaterial color={b.color} side={THREE.DoubleSide} />
             </mesh>
-            <lineSegments position={[size * 0.4, 0, 0]}>
-              <edgesGeometry args={[new THREE.ConeGeometry(size * 0.35, size * 0.5, 3)]} />
+            <lineSegments position={[size * 0.4, 0, 0]} geometry={bladeEdgeGeo}>
               <lineBasicMaterial color="#1a1a2e" transparent opacity={0.4} />
             </lineSegments>
           </group>
