@@ -27,7 +27,10 @@ function loadFolds(): PersistentFolds {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_FOLDS;
-    return { ...DEFAULT_FOLDS, ...JSON.parse(raw) };
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed.actsCompleted)) parsed.actsCompleted = [];
+    if (!Array.isArray(parsed.secretsFound)) parsed.secretsFound = [];
+    return { ...DEFAULT_FOLDS, ...parsed };
   } catch {
     return DEFAULT_FOLDS;
   }
@@ -37,7 +40,9 @@ function saveFolds(folds: PersistentFolds) {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(folds));
-  } catch {}
+  } catch (e) {
+    console.warn("DRIFT: Failed to save progress", e);
+  }
 }
 
 export function usePersistentFolds() {

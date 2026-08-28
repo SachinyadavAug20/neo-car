@@ -436,11 +436,11 @@ export function nextBeat(state: NarrativeState): NarrativeState {
   if (!act) return state;
 
   if (state.currentBeat < act.beats.length - 1) {
-    return { ...state, currentBeat: state.currentBeat + 1, interactionState: "idle", interactionProgress: 0 };
+    return { ...state, currentBeat: state.currentBeat + 1, interactionState: "idle", interactionProgress: 0, isAnimating: false };
   }
 
   if (state.currentAct < STORY_ACTS.length - 1) {
-    return { ...state, currentAct: state.currentAct + 1, currentBeat: 0, interactionState: "idle", interactionProgress: 0 };
+    return { ...state, currentAct: state.currentAct + 1, currentBeat: 0, interactionState: "idle", interactionProgress: 0, isAnimating: false };
   }
 
   return { ...state, ended: true };

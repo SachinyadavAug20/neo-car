@@ -1380,7 +1380,11 @@ export function initAudio() { getCtx(); }
 
 export function setupAudioEvents() {
   if (typeof window === "undefined") return;
-  const on = (e: string, fn: () => void) => window.addEventListener(e, fn);
+  const cleanups: (() => void)[] = [];
+  const on = (e: string, fn: () => void) => {
+    window.addEventListener(e, fn);
+    cleanups.push(() => window.removeEventListener(e, fn));
+  };
   // Core interactions
   on("milo-jump", playJump);
   on("collect-leaf", playCollect);
@@ -1446,7 +1450,7 @@ export function setupAudioEvents() {
   on("map-pin", playMapPin);
   on("ambient-pulse", playAmbientPulse);
   on("crystal-resonance", playCrystalResonance);
-  // New: Gesture sounds
+  // Gesture sounds
   on("double-click", playDoubleClick);
   on("long-press", playLongPress);
   on("swipe-right", playSwipeRight);
@@ -1458,22 +1462,22 @@ export function setupAudioEvents() {
   on("chime", playChime);
   on("bell", playBell);
   on("gong", playGong);
-  // New: Typewriter
+  // Typewriter
   on("typewriter-key", playTypewriterKey);
   on("carriage-return", playCarriageReturn);
-  // New: Sci-fi/fantasy
+  // Sci-fi/fantasy
   on("laser", playLaser);
   on("teleport", playTeleport);
   on("magic-sparkle", playMagicSparkle);
   on("power-up", playPowerUp);
   on("power-down", playPowerDown);
-  // New: Validation
+  // Validation
   on("check", playCheck);
   on("cross", playCross);
-  // New: Directional
+  // Directional
   on("whoosh-up", playWhooshUp);
   on("whoosh-down", playWhooshDown);
-  // New: UI state
+  // UI state
   on("bubble-pop", playBubblePop);
   on("click-meta", playClickMeta);
   on("context-open", playContextOpen);
@@ -1487,18 +1491,19 @@ export function setupAudioEvents() {
   on("tab-switch", playTabSwitch);
   on("accordion-open", playAccordionOpen);
   on("accordion-close", playAccordionClose);
-  // New: Game state
+  // Game state
   on("game-over", playGameOver);
   on("victory", playVictory);
   on("quest-complete", playQuestComplete);
-  // New: Item interactions
+  // Item interactions
   on("item-pickup", playItemPickup);
   on("item-drop", playItemDrop);
   on("sticker-peel", playStickerPeel);
   on("tape-rip", playTapeRip);
   on("rubber-band", playRubberBand);
   on("marble-drop", playMarbleDrop);
-  // New: Paper variants
+  // Paper variants
   on("crumple-intense", playCrumpleIntense);
   on("unfold-dramatic", playUnfoldDramatic);
+  return () => cleanups.forEach(fn => fn());
 }

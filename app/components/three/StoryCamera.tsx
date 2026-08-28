@@ -352,6 +352,7 @@ export default function StoryCamera({ narrativeState, onInteractionProgress, onI
 
     camera.getWorldDirection(_forward);
     _forward.y = 0;
+    if (_forward.lengthSq() < 0.001) _forward.set(0, 0, -1);
     _forward.normalize();
     _right.crossVectors(_forward, _up).normalize();
 

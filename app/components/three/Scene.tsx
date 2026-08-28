@@ -54,7 +54,8 @@ export default function Scene() {
 
   // Setup audio events on mount
   useEffect(() => {
-    setupAudioEvents();
+    const cleanup = setupAudioEvents();
+    return () => { if (cleanup) cleanup(); };
   }, []);
 
   // Toggle terminal with Ctrl+~
@@ -157,8 +158,6 @@ export default function Scene() {
     setNarrativeState(prev => {
       const beat = getCurrentBeat(prev);
       completeInteraction(prev.currentAct);
-      trackEvent("interaction-complete", { type: beat?.interaction });
-      // Auto-advance after both interaction types complete
       if (beat?.interaction === "drag-wind" || beat?.interaction === "click-jump") {
         setTimeout(() => {
           setNarrativeState(p => nextBeat(p));
@@ -166,7 +165,7 @@ export default function Scene() {
       }
       return { ...prev, interactionState: "complete" };
     });
-  }, [completeInteraction, trackEvent]);
+  }, [completeInteraction]);
 
   const handleSecretFoldInteract = useCallback(() => {
     setNarrativeState(prev => ({ ...prev, interactionState: "complete" }));

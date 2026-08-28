@@ -60,11 +60,17 @@ export function useJourneyTracker() {
   const statsRef = useRef<JourneyStats>({ ...INITIAL_JOURNEY, startTime: Date.now() });
   const lastMousePos = useRef({ x: 0, y: 0 });
   const lastActTime = useRef(Date.now());
+  const updatePending = useRef(false);
   const [stats, setStats] = useState<JourneyStats>({ ...INITIAL_JOURNEY, startTime: Date.now() });
 
   const updateStats = useCallback(() => {
-    statsRef.current.endTime = Date.now();
-    setStats({ ...statsRef.current });
+    if (updatePending.current) return;
+    updatePending.current = true;
+    requestAnimationFrame(() => {
+      statsRef.current.endTime = Date.now();
+      setStats({ ...statsRef.current });
+      updatePending.current = false;
+    });
   }, []);
 
   // Track mouse distance

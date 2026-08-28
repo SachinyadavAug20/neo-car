@@ -150,6 +150,8 @@ function getEdge(key: string, factory: () => THREE.EdgesGeometry): THREE.EdgesGe
   return e;
 }
 
+const _scaleVec = new THREE.Vector3();
+
 const MAT_CACHE = new Map<string, THREE.MeshToonMaterial>();
 const LINE_MAT = new THREE.LineBasicMaterial({ color: "#1a1a2e" });
 
@@ -728,6 +730,7 @@ function ConwayPaperGrid({ visible, playerPos, interactive = false }: { visible:
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const edgeMeshRef = useRef<THREE.InstancedMesh>(null);
   const gridRef = useRef<number[]>(Array(CONWAY_CELLS).fill(0));
+  const nextBuffer = useRef<number[]>(Array(CONWAY_CELLS).fill(0));
   const targetScales = useRef<Float32Array>(new Float32Array(CONWAY_CELLS));
   const frameCount = useRef(0);
   const initialized = useRef(false);
@@ -770,7 +773,8 @@ function ConwayPaperGrid({ visible, playerPos, interactive = false }: { visible:
 
   const stepGrid = useCallback(() => {
     const g = gridRef.current;
-    const next = new Array(CONWAY_CELLS).fill(0);
+    const next = nextBuffer.current;
+    for (let i = 0; i < CONWAY_CELLS; i++) next[i] = 0;
     for (let y = 0; y < CONWAY_SIZE; y++) {
       for (let x = 0; x < CONWAY_SIZE; x++) {
         let neighbors = 0;
@@ -1476,13 +1480,15 @@ function InteractivePaperObject({
   const [hovered, setHovered] = useState(false);
   const matRef = useRef<THREE.MeshToonMaterial>(null);
 
-  useFrame(() => {
+  const clock = useRef(0);
+  useFrame((_, delta) => {
     if (!ref.current) return;
+    clock.current += delta;
     const targetScale = hovered ? 1.15 : 1;
-    ref.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
-    // Floating bob when hovered
+    _scaleVec.set(targetScale, targetScale, targetScale);
+    ref.current.scale.lerp(_scaleVec, 0.1);
     if (hovered) {
-      ref.current.position.y = position[1] + Math.sin(Date.now() * 0.003) * 0.1;
+      ref.current.position.y = position[1] + Math.sin(clock.current * 3) * 0.1;
     }
   });
 
