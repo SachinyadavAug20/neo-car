@@ -595,32 +595,30 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
   const navRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
-  const particlesRef = useRef<HTMLDivElement>(null);
   const mouseRef = useRef({ x: 0, y: 0 });
-  const [particles] = useState(() => Array.from({ length: 30 }, (_, i) => ({
+  const [particles] = useState(() => Array.from({ length: 20 }, (_, i) => ({
     id: i,
     x: Math.random() * 100,
     y: Math.random() * 100,
-    size: 4 + Math.random() * 12,
+    size: 3 + Math.random() * 10,
     delay: Math.random() * 8,
-    duration: 10 + Math.random() * 15,
-    opacity: 0.08 + Math.random() * 0.12,
+    duration: 10 + Math.random() * 12,
+    opacity: 0.05 + Math.random() * 0.1,
     rotation: Math.random() * 360,
   })));
 
   useEffect(() => {
     const tl = gsap.timeline();
-    gsap.set([titleRef.current, subRef.current, textRef.current, btnRef.current, navRef.current, featuresRef.current], { opacity: 0, y: 20 });
-    tl.to(titleRef.current, { opacity: 1, y: 0, duration: 1.2, ease: "power3.out", delay: 0.3 })
-      .to(subRef.current, { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" }, "-=0.6")
-      .to(textRef.current, { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }, "-=0.4")
-      .to(featuresRef.current, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, "-=0.3")
-      .to(btnRef.current, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "-=0.2")
-      .to(navRef.current, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "-=0.3");
+    gsap.set([titleRef.current, subRef.current, textRef.current, btnRef.current, navRef.current, featuresRef.current], { opacity: 0, y: 16 });
+    tl.to(navRef.current, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", delay: 0.2 })
+      .to(titleRef.current, { opacity: 1, y: 0, duration: 1, ease: "power3.out" }, "-=0.3")
+      .to(subRef.current, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, "-=0.5")
+      .to(textRef.current, { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" }, "-=0.3")
+      .to(featuresRef.current, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "-=0.2")
+      .to(btnRef.current, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "-=0.2");
     return () => { tl.kill(); };
   }, []);
 
-  // Mouse parallax on card
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
       mouseRef.current = { x: e.clientX, y: e.clientY };
@@ -630,7 +628,7 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
         const cy = rect.top + rect.height / 2;
         const dx = (e.clientX - cx) / rect.width;
         const dy = (e.clientY - cy) / rect.height;
-        cardRef.current.style.transform = `perspective(1000px) rotateY(${dx * 4}deg) rotateX(${-dy * 4}deg) translateZ(10px)`;
+        cardRef.current.style.transform = `perspective(800px) rotateY(${dx * 3}deg) rotateX(${-dy * 3}deg)`;
       }
     };
     window.addEventListener("mousemove", onMove);
@@ -652,15 +650,11 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
       pointerEvents: "auto", overflow: "hidden",
     }}>
       {/* Floating paper particles */}
-      <div ref={particlesRef} style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
         {particles.map((p) => (
           <div key={p.id} style={{
-            position: "absolute",
-            left: `${p.x}%`,
-            top: `${p.y}%`,
-            width: p.size,
-            height: p.size,
-            background: "#1a1a2e",
+            position: "absolute", left: `${p.x}%`, top: `${p.y}%`,
+            width: p.size, height: p.size, background: "#1a1a2e",
             opacity: p.opacity,
             borderRadius: p.id % 3 === 0 ? "50%" : p.id % 3 === 1 ? "2px" : "0",
             transform: `rotate(${p.rotation}deg)`,
@@ -669,50 +663,34 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
         ))}
       </div>
 
-      {/* Background gradient orbs */}
-      <div style={{
-        position: "absolute", width: 500, height: 500, borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(167,139,250,0.08) 0%, transparent 70%)",
-        top: "10%", left: "10%", pointerEvents: "none",
-        animation: "drift-slow 20s ease-in-out infinite alternate",
-      }} />
-      <div style={{
-        position: "absolute", width: 400, height: 400, borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(244,114,182,0.06) 0%, transparent 70%)",
-        bottom: "10%", right: "10%", pointerEvents: "none",
-        animation: "drift-slow 25s ease-in-out 5s infinite alternate-reverse",
-      }} />
-
-      {/* Top nav bar */}
+      {/* Top nav */}
       <div ref={navRef} style={{
         position: "absolute", top: 0, left: 0, right: 0,
         display: "flex", justifyContent: "space-between", alignItems: "center",
-        padding: "20px 32px", opacity: 0,
+        padding: "20px 28px", opacity: 0,
       }}>
-        <div style={{
-          fontSize: 18, fontWeight: "bold", color: "#1a1a2e", letterSpacing: -1,
-        }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: "#1a1a2e", letterSpacing: -0.5 }}>
           DRIFT
         </div>
-        <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
           <span style={{ fontSize: 13, color: "#1a1a2e", fontWeight: 600 }}>Home</span>
           <a href="/about" style={{
             fontSize: 13, color: "#1a1a2e", textDecoration: "none", fontWeight: 600,
-            opacity: 0.6, transition: "opacity 0.2s",
+            opacity: 0.5, transition: "opacity 0.2s",
           }}
-            onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; window.dispatchEvent(new CustomEvent("tooltip")); }}
-            onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.6")}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.5")}
           >
             About
           </a>
           <a href="https://github.com/SachinyadavAug20/neo-car" target="_blank" rel="noopener noreferrer" style={{
             fontSize: 13, color: "#1a1a2e", textDecoration: "none", fontWeight: 600,
-            opacity: 0.6, transition: "opacity 0.2s", display: "flex", alignItems: "center", gap: 5,
+            opacity: 0.5, transition: "opacity 0.2s", display: "flex", alignItems: "center", gap: 5,
           }}
-            onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; window.dispatchEvent(new CustomEvent("tooltip")); }}
-            onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.6")}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.5")}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
             </svg>
             GitHub
@@ -720,17 +698,17 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
         </div>
       </div>
 
-      {/* Main card with 3D tilt */}
+      {/* Main card */}
       <div ref={cardRef} style={{
-        background: "rgba(255,255,255,0.92)", backdropFilter: "blur(20px)",
-        border: "3px solid #1a1a2e", borderRadius: 24,
-        padding: "52px 60px", boxShadow: "8px 8px 0 #1a1a2e", textAlign: "center",
-        maxWidth: 520, width: "90%", transition: "transform 0.1s ease-out",
+        background: "#fff", border: "2px solid #1a1a2e", borderRadius: 16,
+        padding: "48px 56px", textAlign: "center",
+        boxShadow: "6px 6px 0 #1a1a2e",
+        maxWidth: 500, width: "90%", transition: "transform 0.1s ease-out",
         willChange: "transform",
       }}>
-        {/* Decorative crane icon */}
-        <div style={{ marginBottom: 16, opacity: 0.4 }}>
-          <svg width="48" height="48" viewBox="0 0 60 60" fill="none" style={{ display: "block", margin: "0 auto" }}>
+        {/* Crane icon */}
+        <div style={{ marginBottom: 20, opacity: 0.35 }}>
+          <svg width="40" height="40" viewBox="0 0 60 60" fill="none" style={{ display: "block", margin: "0 auto" }}>
             <path d="M30 8 L52 30 L30 26 L8 30 Z" fill="#1a1a2e" opacity="0.8"/>
             <path d="M30 26 L30 52" stroke="#1a1a2e" strokeWidth="2"/>
             <path d="M30 26 L52 30 L44 42" fill="#1a1a2e" opacity="0.6"/>
@@ -739,21 +717,21 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
         </div>
 
         <div ref={titleRef} style={{
-          fontSize: 64, fontWeight: "bold", color: "#1a1a2e", letterSpacing: -4,
-          marginBottom: 4, opacity: 0, lineHeight: 1,
+          fontSize: 56, fontWeight: "bold", color: "#1a1a2e", letterSpacing: -3,
+          marginBottom: 6, opacity: 0, lineHeight: 1,
         }}>
           DRIFT
         </div>
         <div ref={subRef} style={{
-          fontSize: 18, color: "#1a1a2e", marginBottom: 24, fontStyle: "italic",
-          opacity: 0, letterSpacing: 2,
+          fontSize: 17, color: "#1a1a2e", marginBottom: 20, fontStyle: "italic",
+          opacity: 0, letterSpacing: 1.5,
         }}>
           A Paper World
         </div>
-        <div style={{ width: 60, height: 2, background: "#1a1a2e", margin: "0 auto 24px", opacity: 0.3 }} />
+        <div style={{ width: 48, height: 2, background: "#1a1a2e", margin: "0 auto 20px", opacity: 0.2 }} />
         <div ref={textRef} style={{
-          fontSize: 15, color: "#1a1a2e", lineHeight: 1.9, marginBottom: 28,
-          opacity: 0, maxWidth: 400, margin: "0 auto 28px",
+          fontSize: 15, color: "#1a1a2e", lineHeight: 1.8, marginBottom: 28,
+          opacity: 0, maxWidth: 380, margin: "0 auto 28px",
         }}>
           There was a paper crane named Milo who could not fly.
           One wing was bigger than the other. But he never stopped jumping.
@@ -765,24 +743,24 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
           opacity: 0, flexWrap: "wrap",
         }}>
           {[
-            { icon: " ", label: "8 Acts" },
-            { icon: " ", label: "110 Sounds" },
-            { icon: "*", label: "Secrets" },
+            { dot: "#1a1a2e", label: "8 Acts" },
+            { dot: "#fbbf24", label: "110 Sounds" },
+            { dot: "#a78bfa", label: "Secrets" },
           ].map((f, i) => (
             <div key={i} style={{
               display: "flex", alignItems: "center", gap: 6,
-              fontSize: 12, color: "#1a1a2e", fontWeight: 600, opacity: 0.6,
+              fontSize: 12, color: "#1a1a2e", fontWeight: 600, opacity: 0.55,
             }}>
-              <span>{f.icon}</span>
-              <span>{f.label}</span>
+              <div style={{ width: 5, height: 5, borderRadius: "50%", background: f.dot }} />
+              {f.label}
             </div>
           ))}
         </div>
 
         {folds.totalPlaythroughs > 0 && (
           <div style={{
-            fontSize: 11, color: "#1a1a2e", marginBottom: 20,
-            fontStyle: "italic", opacity: 0.5,
+            fontSize: 12, color: "#1a1a2e", marginBottom: 20,
+            fontStyle: "italic", opacity: 0.4,
           }}>
             The world remembers {folds.totalPlaythroughs} previous {folds.totalPlaythroughs === 1 ? "visit" : "visits"}.
             {folds.secretFoldUnlocked && " The secret fold was unlocked."}
@@ -790,47 +768,28 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
         )}
 
         <button ref={btnRef} onClick={onStart} style={{
-          background: "#1a1a2e", color: "#fff", border: "none", borderRadius: 14,
-          padding: "16px 48px", fontSize: 16, fontFamily: "Georgia, serif", cursor: "pointer",
-          boxShadow: "4px 4px 0 #6b7280", fontWeight: 600, letterSpacing: 0.5,
+          background: "#1a1a2e", color: "#fff", border: "none", borderRadius: 10,
+          padding: "15px 44px", fontSize: 15, fontFamily: "Georgia, serif", cursor: "pointer",
+          fontWeight: 600, boxShadow: "3px 3px 0 #6b7280",
           transition: "transform 0.15s, box-shadow 0.15s", opacity: 0,
         }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translate(-2px, -2px)";
-            e.currentTarget.style.boxShadow = "6px 6px 0 #6b7280";
+            e.currentTarget.style.transform = "translate(-1px, -1px)";
+            e.currentTarget.style.boxShadow = "4px 4px 0 #6b7280";
             window.dispatchEvent(new CustomEvent("button-hover"));
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = "translate(0, 0)";
-            e.currentTarget.style.boxShadow = "4px 4px 0 #6b7280";
+            e.currentTarget.style.boxShadow = "3px 3px 0 #6b7280";
             window.dispatchEvent(new CustomEvent("hover-out"));
           }}
         >
           {folds.totalPlaythroughs > 0 ? "Enter Again" : "Begin the Story"}
         </button>
-        <div style={{ fontSize: 11, color: "#1a1a2e", marginTop: 16, fontWeight: 600, opacity: 0.4, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-          <kbd style={{ padding: "2px 8px", border: "1px solid #d1d5db", borderRadius: 4, fontSize: 10, background: "#f9fafb" }}>Enter</kbd>
+        <div style={{ fontSize: 11, color: "#1a1a2e", marginTop: 14, fontWeight: 600, opacity: 0.35, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+          <kbd style={{ padding: "2px 8px", border: "1px solid #d1d5db", borderRadius: 4, fontSize: 10, background: "#fafafa" }}>Enter</kbd>
           <span>to start</span>
-          <span style={{ margin: "0 4px", opacity: 0.3 }}>|</span>
-          <kbd style={{ padding: "2px 8px", border: "1px solid #d1d5db", borderRadius: 4, fontSize: 10, background: "#f9fafb" }}>Space</kbd>
-          <span>also works</span>
         </div>
-      </div>
-
-      {/* Bottom features strip */}
-      <div style={{
-        position: "absolute", bottom: 32, left: 0, right: 0,
-        display: "flex", justifyContent: "center", gap: 32, opacity: 0.3,
-      }}>
-        {["Paper Craft Aesthetic", "Procedural Audio", "Hidden Discoveries", "Journey Tracking"].map((feat, i) => (
-          <div key={i} style={{
-            fontSize: 10, color: "#1a1a2e", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase",
-            display: "flex", alignItems: "center", gap: 6,
-          }}>
-            <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#1a1a2e" }} />
-            {feat}
-          </div>
-        ))}
       </div>
     </div>
   );

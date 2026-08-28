@@ -10,109 +10,71 @@ interface EndScreenProps {
   onRestart: () => void;
 }
 
-const CRANE_SVG = `<svg viewBox="0 0 40 40" fill="none"><path d="M20 5 L35 20 L20 18 L5 20 Z" fill="currentColor" opacity="0.8"/><path d="M20 18 L20 35" stroke="currentColor" stroke-width="1.5"/><path d="M20 18 L35 20 L30 28" fill="currentColor" opacity="0.6"/><path d="M20 18 L5 20 L10 28" fill="currentColor" opacity="0.6"/></svg>`;
-const BUTTERFLY_SVG = `<svg viewBox="0 0 30 30" fill="none"><path d="M15 8 C8 2, 2 8, 8 15 C2 22, 8 28, 15 22 C22 28, 28 22, 22 15 C28 8, 22 2, 15 8Z" fill="currentColor" opacity="0.7"/><line x1="15" y1="5" x2="15" y2="25" stroke="currentColor" stroke-width="1"/></svg>`;
-const LEAF_SVG = `<svg viewBox="0 0 24 24" fill="none"><path d="M12 2 C6 8, 2 14, 12 22 C22 14, 18 8, 12 2Z" fill="currentColor" opacity="0.6"/><line x1="12" y1="6" x2="12" y2="20" stroke="currentColor" stroke-width="0.8" opacity="0.8"/></svg>`;
-
-function FloatingElement({ svg, x, delay, duration, color, size }: {
-  svg: string; x: number; delay: number; duration: number; color: string; size: number;
+function StatBlock({ label, value, delay }: {
+  label: string; value: string; delay: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!ref.current) return;
-    const el = ref.current;
-    gsap.set(el, { y: "110vh", x: `${x}vw`, rotation: Math.random() * 360, opacity: 0 });
-    const tl = gsap.timeline({ repeat: -1, delay });
-    tl.to(el, { y: "-10vh", opacity: 0.5, duration: duration * 0.3, ease: "power1.out" })
-      .to(el, { opacity: 0.7, duration: duration * 0.4 })
-      .to(el, { y: "-10vh", opacity: 0, duration: duration * 0.3, ease: "power1.in" });
-    return () => { tl.kill(); };
-  }, [x, delay, duration]);
-  return (
-    <div ref={ref} style={{ position: "fixed", width: size, height: size, color, pointerEvents: "none", zIndex: 60 }}
-      dangerouslySetInnerHTML={{ __html: svg }} />
-  );
-}
-
-function StatBlock({ icon, label, value, sub, delay, color = "#1a1a2e" }: {
-  icon: string; label: string; value: string; sub?: string; delay: number; color?: string;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!ref.current) return;
-    gsap.fromTo(ref.current,
-      { opacity: 0, y: 20, scale: 0.9 },
-      { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.4)", delay }
-    );
+    gsap.fromTo(ref.current, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: "back.out(1.3)", delay });
   }, [delay]);
   return (
     <div ref={ref} style={{
       display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-      padding: "14px 18px", background: "rgba(255,255,255,0.7)", borderRadius: 14,
-      border: `2px solid ${color}`, minWidth: 100, opacity: 0,
-      boxShadow: `2px 2px 0 ${color}20`,
+      padding: "16px 20px", background: "#fff", borderRadius: 12,
+      border: "2px solid #1a1a2e", boxShadow: "3px 3px 0 #1a1a2e",
+      minWidth: 100, opacity: 0,
     }}>
-      <div style={{ fontSize: 22 }}>{icon}</div>
-      <div style={{ fontSize: 26, fontWeight: "bold", color, fontFamily: "monospace", lineHeight: 1 }}>{value}</div>
-      <div style={{ fontSize: 10, color: "#1a1a2e", textTransform: "uppercase", letterSpacing: 1.5, fontWeight: 700 }}>{label}</div>
-      {sub && <div style={{ fontSize: 9, color: "#1a1a2e", opacity: 0.5, fontStyle: "italic" }}>{sub}</div>}
+      <div style={{ fontSize: 28, fontWeight: "bold", color: "#1a1a2e", fontFamily: "monospace", lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: 10, color: "#1a1a2e", textTransform: "uppercase", letterSpacing: 2, fontWeight: 700, opacity: 0.5 }}>{label}</div>
     </div>
   );
 }
 
-function ActBar({ act, clicks, beats, interactions, time, maxClicks, delay }: {
-  act: number; clicks: number; beats: number; interactions: number; time: number; maxClicks: number; delay: number;
+function ActBar({ act, clicks, time, maxClicks, delay }: {
+  act: number; clicks: number; time: number; maxClicks: number; delay: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const width = maxClicks > 0 ? (clicks / maxClicks) * 100 : 0;
   useEffect(() => {
     if (!ref.current) return;
-    gsap.fromTo(ref.current,
-      { opacity: 0, x: -20 },
-      { opacity: 1, x: 0, duration: 0.4, ease: "power2.out", delay }
-    );
+    gsap.fromTo(ref.current, { opacity: 0, x: -12 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out", delay });
   }, [delay]);
   return (
     <div ref={ref} style={{ display: "flex", alignItems: "center", gap: 10, opacity: 0, marginBottom: 6 }}>
-      <div style={{ width: 18, height: 18, borderRadius: 4, background: getActColor(act), border: "1.5px solid #1a1a2e", flexShrink: 0 }} />
-      <div style={{ width: 100, fontSize: 11, color: "#1a1a2e", fontWeight: 600, flexShrink: 0 }}>
+      <div style={{ width: 14, height: 14, borderRadius: 4, background: getActColor(act), border: "1.5px solid #1a1a2e", flexShrink: 0 }} />
+      <div style={{ width: 90, fontSize: 11, color: "#1a1a2e", fontWeight: 600, flexShrink: 0 }}>
         {getActEngagementLabel(act)}
       </div>
-      <div style={{ flex: 1, height: 14, background: "#e5e7eb", borderRadius: 7, overflow: "hidden", border: "1px solid #1a1a2e", position: "relative" }}>
+      <div style={{ flex: 1, height: 10, background: "#e5e7eb", borderRadius: 5, overflow: "hidden", border: "1px solid #d1d5db" }}>
         <div style={{
           width: `${width}%`, height: "100%", background: `linear-gradient(90deg, ${getActColor(act)}, ${getActColor(act)}cc)`,
-          borderRadius: 7, transition: "width 0.6s ease-out",
+          borderRadius: 5, transition: "width 0.6s ease-out",
         }} />
       </div>
-      <div style={{ width: 60, fontSize: 10, color: "#1a1a2e", textAlign: "right", fontFamily: "monospace" }}>
+      <div style={{ width: 55, fontSize: 10, color: "#1a1a2e", textAlign: "right", fontFamily: "monospace", opacity: 0.6 }}>
         {formatTime(time)}
-      </div>
-      <div style={{ width: 24, fontSize: 10, color: "#1a1a2e", textAlign: "right", fontFamily: "monospace" }}>
-        {clicks}
       </div>
     </div>
   );
 }
 
-function Badge({ icon, label, delay, unlocked }: { icon: string; label: string; delay: number; unlocked: boolean }) {
+function Badge({ label, delay, unlocked }: { label: string; delay: number; unlocked: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!ref.current) return;
-    gsap.fromTo(ref.current,
-      { opacity: 0, scale: 0.5, rotation: -10 },
-      { opacity: 1, scale: 1, rotation: 0, duration: 0.4, ease: "back.out(2)", delay }
-    );
+    gsap.fromTo(ref.current, { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)", delay });
   }, [delay]);
   return (
     <div ref={ref} style={{
-      display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-      padding: "10px 12px", borderRadius: 12,
+      padding: "6px 12px", borderRadius: 8,
       background: unlocked ? "rgba(251,191,36,0.15)" : "rgba(0,0,0,0.03)",
       border: `2px solid ${unlocked ? "#fbbf24" : "#e5e7eb"}`,
-      opacity: 0, minWidth: 70,
+      opacity: 0, fontSize: 11, fontWeight: 700,
+      color: unlocked ? "#1a1a2e" : "#9ca3af",
+      textTransform: "uppercase", letterSpacing: 1,
     }}>
-      <div style={{ fontSize: 20, filter: unlocked ? "none" : "grayscale(1) opacity(0.3)" }}>{icon}</div>
-      <div style={{ fontSize: 9, color: unlocked ? "#1a1a2e" : "#9ca3af", textTransform: "uppercase", letterSpacing: 1, fontWeight: 700, textAlign: "center" }}>{label}</div>
+      {label}
     </div>
   );
 }
@@ -128,7 +90,6 @@ export default function EndScreen({ stats, onRestart }: EndScreenProps) {
   const [isCapturing, setIsCapturing] = useState(false);
 
   const totalTime = stats.endTime - stats.startTime;
-  const mostEngaged = getMostEngagedAct(stats);
   const maxClicks = Math.max(...stats.actClicks, 1);
   const totalInteractions = stats.actInteractions.reduce((a, b) => a + b, 0);
   const totalBeats = stats.actBeatCount.reduce((a, b) => a + b, 0);
@@ -136,16 +97,11 @@ export default function EndScreen({ stats, onRestart }: EndScreenProps) {
   const captureScreenshot = useCallback(async () => {
     if (!shareCardRef.current || isCapturing) return;
     setIsCapturing(true);
-    window.dispatchEvent(new CustomEvent("magic-sparkle"));
     try {
       const canvas = await html2canvas(shareCardRef.current, {
-        background: "#fdf6e3",
-        scale: 2,
-        useCORS: true,
-        logging: false,
+        background: "#fdf6e3", scale: 2, useCORS: true, logging: false,
       } as any);
-      const url = canvas.toDataURL("image/png");
-      setScreenshotUrl(url);
+      setScreenshotUrl(canvas.toDataURL("image/png"));
       setShowShareModal(true);
     } catch (err) {
       console.error("Screenshot failed:", err);
@@ -154,169 +110,120 @@ export default function EndScreen({ stats, onRestart }: EndScreenProps) {
     }
   }, [isCapturing]);
 
-  const shareText = `I completed DRIFT -- A Paper World\n\n${formatTime(totalTime)} | ${totalBeats} story beats | ${stats.secretsFound.length} secrets discovered\n\nCan you find all the secrets? drift-paper.vercel.app`;
+  const shareText = `I completed DRIFT -- A Paper World\n\n${formatTime(totalTime)} | ${totalBeats} story beats | ${stats.secretsFound.length} secrets\n\nCan you find all the secrets? drift-paper.vercel.app`;
 
   const shareToWhatsApp = useCallback(() => {
-    window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
-    window.dispatchEvent(new CustomEvent("star-collect"));
+    window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank", "noopener,noreferrer");
   }, [shareText]);
-
   const shareToTwitter = useCallback(() => {
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent("https://drift-paper.vercel.app")}`, "_blank");
-    window.dispatchEvent(new CustomEvent("star-collect"));
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent("https://drift-paper.vercel.app")}`, "_blank", "noopener,noreferrer");
   }, [shareText]);
-
   const shareToFacebook = useCallback(() => {
-    window.open(`https://www.facebook.com/sharer/sharer.php?quote=${encodeURIComponent(shareText)}&u=${encodeURIComponent("https://drift-paper.vercel.app")}`, "_blank");
-    window.dispatchEvent(new CustomEvent("star-collect"));
+    window.open(`https://www.facebook.com/sharer/sharer.php?quote=${encodeURIComponent(shareText)}&u=${encodeURIComponent("https://drift-paper.vercel.app")}`, "_blank", "noopener,noreferrer");
   }, [shareText]);
-
   const downloadImage = useCallback(() => {
     if (!screenshotUrl) return;
     const link = document.createElement("a");
     link.download = "drift-journey.png";
     link.href = screenshotUrl;
     link.click();
-    window.dispatchEvent(new CustomEvent("coin-collect"));
   }, [screenshotUrl]);
-
   const copyToClipboard = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(shareText);
-      window.dispatchEvent(new CustomEvent("bubble-pop"));
-    } catch {}
+    try { await navigator.clipboard.writeText(shareText); } catch {}
   }, [shareText]);
 
   useEffect(() => {
     const tl = gsap.timeline();
-    tl.to(containerRef.current, { opacity: 1, duration: 2, ease: "power2.inOut" })
+    tl.to(containerRef.current, { opacity: 1, duration: 1.5, ease: "power2.inOut" })
       .call(() => setVisible(true))
       .call(() => setShowDetails(true), [], "+=0.8")
-      .call(() => setShowBadges(true), [], "+=0.6");
+      .call(() => setShowBadges(true), [], "+=0.5");
     return () => { tl.kill(); };
   }, []);
 
   return (
-    <div ref={containerRef} style={{
+    <div ref={containerRef} role="dialog" aria-modal="true" aria-label="Journey Complete" style={{
       position: "fixed", inset: 0, zIndex: 55,
       display: "flex", alignItems: "center", justifyContent: "center",
       background: "#fdf6e3", opacity: 0, fontFamily: "Georgia, serif",
       overflowY: "auto", overflowX: "hidden",
     }}>
-      {/* Floating elements */}
-      {Array.from({ length: 6 }).map((_, i) => (
-        <FloatingElement key={`c-${i}`} svg={CRANE_SVG} x={8 + i * 16} delay={i * 1} duration={9 + i}
-          color={["#fbbf24", "#a78bfa", "#f472b6", "#67e8f9", "#22c55e", "#f97316"][i]} size={18 + i * 2} />
-      ))}
-      {Array.from({ length: 4 }).map((_, i) => (
-        <FloatingElement key={`b-${i}`} svg={BUTTERFLY_SVG} x={12 + i * 22} delay={1.5 + i * 1.3} duration={10 + i}
-          color={["#a78bfa", "#f472b6", "#67e8f9", "#fbbf24"][i]} size={14 + i * 2} />
-      ))}
-      {Array.from({ length: 5 }).map((_, i) => (
-        <FloatingElement key={`l-${i}`} svg={LEAF_SVG} x={5 + i * 18} delay={0.8 + i * 1.1} duration={8 + i}
-          color={["#22c55e", "#4ade80", "#86efac", "#fbbf24", "#a78bfa"][i]} size={12 + i * 2} />
-      ))}
-
-      {/* Main content */}
       {visible && (
         <div style={{
-          textAlign: "center", maxWidth: 640, width: "92%", padding: "40px 20px",
+          textAlign: "center", maxWidth: 600, width: "92%", padding: "40px 20px",
           position: "relative", zIndex: 10, maxHeight: "95vh", overflowY: "auto",
         }}>
           {/* Header */}
-          <div style={{ fontSize: 11, letterSpacing: 5, textTransform: "uppercase", fontWeight: 600, marginBottom: 12, color: "#1a1a2e", opacity: 0 }}
-            ref={el => { if (el) gsap.to(el, { opacity: 0.6, duration: 1, delay: 0.3 }); }}>
+          <div style={{ fontSize: 11, letterSpacing: 5, textTransform: "uppercase", fontWeight: 700, marginBottom: 10, color: "#1a1a2e", opacity: 0 }}
+            ref={el => { if (el) gsap.to(el, { opacity: 0.5, duration: 1, delay: 0.3 }); }}>
             Journey Complete
           </div>
-          <div style={{ fontSize: 56, fontWeight: "bold", color: "#1a1a2e", letterSpacing: -3, marginBottom: 4, opacity: 0 }}
-            ref={el => { if (el) gsap.to(el, { opacity: 1, duration: 1, delay: 0.6 }); }}>
+          <div style={{ fontSize: 52, fontWeight: "bold", color: "#1a1a2e", letterSpacing: -3, marginBottom: 4, opacity: 0 }}
+            ref={el => { if (el) gsap.to(el, { opacity: 1, duration: 1, delay: 0.5 }); }}>
             DRIFT
           </div>
-          <div style={{ fontSize: 15, color: "#1a1a2e", fontStyle: "italic", marginBottom: 6, opacity: 0 }}
-            ref={el => { if (el) gsap.to(el, { opacity: 0.7, duration: 1, delay: 0.9 }); }}>
+          <div style={{ fontSize: 16, color: "#1a1a2e", fontStyle: "italic", marginBottom: 6, opacity: 0 }}
+            ref={el => { if (el) gsap.to(el, { opacity: 0.6, duration: 1, delay: 0.7 }); }}>
             A Paper World
           </div>
-          <div style={{ width: 50, height: 2, background: "#1a1a2e", margin: "0 auto 20px", opacity: 0 }}
-            ref={el => { if (el) gsap.to(el, { opacity: 0.4, duration: 1, delay: 1.1 }); }} />
+          <div style={{ width: 48, height: 2, background: "#1a1a2e", margin: "0 auto 20px", opacity: 0 }}
+            ref={el => { if (el) gsap.to(el, { opacity: 0.25, duration: 1, delay: 0.9 }); }} />
 
-          {/* Quick summary quote */}
-          <div style={{ fontSize: 16, color: "#1a1a2e", lineHeight: 1.7, marginBottom: 24, fontStyle: "italic", maxWidth: 400, margin: "0 auto 24px", opacity: 0 }}
-            ref={el => { if (el) gsap.to(el, { opacity: 1, duration: 1, delay: 1.3 }); }}>
+          <div style={{ fontSize: 15, color: "#1a1a2e", lineHeight: 1.7, fontStyle: "italic", maxWidth: 380, margin: "0 auto 28px", opacity: 0 }}
+            ref={el => { if (el) gsap.to(el, { opacity: 0.7, duration: 1, delay: 1.1 }); }}>
             &ldquo;Every fold was a choice. Every choice was the wind.&rdquo;
           </div>
 
-          {/* Main stats grid */}
+          {/* Main stats */}
           {showDetails && (
-            <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginBottom: 20 }}>
-              <StatBlock icon="⏱" value={formatTime(totalTime)} label="Total Time" sub="story duration" delay={0} />
-              <StatBlock icon=">" value={String(stats.totalClicks)} label="Clicks" sub={`${Math.round(stats.totalClicks / Math.max(totalTime / 1000, 1))}/sec`} delay={0.1} />
-              <StatBlock icon="~" value={`${Math.round(stats.totalMouseMoveDistance)}m`} label="Distance" sub="cursor traveled" delay={0.2} />
-              <StatBlock icon="K" value={String(stats.totalKeys)} label="Keys Typed" sub="keyboard input" delay={0.3} />
+            <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 24 }}>
+              <StatBlock value={formatTime(totalTime)} label="Time" delay={0} />
+              <StatBlock value={String(totalBeats)} label="Beats" delay={0.1} />
+              <StatBlock value={String(stats.secretsFound.length)} label="Secrets" delay={0.2} />
+              <StatBlock value={String(totalInteractions)} label="Interactions" delay={0.3} />
             </div>
           )}
 
-          {/* Secondary stats */}
-          {showDetails && (
-            <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginBottom: 24 }}>
-              <StatBlock icon="B" value={String(totalBeats)} label="Beats Visited" sub={`of ${32} total`} delay={0.4} color="#6b7280" />
-              <StatBlock icon="X" value={String(totalInteractions)} label="Interactions" sub="completed" delay={0.5} color="#6b7280" />
-              <StatBlock icon="!" value={String(stats.secretsFound.length)} label="Secrets" sub="words typed" delay={0.6} color="#fbbf24" />
-              <StatBlock icon="L" value={String(stats.loreCollected)} label="Lore" sub="fragments" delay={0.7} color="#a78bfa" />
-            </div>
-          )}
-
-          {/* Act-by-act breakdown */}
+          {/* Act breakdown */}
           {showDetails && (
             <div style={{
-              background: "rgba(255,255,255,0.6)", border: "2px solid #1a1a2e", borderRadius: 16,
-              padding: "18px 20px", marginBottom: 20, boxShadow: "3px 3px 0 #1a1a2e20",
+              background: "#fff", border: "2px solid #1a1a2e", borderRadius: 14,
+              padding: "16px 20px", marginBottom: 20, boxShadow: "3px 3px 0 #1a1a2e",
+              textAlign: "left",
             }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#1a1a2e", textTransform: "uppercase", letterSpacing: 2, marginBottom: 12, textAlign: "left" }}>
-                Act-by-Act Breakdown
-              </div>
-              <div style={{ fontSize: 10, color: "#1a1a2e", opacity: 0.5, marginBottom: 10, textAlign: "left" }}>
-                Most engaged: <strong style={{ color: getActColor(mostEngaged) }}>{getActEngagementLabel(mostEngaged)}</strong>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#1a1a2e", textTransform: "uppercase", letterSpacing: 2, marginBottom: 12 }}>
+                Act Breakdown
               </div>
               {Array.from({ length: 8 }).map((_, i) => (
-                <ActBar
-                  key={i} act={i}
-                  clicks={stats.actClicks[i]}
-                  beats={stats.actBeatCount[i]}
-                  interactions={stats.actInteractions[i]}
-                  time={stats.actTimes[i]}
-                  maxClicks={maxClicks}
-                  delay={0.8 + i * 0.1}
-                />
+                <ActBar key={i} act={i} clicks={stats.actClicks[i]} time={stats.actTimes[i]} maxClicks={maxClicks} delay={0.4 + i * 0.08} />
               ))}
             </div>
           )}
 
-          {/* Activity breakdown */}
+          {/* Activity */}
           {showDetails && (
             <div style={{
-              background: "rgba(255,255,255,0.6)", border: "2px solid #1a1a2e", borderRadius: 16,
-              padding: "18px 20px", marginBottom: 20, boxShadow: "3px 3px 0 #1a1a2e20",
+              background: "#fff", border: "2px solid #1a1a2e", borderRadius: 14,
+              padding: "16px 20px", marginBottom: 20, boxShadow: "3px 3px 0 #1a1a2e",
+              textAlign: "left",
             }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#1a1a2e", textTransform: "uppercase", letterSpacing: 2, marginBottom: 12, textAlign: "left" }}>
-                Your Activities
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#1a1a2e", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>
+                Activities
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 8, textAlign: "left" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 16px" }}>
                 {[
-                  { icon: "J", label: "Jumps", val: stats.jumpsMade },
-                  { icon: "W", label: "Wind Power", val: stats.windGenerated },
-                  { icon: "L", label: "Leaves", val: stats.leavesCollected },
-                  { icon: "[]", label: "Cells Toggled", val: stats.cellsToggled },
-                  { icon: ">>", label: "Boat Strokes", val: stats.boatStrokes },
-                  { icon: "B", label: "Butterflies", val: stats.butterfliesFollowed },
-                  { icon: "*", label: "Cranes", val: stats.cranesReleased },
-                  { icon: "X", label: "Shatters", val: stats.shattersTriggered },
-                  { icon: "!", label: "Pendulums", val: stats.pendulumsPushed },
-                  { icon: "F", label: "Critters", val: stats.crittersFound },
+                  { label: "Clicks", val: stats.totalClicks },
+                  { label: "Keys Typed", val: stats.totalKeys },
+                  { label: "Cursor Distance", val: `${Math.round(stats.totalMouseMoveDistance)}m` },
+                  { label: "Jumps", val: stats.jumpsMade },
+                  { label: "Leaves Collected", val: stats.leavesCollected },
+                  { label: "Wind Generated", val: stats.windGenerated },
+                  { label: "Butterflies", val: stats.butterfliesFollowed },
+                  { label: "Cranes Released", val: stats.cranesReleased },
                 ].map((item, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 0" }}>
-                    <span style={{ fontSize: 14 }}>{item.icon}</span>
-                    <span style={{ fontSize: 11, color: "#1a1a2e" }}>{item.label}:</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "#1a1a2e", fontFamily: "monospace" }}>{item.val}</span>
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "3px 0" }}>
+                    <span style={{ fontSize: 11, color: "#1a1a2e", opacity: 0.5 }}>{item.label}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#1a1a2e", fontFamily: "monospace" }}>{item.val}</span>
                   </div>
                 ))}
               </div>
@@ -326,34 +233,32 @@ export default function EndScreen({ stats, onRestart }: EndScreenProps) {
           {/* Badges */}
           {showBadges && (
             <div style={{
-              background: "rgba(255,255,255,0.6)", border: "2px solid #1a1a2e", borderRadius: 16,
-              padding: "18px 20px", marginBottom: 24, boxShadow: "3px 3px 0 #1a1a2e20",
+              background: "#fff", border: "2px solid #1a1a2e", borderRadius: 14,
+              padding: "16px 20px", marginBottom: 20, boxShadow: "3px 3px 0 #1a1a2e",
+              textAlign: "left",
             }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#1a1a2e", textTransform: "uppercase", letterSpacing: 2, marginBottom: 12, textAlign: "left" }}>
-                Badges Earned
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#1a1a2e", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 }}>
+                Badges
               </div>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-start" }}>
-                <Badge icon="*" label="First Fold" delay={0} unlocked={stats.jumpsMade > 0} />
-                <Badge icon="W" label="Storm Rider" delay={0.1} unlocked={stats.windGenerated > 10} />
-                <Badge icon="L" label="Leaf Collector" delay={0.2} unlocked={stats.leavesCollected >= 8} />
-                <Badge icon="[]" label="Cell Master" delay={0.3} unlocked={stats.cellsToggled >= 10} />
-                <Badge icon=">>" label="Rowing Pro" delay={0.4} unlocked={stats.boatStrokes >= 20} />
-                <Badge icon="B" label="Butterfly Chaser" delay={0.5} unlocked={stats.butterfliesFollowed >= 25} />
-                <Badge icon="!" label="Celebration" delay={0.6} unlocked={stats.cranesReleased >= 15} />
-                <Badge icon="S" label="Secret Keeper" delay={0.7} unlocked={stats.secretsFound.length > 0} />
-                <Badge icon="L" label="Lore Master" delay={0.8} unlocked={stats.loreCollected >= 3} />
-                <Badge icon="X" label="Breakthrough" delay={0.9} unlocked={stats.shattersTriggered > 0} />
-                <Badge icon="F" label="Critter Friend" delay={1.0} unlocked={stats.crittersFound >= 3} />
-                <Badge icon="*" label="Full Journey" delay={1.1} unlocked={totalBeats >= 30} />
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <Badge label="First Fold" delay={0} unlocked={stats.jumpsMade > 0} />
+                <Badge label="Storm Rider" delay={0.05} unlocked={stats.windGenerated > 10} />
+                <Badge label="Leaf Collector" delay={0.1} unlocked={stats.leavesCollected >= 8} />
+                <Badge label="Cell Master" delay={0.15} unlocked={stats.cellsToggled >= 10} />
+                <Badge label="Rowing Pro" delay={0.2} unlocked={stats.boatStrokes >= 20} />
+                <Badge label="Butterfly Chaser" delay={0.25} unlocked={stats.butterfliesFollowed >= 25} />
+                <Badge label="Celebration" delay={0.3} unlocked={stats.cranesReleased >= 15} />
+                <Badge label="Secret Keeper" delay={0.35} unlocked={stats.secretsFound.length > 0} />
+                <Badge label="Full Journey" delay={0.4} unlocked={totalBeats >= 30} />
               </div>
             </div>
           )}
 
-          {/* Secrets discovered */}
+          {/* Secrets */}
           {stats.secretsFound.length > 0 && showDetails && (
             <div style={{
-              background: "rgba(251,191,36,0.1)", border: "2px solid #fbbf24", borderRadius: 14,
-              padding: "14px 18px", marginBottom: 20, textAlign: "left",
+              background: "rgba(251,191,36,0.1)", border: "2px solid #fbbf24", borderRadius: 12,
+              padding: "14px 18px", marginBottom: 24, textAlign: "left",
             }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: "#1a1a2e", textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>
                 Secret Words Discovered
@@ -361,7 +266,7 @@ export default function EndScreen({ stats, onRestart }: EndScreenProps) {
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {Array.from(new Set(stats.secretsFound)).map((word, i) => (
                   <span key={i} style={{
-                    background: "#1a1a2e", color: "#fbbf24", borderRadius: 8,
+                    background: "#1a1a2e", color: "#fbbf24", borderRadius: 6,
                     padding: "4px 12px", fontSize: 12, fontFamily: "monospace", fontWeight: 700,
                   }}>
                     {word}
@@ -372,85 +277,72 @@ export default function EndScreen({ stats, onRestart }: EndScreenProps) {
           )}
 
           {/* Buttons */}
-          <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap", opacity: 0 }}
-            ref={el => { if (el) gsap.to(el, { opacity: 1, duration: 0.8, delay: 2.5 }); }}>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", opacity: 0 }}
+            ref={el => { if (el) gsap.to(el, { opacity: 1, duration: 0.8, delay: 2.2 }); }}>
             <button onClick={onRestart} style={{
-              background: "#1a1a2e", color: "#fff", border: "none", borderRadius: 14,
-              padding: "16px 40px", fontSize: 15, fontFamily: "Georgia, serif", cursor: "pointer",
-              boxShadow: "4px 4px 0 #6b7280", fontWeight: 600, transition: "transform 0.15s, box-shadow 0.15s",
+              background: "#1a1a2e", color: "#fff", border: "none", borderRadius: 10,
+              padding: "14px 36px", fontSize: 14, fontFamily: "Georgia, serif", cursor: "pointer",
+              boxShadow: "3px 3px 0 #6b7280", fontWeight: 700,
+              transition: "transform 0.15s, box-shadow 0.15s",
             }}
-              onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "5px 5px 0 #6b7280"; window.dispatchEvent(new CustomEvent("button-hover")); }}
-              onMouseLeave={e => { e.currentTarget.style.transform = "translate(0,0)"; e.currentTarget.style.boxShadow = "4px 4px 0 #6b7280"; window.dispatchEvent(new CustomEvent("hover-out")); }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 #6b7280"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "translate(0,0)"; e.currentTarget.style.boxShadow = "3px 3px 0 #6b7280"; }}
             >
               Play Again
             </button>
             <button onClick={captureScreenshot} disabled={isCapturing} style={{
-              background: "#fbbf24", color: "#1a1a2e", border: "2px solid #1a1a2e", borderRadius: 14,
-              padding: "14px 28px", fontSize: 15, fontFamily: "Georgia, serif", cursor: isCapturing ? "wait" : "pointer",
-              boxShadow: "3px 3px 0 #1a1a2e", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 8,
-              transition: "transform 0.15s, box-shadow 0.15s", opacity: isCapturing ? 0.7 : 1,
-            }}
-              onMouseEnter={e => { if (!isCapturing) { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 #1a1a2e"; window.dispatchEvent(new CustomEvent("button-hover")); } }}
-              onMouseLeave={e => { e.currentTarget.style.transform = "translate(0,0)"; e.currentTarget.style.boxShadow = "3px 3px 0 #1a1a2e"; window.dispatchEvent(new CustomEvent("hover-out")); }}
-            >
-              {isCapturing ? "📸 Capturing..." : "📤 Share Your Journey"}
-            </button>
-            <a href="/about" style={{
-              background: "#fff", color: "#1a1a2e", border: "2px solid #1a1a2e", borderRadius: 14,
-              padding: "14px 28px", fontSize: 15, fontFamily: "Georgia, serif", cursor: "pointer",
-              boxShadow: "3px 3px 0 #1a1a2e", fontWeight: 600, textDecoration: "none",
-              display: "inline-flex", alignItems: "center", gap: 8,
+              background: "#fbbf24", color: "#1a1a2e", border: "2px solid #1a1a2e", borderRadius: 10,
+              padding: "12px 28px", fontSize: 14, fontFamily: "Georgia, serif", cursor: isCapturing ? "wait" : "pointer",
+              boxShadow: "3px 3px 0 #1a1a2e", fontWeight: 700, opacity: isCapturing ? 0.6 : 1,
               transition: "transform 0.15s, box-shadow 0.15s",
             }}
-              onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 #1a1a2e"; window.dispatchEvent(new CustomEvent("button-hover")); }}
-              onMouseLeave={e => { e.currentTarget.style.transform = "translate(0,0)"; e.currentTarget.style.boxShadow = "3px 3px 0 #1a1a2e"; window.dispatchEvent(new CustomEvent("hover-out")); }}
+              onMouseEnter={e => { if (!isCapturing) { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 #1a1a2e"; }}}
+              onMouseLeave={e => { e.currentTarget.style.transform = "translate(0,0)"; e.currentTarget.style.boxShadow = "3px 3px 0 #1a1a2e"; }}
             >
-              About the Project
+              {isCapturing ? "Capturing..." : "Share Journey"}
+            </button>
+            <a href="/about" style={{
+              background: "#fff", color: "#1a1a2e", border: "2px solid #1a1a2e", borderRadius: 10,
+              padding: "12px 28px", fontSize: 14, fontFamily: "Georgia, serif", cursor: "pointer",
+              boxShadow: "3px 3px 0 #1a1a2e", fontWeight: 700, textDecoration: "none",
+              transition: "transform 0.15s, box-shadow 0.15s",
+            }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 #1a1a2e"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "translate(0,0)"; e.currentTarget.style.boxShadow = "3px 3px 0 #1a1a2e"; }}
+            >
+              About
             </a>
           </div>
 
-          {/* Hidden share card for screenshot */}
-          <div ref={shareCardRef} style={{
+          {/* Footer */}
+          <div style={{ fontSize: 11, color: "#1a1a2e", marginTop: 24, opacity: 0 }}
+            ref={el => { if (el) gsap.to(el, { opacity: 0.3, duration: 1, delay: 2.8 }); }}>
+            Thank you for experiencing DRIFT.
+          </div>
+
+          {/* Hidden share card */}
+          <div ref={shareCardRef} aria-hidden="true" style={{
             position: "fixed", left: "-9999px", top: 0, width: 500, padding: "32px 28px",
             background: "#fdf6e3", fontFamily: "Georgia, serif", color: "#1a1a2e",
-            border: "3px solid #1a1a2e", borderRadius: 20,
+            border: "2px solid #1a1a2e", borderRadius: 16,
           }}>
             <div style={{ fontSize: 28, fontWeight: "bold", letterSpacing: -2, marginBottom: 4 }}>DRIFT</div>
-            <div style={{ fontSize: 12, opacity: 0.5, marginBottom: 20 }}>A Paper World — Journey Complete</div>
-
+            <div style={{ fontSize: 12, opacity: 0.5, marginBottom: 20 }}>A Paper World -- Journey Complete</div>
             <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
-              <div style={{ flex: 1, minWidth: 90, padding: "12px 14px", background: "rgba(255,255,255,0.7)", borderRadius: 12, border: "2px solid #1a1a2e", textAlign: "center" }}>
+              <div style={{ flex: 1, minWidth: 90, padding: "12px 14px", background: "#fff", borderRadius: 10, border: "2px solid #1a1a2e", textAlign: "center" }}>
                 <div style={{ fontSize: 24, fontWeight: "bold", fontFamily: "monospace" }}>{formatTime(totalTime)}</div>
                 <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: 1.5, fontWeight: 700, opacity: 0.6 }}>Time</div>
               </div>
-              <div style={{ flex: 1, minWidth: 90, padding: "12px 14px", background: "rgba(255,255,255,0.7)", borderRadius: 12, border: "2px solid #1a1a2e", textAlign: "center" }}>
+              <div style={{ flex: 1, minWidth: 90, padding: "12px 14px", background: "#fff", borderRadius: 10, border: "2px solid #1a1a2e", textAlign: "center" }}>
                 <div style={{ fontSize: 24, fontWeight: "bold", fontFamily: "monospace" }}>{totalBeats}</div>
                 <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: 1.5, fontWeight: 700, opacity: 0.6 }}>Beats</div>
               </div>
-              <div style={{ flex: 1, minWidth: 90, padding: "12px 14px", background: "rgba(255,255,255,0.7)", borderRadius: 12, border: "2px solid #1a1a2e", textAlign: "center" }}>
-                <div style={{ fontSize: 24, fontWeight: "bold", fontFamily: "monospace" }}> {stats.secretsFound.length}</div>
+              <div style={{ flex: 1, minWidth: 90, padding: "12px 14px", background: "#fff", borderRadius: 10, border: "2px solid #1a1a2e", textAlign: "center" }}>
+                <div style={{ fontSize: 24, fontWeight: "bold", fontFamily: "monospace" }}>{stats.secretsFound.length}</div>
                 <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: 1.5, fontWeight: 700, opacity: 0.6 }}>Secrets</div>
               </div>
             </div>
-
-            <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-              <div style={{ padding: "8px 14px", background: "#1a1a2e", color: "#fdf6e3", borderRadius: 8, fontSize: 11, fontWeight: 700 }}>
-                {stats.totalClicks} clicks
-              </div>
-              <div style={{ padding: "8px 14px", background: "#1a1a2e", color: "#fdf6e3", borderRadius: 8, fontSize: 11, fontWeight: 700 }}>
-                {stats.leavesCollected} leaves
-              </div>
-              <div style={{ padding: "8px 14px", background: "#1a1a2e", color: "#fdf6e3", borderRadius: 8, fontSize: 11, fontWeight: 700 }}>
-                {stats.butterfliesFollowed} butterflies
-              </div>
-              <div style={{ padding: "8px 14px", background: "#1a1a2e", color: "#fdf6e3", borderRadius: 8, fontSize: 11, fontWeight: 700 }}>
-                {stats.secretsFound.length} secrets
-              </div>
-            </div>
-
-            <div style={{ fontSize: 11, opacity: 0.5, textAlign: "center" }}>
-              drift-paper.vercel.app — Can you find all the secrets?
-            </div>
+            <div style={{ fontSize: 11, opacity: 0.5, textAlign: "center" }}>drift-paper.vercel.app</div>
           </div>
 
           {/* Share modal */}
@@ -458,110 +350,60 @@ export default function EndScreen({ stats, onRestart }: EndScreenProps) {
             <div onClick={() => setShowShareModal(false)} style={{
               position: "fixed", inset: 0, zIndex: 200,
               display: "flex", alignItems: "center", justifyContent: "center",
-              background: "rgba(26,26,46,0.6)", backdropFilter: "blur(8px)",
+              background: "rgba(26,26,46,0.5)", backdropFilter: "blur(8px)",
             }}>
               <div onClick={e => e.stopPropagation()} style={{
-                background: "#fff", border: "3px solid #1a1a2e", borderRadius: 20,
-                padding: "32px 36px", boxShadow: "8px 8px 0 #1a1a2e",
-                maxWidth: 440, width: "92%", position: "relative",
+                background: "#fff", border: "2px solid #1a1a2e", borderRadius: 16,
+                padding: "28px 32px", boxShadow: "6px 6px 0 #1a1a2e",
+                maxWidth: 420, width: "92%", position: "relative",
               }}>
                 <button onClick={() => setShowShareModal(false)} style={{
-                  position: "absolute", top: 12, right: 12, background: "none", border: "none",
-                  fontSize: 18, cursor: "pointer", color: "#1a1a2e", opacity: 0.4,
-                  width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
-                  borderRadius: 8, transition: "opacity 0.2s",
-                }}
-                  onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-                  onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.4")}
-                >
-                  ✕
-                </button>
+                  position: "absolute", top: 10, right: 10, background: "none", border: "none",
+                  fontSize: 16, cursor: "pointer", color: "#1a1a2e", opacity: 0.3, padding: 4,
+                }}>x</button>
 
-                <div style={{ fontSize: 22, fontWeight: "bold", color: "#1a1a2e", letterSpacing: -1, marginBottom: 4 }}>
+                <div style={{ fontSize: 20, fontWeight: "bold", color: "#1a1a2e", letterSpacing: -1, marginBottom: 4 }}>
                   Share Your Journey
                 </div>
-                <div style={{ fontSize: 12, color: "#1a1a2e", opacity: 0.5, marginBottom: 20 }}>
+                <div style={{ fontSize: 12, color: "#1a1a2e", opacity: 0.4, marginBottom: 16 }}>
                   Show the world your paper adventure
                 </div>
 
-                {/* Screenshot preview */}
                 {screenshotUrl && (
-                  <div style={{ marginBottom: 20, borderRadius: 12, overflow: "hidden", border: "2px solid #1a1a2e" }}>
-                    <img src={screenshotUrl} alt="Journey screenshot" style={{ width: "100%", display: "block" }} />
+                  <div style={{ marginBottom: 16, borderRadius: 10, overflow: "hidden", border: "2px solid #1a1a2e" }}>
+                    <img src={screenshotUrl} alt="Journey" style={{ width: "100%", display: "block" }} />
                   </div>
                 )}
 
-                {/* Share buttons */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
                   <button onClick={shareToWhatsApp} style={{
-                    background: "#25D366", color: "#fff", border: "2px solid #1a1a2e", borderRadius: 12,
-                    padding: "12px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer",
-                    boxShadow: "2px 2px 0 #1a1a2e", transition: "transform 0.15s",
-                  }}
-                    onMouseEnter={e => e.currentTarget.style.transform = "translate(-1px,-1px)"}
-                    onMouseLeave={e => e.currentTarget.style.transform = "translate(0,0)"}
-                  >
-                    WhatsApp
-                  </button>
+                    background: "#25D366", color: "#fff", border: "2px solid #1a1a2e", borderRadius: 10,
+                    padding: "10px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                    boxShadow: "2px 2px 0 #1a1a2e",
+                  }}>WhatsApp</button>
                   <button onClick={shareToTwitter} style={{
-                    background: "#1DA1F2", color: "#fff", border: "2px solid #1a1a2e", borderRadius: 12,
-                    padding: "12px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer",
-                    boxShadow: "2px 2px 0 #1a1a2e", transition: "transform 0.15s",
-                  }}
-                    onMouseEnter={e => e.currentTarget.style.transform = "translate(-1px,-1px)"}
-                    onMouseLeave={e => e.currentTarget.style.transform = "translate(0,0)"}
-                  >
-                    Twitter / X
-                  </button>
+                    background: "#1DA1F2", color: "#fff", border: "2px solid #1a1a2e", borderRadius: 10,
+                    padding: "10px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                    boxShadow: "2px 2px 0 #1a1a2e",
+                  }}>Twitter / X</button>
                   <button onClick={shareToFacebook} style={{
-                    background: "#4267B2", color: "#fff", border: "2px solid #1a1a2e", borderRadius: 12,
-                    padding: "12px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer",
-                    boxShadow: "2px 2px 0 #1a1a2e", transition: "transform 0.15s",
-                  }}
-                    onMouseEnter={e => e.currentTarget.style.transform = "translate(-1px,-1px)"}
-                    onMouseLeave={e => e.currentTarget.style.transform = "translate(0,0)"}
-                  >
-                    Facebook
-                  </button>
+                    background: "#4267B2", color: "#fff", border: "2px solid #1a1a2e", borderRadius: 10,
+                    padding: "10px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                    boxShadow: "2px 2px 0 #1a1a2e",
+                  }}>Facebook</button>
                   <button onClick={copyToClipboard} style={{
-                    background: "#1a1a2e", color: "#fff", border: "2px solid #1a1a2e", borderRadius: 12,
-                    padding: "12px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer",
-                    boxShadow: "2px 2px 0 #6b7280", transition: "transform 0.15s",
-                  }}
-                    onMouseEnter={e => e.currentTarget.style.transform = "translate(-1px,-1px)"}
-                    onMouseLeave={e => e.currentTarget.style.transform = "translate(0,0)"}
-                  >
-                    Copy Text
-                  </button>
+                    background: "#1a1a2e", color: "#fff", border: "2px solid #1a1a2e", borderRadius: 10,
+                    padding: "10px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                    boxShadow: "2px 2px 0 #6b7280",
+                  }}>Copy Text</button>
                 </div>
 
                 <button onClick={downloadImage} style={{
                   width: "100%", background: "#fff", color: "#1a1a2e", border: "2px solid #1a1a2e",
-                  borderRadius: 12, padding: "12px 0", fontSize: 13, fontWeight: 700, cursor: "pointer",
-                  boxShadow: "2px 2px 0 #1a1a2e", transition: "transform 0.15s",
-                }}
-                  onMouseEnter={e => e.currentTarget.style.transform = "translate(-1px,-1px)"}
-                  onMouseLeave={e => e.currentTarget.style.transform = "translate(0,0)"}
-                >
-                  Download Screenshot
-                </button>
+                  borderRadius: 10, padding: "10px 0", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                  boxShadow: "2px 2px 0 #1a1a2e",
+                }}>Download Screenshot</button>
               </div>
-            </div>
-          )}
-
-          {/* Footer */}
-          <div style={{ fontSize: 11, color: "#1a1a2e", marginTop: 24, opacity: 0 }}
-            ref={el => { if (el) gsap.to(el, { opacity: 0.35, duration: 1, delay: 3 }); }}>
-            Thank you for experiencing DRIFT. The paper remembers your journey.
-          </div>
-          <div style={{ fontSize: 10, color: "#1a1a2e", marginTop: 10, opacity: 0 }}
-            ref={el => { if (el) gsap.to(el, { opacity: 0.25, duration: 1, delay: 3.5 }); }}>
-            WASD/HJKL to move &middot; Ctrl+K commands &middot; Ctrl+~ terminal &middot; Type secret words like &ldquo;wind&rdquo; or &ldquo;fold&rdquo;
-          </div>
-          {stats.foldsUnlocked && (
-            <div style={{ fontSize: 10, color: "#fbbf24", marginTop: 8, opacity: 0 }}
-              ref={el => { if (el) gsap.to(el, { opacity: 0.5, duration: 1, delay: 4 }); }}>
-              The secret fold has been unlocked. The paper remembers.
             </div>
           )}
         </div>

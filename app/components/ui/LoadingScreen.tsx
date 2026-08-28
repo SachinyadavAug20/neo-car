@@ -5,20 +5,17 @@ import gsap from "gsap";
 
 export default function LoadingScreen() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const progressRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // Animate progress bar
     const interval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 100) { clearInterval(interval); return 100; }
-        return prev + Math.random() * 15 + 5;
+        return Math.min(prev + Math.random() * 15 + 5, 100);
       });
     }, 200);
 
-    // Animate text
     if (textRef.current) {
       gsap.fromTo(textRef.current,
         { opacity: 0, y: 10 },
@@ -32,13 +29,17 @@ export default function LoadingScreen() {
   return (
     <div
       ref={containerRef}
+      role="progressbar"
+      aria-valuenow={Math.min(Math.round(progress), 100)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label="Loading DRIFT"
       style={{
         position: "fixed", inset: 0, zIndex: 100,
         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
         background: "#fdf6e3", fontFamily: "Georgia, serif",
       }}
     >
-      {/* Paper crane SVG */}
       <div style={{ marginBottom: 32, opacity: 0.6 }}>
         <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
           <path d="M30 8 L52 30 L30 26 L8 30 Z" fill="#1a1a2e" opacity="0.8"/>
@@ -56,19 +57,15 @@ export default function LoadingScreen() {
           Loading the paper world...
         </div>
 
-        {/* Progress bar */}
         <div style={{
           width: 200, height: 4, background: "#e5e7eb", borderRadius: 2,
           overflow: "hidden", margin: "0 auto",
         }}>
-          <div
-            ref={progressRef}
-            style={{
-              width: `${Math.min(progress, 100)}%`, height: "100%",
-              background: "#1a1a2e", borderRadius: 2,
-              transition: "width 0.3s ease-out",
-            }}
-          />
+          <div style={{
+            width: `${Math.min(progress, 100)}%`, height: "100%",
+            background: "#1a1a2e", borderRadius: 2,
+            transition: "width 0.3s ease-out",
+          }} />
         </div>
 
         <div style={{ fontSize: 11, color: "#1a1a2e", opacity: 0.3, marginTop: 12 }}>
@@ -76,7 +73,6 @@ export default function LoadingScreen() {
         </div>
       </div>
 
-      {/* Bottom hint */}
       <div style={{
         position: "absolute", bottom: 24, fontSize: 11, color: "#1a1a2e", opacity: 0.25,
       }}>

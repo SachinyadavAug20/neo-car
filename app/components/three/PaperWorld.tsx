@@ -2013,7 +2013,7 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
       {currentAct >= 7 && (
         <group position={ACT_POSITIONS.water}>
           {/* Physics pendulum near Pip */}
-          <PhysicsPendulum position={[3, 5, 0]} length={2} color="#f472bfa" bobSize={0.2} />
+          <PhysicsPendulum position={[3, 5, 0]} length={2} color="#f472b6" bobSize={0.2} />
         </group>
       )}
 
