@@ -337,7 +337,7 @@ export default function Scene() {
     return (
       <div style={{
         position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
-        zIndex: 50, fontFamily: "Georgia, serif", background: "#fdf6e3",
+        zIndex: 50, fontFamily: "Georgia, serif", background: "var(--bg)",
       }}>
         <TitleScreen onStart={handleStart} folds={folds} resetFolds={resetFolds} />
       </div>
@@ -516,21 +516,21 @@ function LoreModal({ entry, onClose }: { entry: LoreEntry; onClose: () => void }
   const renderMarkdown = (md: string) => {
     return md.split("\n").map((line, i) => {
       if (line.startsWith("## ")) {
-        return <h2 key={i} style={{ fontSize: 18, fontWeight: 700, color: "#1a1a2e", marginTop: i === 0 ? 0 : 16, marginBottom: 8 }}>{line.slice(3)}</h2>;
+        return <h2 key={i} style={{ fontSize: 18, fontWeight: 700, color: "var(--text)", marginTop: i === 0 ? 0 : 16, marginBottom: 8 }}>{line.slice(3)}</h2>;
       }
       if (line.startsWith("> ")) {
-        return <blockquote key={i} style={{ borderLeft: "3px solid #a78bfa", paddingLeft: 12, color: "#1a1a2e", fontStyle: "italic", margin: "8px 0" }}>{line.slice(2)}</blockquote>;
+        return <blockquote key={i} style={{ borderLeft: "3px solid var(--accent)", paddingLeft: 12, color: "var(--text-muted)", fontStyle: "italic", margin: "8px 0" }}>{line.slice(2)}</blockquote>;
       }
       if (line.startsWith("- ")) {
-        return <li key={i} style={{ marginLeft: 16, color: "#1a1a2e" }}>{line.slice(2)}</li>;
+        return <li key={i} style={{ marginLeft: 16, color: "var(--text-muted)" }}>{line.slice(2)}</li>;
       }
       if (line.match(/^\d+\./)) {
-        return <div key={i} style={{ marginLeft: 16, color: "#1a1a2e" }}>{line}</div>;
+        return <div key={i} style={{ marginLeft: 16, color: "var(--text-muted)" }}>{line}</div>;
       }
       if (line.trim() === "") return <div key={i} style={{ height: 8 }} />;
       // Bold
       const bolded = line.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-      return <p key={i} style={{ color: "#1a1a2e", lineHeight: 1.7, margin: "4px 0" }} dangerouslySetInnerHTML={{ __html: bolded }} />;
+      return <p key={i} style={{ color: "var(--text-muted)", lineHeight: 1.7, margin: "4px 0" }} dangerouslySetInnerHTML={{ __html: bolded }} />;
     });
   };
 
@@ -547,8 +547,8 @@ function LoreModal({ entry, onClose }: { entry: LoreEntry; onClose: () => void }
       <div
         ref={contentRef}
         style={{
-          background: "#ffffff",
-          border: "1px solid #e5e7eb",
+          background: "var(--bg-card)",
+          border: "1px solid var(--border-light)",
           borderRadius: 12,
           padding: "32px 36px",
           maxWidth: 520,
@@ -557,39 +557,41 @@ function LoreModal({ entry, onClose }: { entry: LoreEntry; onClose: () => void }
           overflowY: "auto",
           boxShadow: "0 24px 64px rgba(0,0,0,0.2)",
           fontFamily: "'Georgia', serif",
+          transition: "background 0.3s, border-color 0.3s",
         }}
       >
         {/* Title bar */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
           <div>
-            <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: 2, color: "#a78bfa", marginBottom: 4, fontFamily: "monospace" }}>
+            <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: 2, color: "var(--accent)", marginBottom: 4, fontFamily: "monospace" }}>
               Lore Fragment
             </div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: "#1a1a2e", margin: 0 }}>{entry.title}</h1>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--text)", margin: 0, transition: "color 0.3s" }}>{entry.title}</h1>
           </div>
           <button
             onClick={onClose}
             style={{
-              background: "none", border: "1px solid #e5e7eb", borderRadius: 6,
-              width: 28, height: 28, cursor: "pointer", color: "#1a1a2e",
+              background: "none", border: "1px solid var(--border-light)", borderRadius: 6,
+              width: 28, height: 28, cursor: "pointer", color: "var(--text-muted)",
               display: "flex", alignItems: "center", justifyContent: "center",
               fontSize: 14, fontFamily: "monospace",
+              transition: "border-color 0.3s, color 0.3s",
             }}
           >
             ×
           </button>
         </div>
 
-        <div style={{ width: "100%", height: 1, background: "#f3f4f6", margin: "0 0 16px" }} />
+        <div style={{ width: "100%", height: 1, background: "var(--border-light)", margin: "0 0 16px", transition: "background 0.3s" }} />
 
         {/* Content */}
         <div style={{ fontSize: 14, lineHeight: 1.6 }}>
           {renderMarkdown(entry.content)}
         </div>
 
-        <div style={{ width: "100%", height: 1, background: "#f3f4f6", margin: "16px 0 12px" }} />
+        <div style={{ width: "100%", height: 1, background: "var(--border-light)", margin: "16px 0 12px", transition: "background 0.3s" }} />
 
-        <div style={{ fontSize: 10, color: "#1a1a2e", textAlign: "center", fontFamily: "monospace", fontWeight: 600 }}>
+        <div style={{ fontSize: 10, color: "var(--text-muted)", textAlign: "center", fontFamily: "monospace", fontWeight: 600, transition: "color 0.3s" }}>
           Press Esc or click outside to close
         </div>
       </div>

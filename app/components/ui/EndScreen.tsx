@@ -225,7 +225,7 @@ export default function EndScreen({ stats, onRestart }: EndScreenProps) {
             <button onClick={captureScreenshot} disabled={isCapturing} style={{
               ...card, borderRadius: 10, padding: "12px 28px", fontSize: 14, fontFamily: "Georgia, serif",
               cursor: isCapturing ? "wait" : "pointer", boxShadow: "3px 3px 0 var(--shadow)", fontWeight: 700,
-              opacity: isCapturing ? 0.6 : 1, background: "var(--accent)", color: "#1a1a2e",
+              opacity: isCapturing ? 0.6 : 1, background: "var(--accent)", color: "var(--text)",
               transition: "transform 0.15s, box-shadow 0.15s",
             }}
               onMouseEnter={e => { if (!isCapturing) { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "4px 4px 0 var(--shadow)"; }}}
