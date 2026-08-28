@@ -34,7 +34,6 @@ export default function NarrativeOverlay({
   const beat = getCurrentBeat(state);
   const isInteraction = beat?.interaction && beat.interaction !== "none" && state.interactionState !== "complete";
 
-  // Jump feedback
   useEffect(() => {
     const handler = () => {
       setFlashOpacity(0.15);
@@ -49,7 +48,6 @@ export default function NarrativeOverlay({
     return () => window.removeEventListener("milo-jump", handler);
   }, []);
 
-  // Animate story text
   useEffect(() => {
     if (!beat || !textRef.current) return;
     const tl = gsap.timeline();
@@ -60,7 +58,6 @@ export default function NarrativeOverlay({
     return () => { tl.kill(); };
   }, [state.currentAct, state.currentBeat]);
 
-  // Animate act title
   useEffect(() => {
     if (!act || !actTitleRef.current) return;
     const tl = gsap.timeline();
@@ -70,7 +67,6 @@ export default function NarrativeOverlay({
     return () => { tl.kill(); };
   }, [state.currentAct]);
 
-  // Animate interaction UI
   useEffect(() => {
     if (!interactionUIRef.current) return;
     if (isInteraction) {
@@ -79,12 +75,10 @@ export default function NarrativeOverlay({
     }
   }, [isInteraction, state.interactionState]);
 
-  // End screen
   useEffect(() => {
     if (state.ended) setTimeout(() => setShowEnd(true), 2500);
   }, [state.ended]);
 
-  // Advance story
   const handleSkip = useCallback(() => {
     if (state.isAnimating) return;
     const beat = getCurrentBeat(state);
@@ -98,7 +92,6 @@ export default function NarrativeOverlay({
     onAdvance(nextBeat(state));
   }, [state, onAdvance]);
 
-  // Keyboard
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === " " || e.key === "Enter") { e.preventDefault(); handleSkip(); }
@@ -107,7 +100,6 @@ export default function NarrativeOverlay({
     return () => window.removeEventListener("keydown", handler);
   }, [handleSkip]);
 
-  // Cinematic fade
   const [fadeOpacity, setFadeOpacity] = useState(0);
   useEffect(() => {
     if (state.ended) {
@@ -135,11 +127,19 @@ export default function NarrativeOverlay({
 
   const progress = beat?.interactionTarget ? state.interactionProgress / beat.interactionTarget : 0;
 
+  // Shared card style
+  const card = {
+    background: "var(--bg-card)",
+    border: "2px solid var(--border)",
+    color: "var(--text)",
+    transition: "background 0.3s, color 0.3s, border-color 0.3s",
+  } as const;
+
   return (
     <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 20, fontFamily: "Georgia, serif" }}>
       {/* Screen flash */}
       <div style={{
-        position: "absolute", inset: 0, background: "#fbbf24",
+        position: "absolute", inset: 0, background: "var(--accent)",
         opacity: flashOpacity, transition: "opacity 0.12s", pointerEvents: "none",
       }} />
 
@@ -147,8 +147,8 @@ export default function NarrativeOverlay({
       {floatTexts.map((t) => (
         <div key={t.id} style={{
           position: "absolute", left: `${t.x}%`, top: `${t.y}%`,
-          fontSize: 24, fontWeight: 700, color: "#f59e0b",
-          textShadow: "0 1px 4px rgba(245,158,11,0.3)",
+          fontSize: 24, fontWeight: 700, color: "var(--accent)",
+          textShadow: "0 1px 4px var(--shadow-color)",
           animation: "floatUp 1s ease-out forwards", pointerEvents: "none",
         }}>
           +1
@@ -158,8 +158,9 @@ export default function NarrativeOverlay({
       {/* Cinematic fade */}
       {state.ended && (
         <div style={{
-          position: "absolute", inset: 0, background: "#fdf6e3",
+          position: "absolute", inset: 0, background: "var(--bg)",
           opacity: fadeOpacity, pointerEvents: "none", zIndex: 100,
+          transition: "background 0.3s",
         }} />
       )}
 
@@ -169,19 +170,19 @@ export default function NarrativeOverlay({
           position: "absolute", top: "14%", left: 0, right: 0, textAlign: "center",
           opacity: 0, pointerEvents: "none",
         }}>
-          <div style={{ fontSize: 11, color: "#1a1a2e", letterSpacing: 3, textTransform: "uppercase", marginBottom: 8, fontWeight: 600, opacity: 0.45 }}>
+          <div style={{ fontSize: 11, color: "var(--text-muted)", letterSpacing: 3, textTransform: "uppercase", marginBottom: 8, fontWeight: 600, transition: "color 0.3s" }}>
             Act {act.id}
           </div>
-          <div style={{ fontSize: 28, fontWeight: "bold", color: "#1a1a2e", letterSpacing: -1 }}>
+          <div style={{ fontSize: 28, fontWeight: "bold", color: "var(--text)", letterSpacing: -1, transition: "color 0.3s" }}>
             {act.title}
           </div>
-          <div style={{ fontSize: 14, color: "#1a1a2e", fontStyle: "italic", marginTop: 8, opacity: 0.5 }}>
+          <div style={{ fontSize: 14, color: "var(--text-muted)", fontStyle: "italic", marginTop: 8, opacity: 0.6, transition: "color 0.3s" }}>
             {act.subtitle}
           </div>
         </div>
       )}
 
-      {/* Bottom section: story + interactions + progress */}
+      {/* Bottom section */}
       {beat && (
         <div style={{
           position: "absolute", bottom: 0, left: 0, right: 0,
@@ -192,111 +193,66 @@ export default function NarrativeOverlay({
           {isInteraction && (
             <div ref={interactionUIRef} style={{ marginBottom: 14, opacity: 0 }}>
               {beat.interaction === "click-jump" && (
-                <div style={{
-                  background: "#fff", border: "2px solid #1a1a2e", borderRadius: 12,
-                  padding: "14px 24px", boxShadow: "3px 3px 0 #1a1a2e",
-                  textAlign: "center",
-                }}>
-                  <div style={{ fontSize: 13, color: "#1a1a2e", fontWeight: 700, marginBottom: 8 }}>
-                    Click anywhere to make Milo jump
-                  </div>
+                <div style={{ ...card, borderRadius: 12, padding: "14px 24px", boxShadow: "3px 3px 0 var(--shadow)", textAlign: "center" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Click anywhere to make Milo jump</div>
                   <div style={{ display: "flex", gap: 5, justifyContent: "center" }}>
                     {Array.from({ length: beat.interactionTarget || 5 }).map((_, i) => (
                       <div key={i} style={{
-                        width: 10, height: 10, borderRadius: "50%", border: "2px solid #1a1a2e",
-                        background: i < state.interactionProgress ? "#fbbf24" : "transparent",
-                        transition: "background 0.2s",
+                        width: 10, height: 10, borderRadius: "50%", border: "2px solid var(--border)",
+                        background: i < state.interactionProgress ? "var(--accent)" : "transparent",
+                        transition: "background 0.2s, border-color 0.3s",
                       }} />
                     ))}
                   </div>
                 </div>
               )}
               {beat.interaction === "drag-wind" && (
-                <div style={{
-                  background: "#fff", border: "2px solid #1a1a2e", borderRadius: 12,
-                  padding: "14px 24px", boxShadow: "3px 3px 0 #1a1a2e",
-                  textAlign: "center",
-                }}>
-                  <div style={{ fontSize: 13, color: "#1a1a2e", fontWeight: 700, marginBottom: 8 }}>
-                    Click and drag to create wind
+                <div style={{ ...card, borderRadius: 12, padding: "14px 24px", boxShadow: "3px 3px 0 var(--shadow)", textAlign: "center" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Click and drag to create wind</div>
+                  <div style={{ width: 140, height: 6, background: "var(--border-light)", borderRadius: 3, overflow: "hidden", border: "1px solid var(--border-light)", margin: "0 auto", transition: "background 0.3s" }}>
+                    <div style={{ width: `${progress * 100}%`, height: "100%", background: "var(--text)", borderRadius: 3, transition: "width 0.1s, background 0.3s" }} />
                   </div>
-                  <div style={{ width: 140, height: 6, background: "#e5e7eb", borderRadius: 3, overflow: "hidden", border: "1px solid #d1d5db", margin: "0 auto" }}>
-                    <div style={{ width: `${progress * 100}%`, height: "100%", background: "#1a1a2e", borderRadius: 3, transition: "width 0.1s" }} />
-                  </div>
-                  <div style={{ fontSize: 11, color: "#1a1a2e", marginTop: 6, fontWeight: 600 }}>
-                    {state.interactionProgress} / {beat.interactionTarget}
-                  </div>
+                  <div style={{ fontSize: 11, marginTop: 6, fontWeight: 600 }}>{state.interactionProgress} / {beat.interactionTarget}</div>
                 </div>
               )}
               {beat.interaction === "click-unfold" && (
-                <div style={{
-                  background: "#fbbf24", border: "2px solid #1a1a2e", borderRadius: 12,
-                  padding: "14px 24px", boxShadow: "3px 3px 0 #1a1a2e",
-                  textAlign: "center",
-                }}>
-                  <div style={{ fontSize: 13, color: "#1a1a2e", fontWeight: 700 }}>
-                    Click the glowing golden paper
-                  </div>
+                <div style={{ ...card, background: "var(--accent)", borderRadius: 12, padding: "14px 24px", boxShadow: "3px 3px 0 var(--shadow)", textAlign: "center", color: "#1a1a2e" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>Click the glowing golden paper</div>
                 </div>
               )}
               {beat.interaction === "collect-leaves" && (
-                <div style={{
-                  background: "#fff", border: "2px solid #1a1a2e", borderRadius: 12,
-                  padding: "14px 24px", boxShadow: "3px 3px 0 #1a1a2e",
-                  textAlign: "center",
-                }}>
-                  <div style={{ fontSize: 13, color: "#1a1a2e", fontWeight: 700, marginBottom: 8 }}>
-                    Collect the glowing leaves
-                  </div>
+                <div style={{ ...card, borderRadius: 12, padding: "14px 24px", boxShadow: "3px 3px 0 var(--shadow)", textAlign: "center" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Collect the glowing leaves</div>
                   <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
                     {Array.from({ length: beat.interactionTarget || 8 }).map((_, i) => (
                       <div key={i} style={{
-                        width: 8, height: 8, borderRadius: "50%", border: "2px solid #1a1a2e",
+                        width: 8, height: 8, borderRadius: "50%", border: "2px solid var(--border)",
                         background: i < state.interactionProgress ? "#22c55e" : "transparent",
-                        transition: "background 0.2s",
+                        transition: "background 0.2s, border-color 0.3s",
                       }} />
                     ))}
                   </div>
                 </div>
               )}
               {beat.interaction === "toggle-cells" && (
-                <div style={{
-                  background: "#faf5ff", border: "2px solid #1a1a2e", borderRadius: 12,
-                  padding: "14px 24px", boxShadow: "3px 3px 0 #1a1a2e",
-                  textAlign: "center",
-                }}>
-                  <div style={{ fontSize: 13, color: "#1a1a2e", fontWeight: 700, marginBottom: 8 }}>
-                    Click the grid cells to awaken the pattern
-                  </div>
-                  <div style={{ width: 140, height: 6, background: "#e5e7eb", borderRadius: 3, overflow: "hidden", border: "1px solid #d1d5db", margin: "0 auto" }}>
+                <div style={{ ...card, borderRadius: 12, padding: "14px 24px", boxShadow: "3px 3px 0 var(--shadow)", textAlign: "center" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Click the grid cells to awaken the pattern</div>
+                  <div style={{ width: 140, height: 6, background: "var(--border-light)", borderRadius: 3, overflow: "hidden", border: "1px solid var(--border-light)", margin: "0 auto", transition: "background 0.3s" }}>
                     <div style={{ width: `${progress * 100}%`, height: "100%", background: "#a78bfa", borderRadius: 3, transition: "width 0.1s" }} />
                   </div>
                 </div>
               )}
               {beat.interaction === "row-boat" && (
-                <div style={{
-                  background: "#fff", border: "2px solid #1a1a2e", borderRadius: 12,
-                  padding: "14px 24px", boxShadow: "3px 3px 0 #1a1a2e",
-                  textAlign: "center",
-                }}>
-                  <div style={{ fontSize: 13, color: "#1a1a2e", fontWeight: 700, marginBottom: 8 }}>
-                    Click rapidly to row to Pip
-                  </div>
-                  <div style={{ width: 140, height: 6, background: "#e5e7eb", borderRadius: 3, overflow: "hidden", border: "1px solid #d1d5db", margin: "0 auto" }}>
+                <div style={{ ...card, borderRadius: 12, padding: "14px 24px", boxShadow: "3px 3px 0 var(--shadow)", textAlign: "center" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Click rapidly to row to Pip</div>
+                  <div style={{ width: 140, height: 6, background: "var(--border-light)", borderRadius: 3, overflow: "hidden", border: "1px solid var(--border-light)", margin: "0 auto", transition: "background 0.3s" }}>
                     <div style={{ width: `${progress * 100}%`, height: "100%", background: "#67e8f9", borderRadius: 3, transition: "width 0.1s" }} />
                   </div>
                 </div>
               )}
               {beat.interaction === "celebrate" && (
-                <div style={{
-                  background: "linear-gradient(135deg, #fbbf24, #f472b6, #a78bfa)",
-                  border: "2px solid #1a1a2e", borderRadius: 12,
-                  padding: "14px 24px", boxShadow: "3px 3px 0 #1a1a2e",
-                  textAlign: "center",
-                }}>
-                  <div style={{ fontSize: 13, color: "#1a1a2e", fontWeight: 700, marginBottom: 8 }}>
-                    Click to release paper cranes
-                  </div>
+                <div style={{ ...card, background: "linear-gradient(135deg, #fbbf24, #f472b6, #a78bfa)", borderRadius: 12, padding: "14px 24px", boxShadow: "3px 3px 0 var(--shadow)", textAlign: "center", color: "#1a1a2e" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Click to release paper cranes</div>
                   <div style={{ display: "flex", gap: 3, justifyContent: "center" }}>
                     {Array.from({ length: beat.interactionTarget || 15 }).map((_, i) => (
                       <div key={i} style={{
@@ -309,20 +265,14 @@ export default function NarrativeOverlay({
                 </div>
               )}
               {beat.interaction === "follow-butterfly" && (
-                <div style={{
-                  background: "#fff", border: "2px solid #1a1a2e", borderRadius: 12,
-                  padding: "14px 24px", boxShadow: "3px 3px 0 #1a1a2e",
-                  textAlign: "center",
-                }}>
-                  <div style={{ fontSize: 13, color: "#1a1a2e", fontWeight: 700, marginBottom: 8 }}>
-                    Follow the butterfly through the world
-                  </div>
+                <div style={{ ...card, borderRadius: 12, padding: "14px 24px", boxShadow: "3px 3px 0 var(--shadow)", textAlign: "center" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Follow the butterfly through the world</div>
                   <div style={{ display: "flex", gap: 3, justifyContent: "center" }}>
                     {Array.from({ length: beat.interactionTarget || 25 }).map((_, i) => (
                       <div key={i} style={{
-                        width: 5, height: 5, borderRadius: "50%", border: "1.5px solid #1a1a2e",
+                        width: 5, height: 5, borderRadius: "50%", border: "1.5px solid var(--border)",
                         background: i < state.interactionProgress ? "#a78bfa" : "transparent",
-                        transition: "background 0.2s",
+                        transition: "background 0.2s, border-color 0.3s",
                       }} />
                     ))}
                   </div>
@@ -333,17 +283,16 @@ export default function NarrativeOverlay({
 
           {/* Story text card */}
           <div style={{
-            maxWidth: 500, width: "100%", textAlign: "center",
-            background: "#fff", border: "2px solid #1a1a2e", borderRadius: 14,
-            padding: "18px 28px", boxShadow: "4px 4px 0 #1a1a2e",
+            ...card, maxWidth: 500, width: "100%", textAlign: "center",
+            borderRadius: 14, padding: "18px 28px", boxShadow: "4px 4px 0 var(--shadow)",
             marginBottom: 14,
           }}>
-            <div ref={textRef} style={{ fontSize: 15, color: "#1a1a2e", lineHeight: 1.8, opacity: 0 }}>
+            <div ref={textRef} style={{ fontSize: 15, lineHeight: 1.8, opacity: 0 }}>
               {beat.text}
             </div>
             <div ref={charRef} style={{
-              fontSize: 11, color: "#1a1a2e", marginTop: 10, fontStyle: "italic", opacity: 0,
-              fontWeight: 700, textTransform: "lowercase", letterSpacing: 0.5,
+              fontSize: 11, marginTop: 10, fontStyle: "italic", opacity: 0,
+              fontWeight: 700, textTransform: "lowercase", letterSpacing: 0.5, color: "var(--text-muted)",
             }}>
               {beat.character && beat.character !== "narrator" && beat.character !== "prompt"
                 ? `-- ${beat.character}` : ""}
@@ -356,10 +305,9 @@ export default function NarrativeOverlay({
               onMouseEnter={() => window.dispatchEvent(new CustomEvent("button-hover"))}
               onMouseLeave={() => window.dispatchEvent(new CustomEvent("hover-out"))}
               style={{
-                background: "#fff", border: "2px solid #1a1a2e", borderRadius: 8,
-                padding: "8px 20px", fontSize: 12, fontFamily: "Georgia, serif", cursor: "pointer",
-                color: "#1a1a2e", fontWeight: 700, boxShadow: "2px 2px 0 #1a1a2e",
-                marginBottom: 12, pointerEvents: "auto",
+                ...card, borderRadius: 8, padding: "8px 20px", fontSize: 12,
+                fontFamily: "Georgia, serif", cursor: "pointer", fontWeight: 700,
+                boxShadow: "2px 2px 0 var(--shadow)", marginBottom: 12, pointerEvents: "auto",
               }}>
               Continue
             </button>
@@ -373,9 +321,9 @@ export default function NarrativeOverlay({
               return (
                 <div key={i} style={{
                   width: isCurrent ? 20 : 8, height: 8, borderRadius: 4,
-                  background: isCurrent ? "#fbbf24" : isComplete ? "#1a1a2e" : "#e5e7eb",
-                  border: "1.5px solid #1a1a2e", transition: "all 0.3s ease",
-                  boxShadow: isCurrent ? "0 0 8px rgba(251,191,36,0.4)" : "none",
+                  background: isCurrent ? "var(--accent)" : isComplete ? "var(--text)" : "var(--border-light)",
+                  border: "1.5px solid var(--border)", transition: "all 0.3s ease",
+                  boxShadow: isCurrent ? "0 0 8px var(--accent)" : "none",
                 }} />
               );
             })}
@@ -389,9 +337,8 @@ export default function NarrativeOverlay({
         display: "flex", justifyContent: "space-between", alignItems: "center",
       }}>
         <div style={{
-          background: "#fff", border: "2px solid #1a1a2e", borderRadius: 8,
-          padding: "6px 14px", boxShadow: "2px 2px 0 #1a1a2e",
-          fontSize: 15, fontWeight: 700, color: "#1a1a2e", letterSpacing: -0.5,
+          ...card, borderRadius: 8, padding: "6px 14px", boxShadow: "2px 2px 0 var(--shadow)",
+          fontSize: 15, fontWeight: 700, letterSpacing: -0.5,
         }}>
           DRIFT
         </div>
@@ -401,19 +348,17 @@ export default function NarrativeOverlay({
             onMouseEnter={() => window.dispatchEvent(new CustomEvent("button-hover"))}
             onMouseLeave={() => window.dispatchEvent(new CustomEvent("hover-out"))}
             style={{
-              background: "#fff", border: "2px solid #1a1a2e", borderRadius: 8,
-              width: 28, height: 28, cursor: "pointer", fontSize: 13, fontWeight: 700,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "#1a1a2e", boxShadow: "2px 2px 0 #1a1a2e",
+              ...card, borderRadius: 8, width: 28, height: 28, cursor: "pointer",
+              fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "2px 2px 0 var(--shadow)",
             }}
             title="How to play"
           >
             ?
           </button>
           <div style={{
-            background: "#fff", border: "2px solid #1a1a2e", borderRadius: 8,
-            padding: "6px 12px", boxShadow: "2px 2px 0 #1a1a2e",
-            fontSize: 12, color: "#1a1a2e", fontWeight: 700,
+            ...card, borderRadius: 8, padding: "6px 12px", boxShadow: "2px 2px 0 var(--shadow)",
+            fontSize: 12, fontWeight: 700,
           }}>
             {act ? `${act.id} / ${STORY_ACTS.length}` : ""}
           </div>

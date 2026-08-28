@@ -18,6 +18,8 @@ import Fog from "./Fog";
 import { NarrativeState, INITIAL_STATE, getCurrentBeat, getCurrentAct, nextBeat, STORY_ACTS } from "@/app/lib/narrative";
 import { usePersistentFolds } from "@/app/lib/usePersistentFolds";
 import { TerminalLine } from "../ui/DraftingTerminal";
+import ThemeToggle from "../ui/ThemeToggle";
+import { useTheme } from "@/app/lib/ThemeContext";
 import gsap from "gsap";
 import * as THREE from "three";
 
@@ -596,6 +598,7 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
   const cardRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
   const mouseRef = useRef({ x: 0, y: 0 });
+  const { theme } = useTheme();
   const [particles] = useState(() => Array.from({ length: 20 }, (_, i) => ({
     id: i,
     x: Math.random() * 100,
@@ -648,13 +651,14 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
       position: "absolute", inset: 0, display: "flex", flexDirection: "column",
       alignItems: "center", justifyContent: "center", zIndex: 30,
       pointerEvents: "auto", overflow: "hidden",
+      background: "var(--bg)", transition: "background 0.3s",
     }}>
       {/* Floating paper particles */}
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
         {particles.map((p) => (
           <div key={p.id} style={{
             position: "absolute", left: `${p.x}%`, top: `${p.y}%`,
-            width: p.size, height: p.size, background: "#1a1a2e",
+            width: p.size, height: p.size, background: "var(--text)",
             opacity: p.opacity,
             borderRadius: p.id % 3 === 0 ? "50%" : p.id % 3 === 1 ? "2px" : "0",
             transform: `rotate(${p.rotation}deg)`,
@@ -669,14 +673,14 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
         display: "flex", justifyContent: "space-between", alignItems: "center",
         padding: "20px 28px", opacity: 0,
       }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: "#1a1a2e", letterSpacing: -0.5 }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", letterSpacing: -0.5, transition: "color 0.3s" }}>
           DRIFT
         </div>
         <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
-          <span style={{ fontSize: 13, color: "#1a1a2e", fontWeight: 600 }}>Home</span>
+          <span style={{ fontSize: 13, color: "var(--text)", fontWeight: 600, transition: "color 0.3s" }}>Home</span>
           <a href="/about" style={{
-            fontSize: 13, color: "#1a1a2e", textDecoration: "none", fontWeight: 600,
-            opacity: 0.5, transition: "opacity 0.2s",
+            fontSize: 13, color: "var(--text)", textDecoration: "none", fontWeight: 600,
+            opacity: 0.5, transition: "opacity 0.2s, color 0.3s",
           }}
             onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
             onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.5")}
@@ -684,8 +688,8 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
             About
           </a>
           <a href="https://github.com/SachinyadavAug20/neo-car" target="_blank" rel="noopener noreferrer" style={{
-            fontSize: 13, color: "#1a1a2e", textDecoration: "none", fontWeight: 600,
-            opacity: 0.5, transition: "opacity 0.2s", display: "flex", alignItems: "center", gap: 5,
+            fontSize: 13, color: "var(--text)", textDecoration: "none", fontWeight: 600,
+            opacity: 0.5, transition: "opacity 0.2s, color 0.3s", display: "flex", alignItems: "center", gap: 5,
           }}
             onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
             onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.5")}
@@ -695,43 +699,44 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
             </svg>
             GitHub
           </a>
+          <ThemeToggle />
         </div>
       </div>
 
       {/* Main card */}
       <div ref={cardRef} style={{
-        background: "#fff", border: "2px solid #1a1a2e", borderRadius: 16,
+        background: "var(--bg-card)", border: "2px solid var(--border)", borderRadius: 16,
         padding: "48px 56px", textAlign: "center",
-        boxShadow: "6px 6px 0 #1a1a2e",
-        maxWidth: 500, width: "90%", transition: "transform 0.1s ease-out",
+        boxShadow: "6px 6px 0 var(--shadow)",
+        maxWidth: 500, width: "90%", transition: "transform 0.1s ease-out, background 0.3s, border-color 0.3s, box-shadow 0.3s",
         willChange: "transform",
       }}>
         {/* Crane icon */}
         <div style={{ marginBottom: 20, opacity: 0.35 }}>
           <svg width="40" height="40" viewBox="0 0 60 60" fill="none" style={{ display: "block", margin: "0 auto" }}>
-            <path d="M30 8 L52 30 L30 26 L8 30 Z" fill="#1a1a2e" opacity="0.8"/>
-            <path d="M30 26 L30 52" stroke="#1a1a2e" strokeWidth="2"/>
-            <path d="M30 26 L52 30 L44 42" fill="#1a1a2e" opacity="0.6"/>
-            <path d="M30 26 L8 30 L16 42" fill="#1a1a2e" opacity="0.6"/>
+            <path d="M30 8 L52 30 L30 26 L8 30 Z" fill="currentColor" opacity="0.8"/>
+            <path d="M30 26 L30 52" stroke="currentColor" strokeWidth="2"/>
+            <path d="M30 26 L52 30 L44 42" fill="currentColor" opacity="0.6"/>
+            <path d="M30 26 L8 30 L16 42" fill="currentColor" opacity="0.6"/>
           </svg>
         </div>
 
         <div ref={titleRef} style={{
-          fontSize: 56, fontWeight: "bold", color: "#1a1a2e", letterSpacing: -3,
-          marginBottom: 6, opacity: 0, lineHeight: 1,
+          fontSize: 56, fontWeight: "bold", color: "var(--text)", letterSpacing: -3,
+          marginBottom: 6, opacity: 0, lineHeight: 1, transition: "color 0.3s",
         }}>
           DRIFT
         </div>
         <div ref={subRef} style={{
-          fontSize: 17, color: "#1a1a2e", marginBottom: 20, fontStyle: "italic",
-          opacity: 0, letterSpacing: 1.5,
+          fontSize: 17, color: "var(--text)", marginBottom: 20, fontStyle: "italic",
+          opacity: 0, letterSpacing: 1.5, transition: "color 0.3s",
         }}>
           A Paper World
         </div>
-        <div style={{ width: 48, height: 2, background: "#1a1a2e", margin: "0 auto 20px", opacity: 0.2 }} />
+        <div style={{ width: 48, height: 2, background: "var(--text)", margin: "0 auto 20px", opacity: 0.2, transition: "background 0.3s" }} />
         <div ref={textRef} style={{
-          fontSize: 15, color: "#1a1a2e", lineHeight: 1.8, marginBottom: 28,
-          opacity: 0, maxWidth: 380, margin: "0 auto 28px",
+          fontSize: 15, color: "var(--text-muted)", lineHeight: 1.8, marginBottom: 28,
+          opacity: 0, maxWidth: 380, margin: "0 auto 28px", transition: "color 0.3s",
         }}>
           There was a paper crane named Milo who could not fly.
           One wing was bigger than the other. But he never stopped jumping.
@@ -749,7 +754,8 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
           ].map((f, i) => (
             <div key={i} style={{
               display: "flex", alignItems: "center", gap: 6,
-              fontSize: 12, color: "#1a1a2e", fontWeight: 600, opacity: 0.55,
+              fontSize: 12, color: "var(--text-muted)", fontWeight: 600, opacity: 0.55,
+              transition: "color 0.3s",
             }}>
               <div style={{ width: 5, height: 5, borderRadius: "50%", background: f.dot }} />
               {f.label}
@@ -759,8 +765,8 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
 
         {folds.totalPlaythroughs > 0 && (
           <div style={{
-            fontSize: 12, color: "#1a1a2e", marginBottom: 20,
-            fontStyle: "italic", opacity: 0.4,
+            fontSize: 12, color: "var(--text-muted)", marginBottom: 20,
+            fontStyle: "italic", opacity: 0.4, transition: "color 0.3s",
           }}>
             The world remembers {folds.totalPlaythroughs} previous {folds.totalPlaythroughs === 1 ? "visit" : "visits"}.
             {folds.secretFoldUnlocked && " The secret fold was unlocked."}
@@ -768,26 +774,26 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
         )}
 
         <button ref={btnRef} onClick={onStart} style={{
-          background: "#1a1a2e", color: "#fff", border: "none", borderRadius: 10,
+          background: "var(--text)", color: "var(--bg)", border: "none", borderRadius: 10,
           padding: "15px 44px", fontSize: 15, fontFamily: "Georgia, serif", cursor: "pointer",
-          fontWeight: 600, boxShadow: "3px 3px 0 #6b7280",
-          transition: "transform 0.15s, box-shadow 0.15s", opacity: 0,
+          fontWeight: 600, boxShadow: "3px 3px 0 var(--shadow)",
+          transition: "transform 0.15s, box-shadow 0.15s, background 0.3s, color 0.3s", opacity: 0,
         }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = "translate(-1px, -1px)";
-            e.currentTarget.style.boxShadow = "4px 4px 0 #6b7280";
+            e.currentTarget.style.boxShadow = "4px 4px 0 var(--shadow)";
             window.dispatchEvent(new CustomEvent("button-hover"));
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = "translate(0, 0)";
-            e.currentTarget.style.boxShadow = "3px 3px 0 #6b7280";
+            e.currentTarget.style.boxShadow = "3px 3px 0 var(--shadow)";
             window.dispatchEvent(new CustomEvent("hover-out"));
           }}
         >
           {folds.totalPlaythroughs > 0 ? "Enter Again" : "Begin the Story"}
         </button>
-        <div style={{ fontSize: 11, color: "#1a1a2e", marginTop: 14, fontWeight: 600, opacity: 0.35, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-          <kbd style={{ padding: "2px 8px", border: "1px solid #d1d5db", borderRadius: 4, fontSize: 10, background: "#fafafa" }}>Enter</kbd>
+        <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 14, fontWeight: 600, opacity: 0.35, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "color 0.3s" }}>
+          <kbd style={{ padding: "2px 8px", border: "1px solid var(--border-light)", borderRadius: 4, fontSize: 10, background: "var(--bg-elevated)", transition: "background 0.3s, border-color 0.3s" }}>Enter</kbd>
           <span>to start</span>
         </div>
       </div>

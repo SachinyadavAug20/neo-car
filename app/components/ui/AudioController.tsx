@@ -41,13 +41,8 @@ export default function AudioController({ mood, visible = true }: AudioControlle
     const newMuted = !muted;
     setMutedState(newMuted);
     setMuted(newMuted);
-    if (newMuted) {
-      stopMusic();
-      stopAmbient();
-    } else {
-      startMusic(mood);
-      startAmbient(mood);
-    }
+    if (newMuted) { stopMusic(); stopAmbient(); }
+    else { startMusic(mood); startAmbient(mood); }
   };
 
   if (!visible) return null;
@@ -57,11 +52,12 @@ export default function AudioController({ mood, visible = true }: AudioControlle
       {showPrompt && (
         <div style={{
           position: "fixed", top: 60, left: "50%", transform: "translateX(-50%)",
-          background: "#1a1a2e", color: "#fdf6e3",
+          background: "var(--text)", color: "var(--bg)",
           borderRadius: 10, padding: "10px 20px", fontSize: 12, fontFamily: "Georgia, serif",
           zIndex: 90, display: "flex", alignItems: "center", gap: 8,
-          boxShadow: "3px 3px 0 #6b7280", cursor: "pointer",
-          border: "2px solid #1a1a2e",
+          boxShadow: "3px 3px 0 var(--shadow)", cursor: "pointer",
+          border: "2px solid var(--border)",
+          transition: "background 0.3s, color 0.3s",
         }}
           onClick={() => { initAudio(); setStarted(true); setShowPrompt(false); window.dispatchEvent(new CustomEvent("power-up")); }}
         >
@@ -73,16 +69,16 @@ export default function AudioController({ mood, visible = true }: AudioControlle
       <button
         onClick={toggle}
         data-cursor="pointer"
-        onMouseEnter={(e) => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "3px 3px 0 #1a1a2e"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.transform = "translate(0,0)"; e.currentTarget.style.boxShadow = "2px 2px 0 #1a1a2e"; }}
+        onMouseEnter={(e) => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "3px 3px 0 var(--shadow)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.transform = "translate(0,0)"; e.currentTarget.style.boxShadow = "2px 2px 0 var(--shadow)"; }}
         style={{
           position: "fixed", top: 14, right: 80, zIndex: 90,
-          background: "#fff", border: "2px solid #1a1a2e", borderRadius: 8,
+          background: "var(--bg-card)", border: "2px solid var(--border)", borderRadius: 8,
           width: 28, height: 28, cursor: "pointer",
           display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 12, fontWeight: 700, color: "#1a1a2e",
-          boxShadow: "2px 2px 0 #1a1a2e",
-          transition: "transform 0.15s, box-shadow 0.15s",
+          fontSize: 12, fontWeight: 700, color: "var(--text)",
+          boxShadow: "2px 2px 0 var(--shadow)",
+          transition: "transform 0.15s, box-shadow 0.15s, background 0.3s, color 0.3s",
         }}
         title={muted ? "Unmute" : "Mute"}
       >
