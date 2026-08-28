@@ -286,21 +286,21 @@ export default function NarrativeOverlay({
               onMouseEnter={() => window.dispatchEvent(new CustomEvent("button-hover"))}
               onMouseLeave={() => window.dispatchEvent(new CustomEvent("hover-out"))}
               style={{
-                ...card, borderRadius: 8, padding: "8px 20px", fontSize: 12,
+                ...card, borderRadius: 10, padding: "10px 24px", fontSize: 14,
                 fontFamily: "Georgia, serif", cursor: "pointer", fontWeight: 700,
-                boxShadow: "2px 2px 0 var(--shadow)", marginBottom: 12, pointerEvents: "auto",
+                boxShadow: "3px 3px 0 var(--shadow)", marginBottom: 12, pointerEvents: "auto",
               }}>
               Continue
             </button>
           )}
 
           {/* Progress dots */}
-          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 4, alignItems: "center" }} role="progressbar" aria-label={`Story progress: act ${state.currentAct + 1} of ${STORY_ACTS.length}`}>
             {STORY_ACTS.map((a, i) => {
               const isCurrent = a.id === (act?.id || 0);
               const isComplete = a.id < (act?.id || 0);
               return (
-                <div key={i} style={{
+                <div key={i} aria-hidden="true" style={{
                   width: isCurrent ? 18 : 6, height: 6, borderRadius: 3,
                   background: isCurrent ? "var(--accent)" : isComplete ? "var(--text)" : "var(--border-light)",
                   transition: "all 0.3s ease",
@@ -313,42 +313,43 @@ export default function NarrativeOverlay({
 
       {/* Top bar */}
       <div style={{
-        position: "absolute", top: 14, left: 14, right: 14,
+        position: "absolute", top: 0, left: 0, right: 0,
         display: "flex", justifyContent: "space-between", alignItems: "center",
-        gap: 12,
+        padding: "12px 16px",
       }}>
         <div style={{
-          ...card, borderRadius: 8, padding: "6px 14px", boxShadow: "2px 2px 0 var(--shadow)",
-          fontSize: 15, fontWeight: 700, letterSpacing: -0.5, flexShrink: 0,
+          fontSize: 14, fontWeight: 700, color: "var(--text)", letterSpacing: -0.5,
+          background: "var(--bg-card)", border: "2px solid var(--border)", borderRadius: 8,
+          padding: "5px 12px", boxShadow: "2px 2px 0 var(--shadow)",
+          transition: "background 0.3s, color 0.3s, border-color 0.3s",
         }}>
           DRIFT
         </div>
-        <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {/* Act / Timer combined */}
           <div style={{
-            ...card, borderRadius: 8, padding: "6px 12px", boxShadow: "2px 2px 0 var(--shadow)",
-            fontSize: 12, fontWeight: 700, whiteSpace: "nowrap",
+            fontSize: 11, fontWeight: 600, color: "var(--text-muted)",
+            background: "var(--bg-card)", border: "1.5px solid var(--border)", borderRadius: 6,
+            padding: "4px 10px", fontFamily: "monospace", whiteSpace: "nowrap",
+            transition: "background 0.3s, color 0.3s, border-color 0.3s",
           }}>
-            {act ? `${state.currentAct + 1}/${STORY_ACTS.length}` : ""}
+            {act ? `${state.currentAct + 1}/${STORY_ACTS.length}` : ""} &middot; {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}
           </div>
-          <div style={{
-            ...card, borderRadius: 8, padding: "6px 10px", boxShadow: "2px 2px 0 var(--shadow)",
-            fontSize: 11, fontWeight: 600, fontFamily: "monospace", whiteSpace: "nowrap",
-          }}>
-            {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}
-          </div>
+          {/* Help */}
           <button
             onClick={() => { setShowHowToPlay(true); window.dispatchEvent(new CustomEvent("context-open")); }}
             onMouseEnter={() => window.dispatchEvent(new CustomEvent("button-hover"))}
             onMouseLeave={() => window.dispatchEvent(new CustomEvent("hover-out"))}
             style={{
-              ...card, borderRadius: 8, width: 28, height: 28, cursor: "pointer",
-              fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "2px 2px 0 var(--shadow)", flexShrink: 0,
+              background: "var(--bg-card)", border: "1.5px solid var(--border)", borderRadius: 6,
+              width: 26, height: 26, cursor: "pointer",
+              fontSize: 12, fontWeight: 700, color: "var(--text-muted)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "1px 1px 0 var(--shadow)", flexShrink: 0,
+              transition: "background 0.3s, color 0.3s, border-color 0.3s",
             }}
             title="How to play"
-          >
-            ?
-          </button>
+          >?</button>
         </div>
       </div>
 

@@ -43,35 +43,43 @@ export default function AboutPage() {
     if (el && !sectionsRef.current.includes(el)) sectionsRef.current.push(el);
   };
 
+  const card = {
+    background: "var(--bg-card)",
+    border: "2px solid var(--border)",
+    boxShadow: "2px 2px 0 var(--shadow)",
+    transition: "background 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s",
+  } as const;
+
   return (
     <div style={{
-      minHeight: "100vh", background: "#fdf6e3", color: "#1a1a2e",
-      fontFamily: "Georgia, serif",
+      minHeight: "100vh", background: "var(--bg)", color: "var(--text)",
+      fontFamily: "Georgia, serif", transition: "background 0.3s, color 0.3s",
     }}>
       {/* Navigation */}
       <nav style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
         display: "flex", justifyContent: "space-between", alignItems: "center",
-        padding: "16px 32px", background: "rgba(253,246,227,0.9)",
-        backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(26,26,46,0.08)",
+        padding: "16px 32px", background: "color-mix(in srgb, var(--bg) 90%, transparent)",
+        backdropFilter: "blur(12px)", borderBottom: "1px solid var(--border-light)",
+        transition: "background 0.3s, border-color 0.3s",
       }}>
         <Link href="/" style={{
-          fontSize: 20, fontWeight: "bold", color: "#1a1a2e", letterSpacing: -1,
-          textDecoration: "none",
+          fontSize: 20, fontWeight: "bold", color: "var(--text)", letterSpacing: -1,
+          textDecoration: "none", transition: "color 0.3s",
         }}>
           DRIFT
         </Link>
         <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
           <Link href="/" style={{
-            fontSize: 13, color: "#1a1a2e", textDecoration: "none",
-            fontWeight: 600, letterSpacing: 0.5,
+            fontSize: 13, color: "var(--text)", textDecoration: "none",
+            fontWeight: 600, letterSpacing: 0.5, opacity: 0.6, transition: "opacity 0.2s, color 0.3s",
           }}>
             Home
           </Link>
           <Link href="/about" style={{
-            fontSize: 13, color: "#1a1a2e", textDecoration: "none",
-            fontWeight: 600, letterSpacing: 0.5, borderBottom: "2px solid #1a1a2e",
-            paddingBottom: 2,
+            fontSize: 13, color: "var(--text)", textDecoration: "none",
+            fontWeight: 600, letterSpacing: 0.5, borderBottom: "2px solid var(--text)",
+            paddingBottom: 2, transition: "color 0.3s, border-color 0.3s",
           }}>
             About
           </Link>
@@ -80,14 +88,11 @@ export default function AboutPage() {
             target="_blank"
             rel="noopener noreferrer"
             style={{
-              fontSize: 13, color: "#1a1a2e", textDecoration: "none",
-              fontWeight: 600, letterSpacing: 0.5,
-              display: "flex", alignItems: "center", gap: 6,
+              fontSize: 13, color: "var(--text)", textDecoration: "none",
+              fontWeight: 600, letterSpacing: 0.5, opacity: 0.6,
+              transition: "opacity 0.2s, color 0.3s",
             }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-            </svg>
             GitHub
           </a>
         </div>
@@ -98,8 +103,8 @@ export default function AboutPage() {
         padding: "140px 32px 60px", maxWidth: 800, margin: "0 auto",
       }}>
         <div style={{
-          fontSize: 11, color: "#1a1a2e", letterSpacing: 4, textTransform: "uppercase",
-          fontWeight: 600, marginBottom: 16,
+          fontSize: 11, color: "var(--text-muted)", letterSpacing: 4, textTransform: "uppercase",
+          fontWeight: 600, marginBottom: 16, transition: "color 0.3s",
         }}>
           About the Project
         </div>
@@ -113,7 +118,8 @@ export default function AboutPage() {
           </span>
         </h1>
         <p style={{
-          fontSize: 17, lineHeight: 1.8, color: "#1a1a2e", maxWidth: 600,
+          fontSize: 17, lineHeight: 1.8, color: "var(--text-muted)", maxWidth: 600,
+          transition: "color 0.3s",
         }}>
           An interactive 3D storytelling experience built for the Devpost 3D Websites Hackathon.
           A paper craft fantasy about a crane named Milo who cannot fly — told through eight
@@ -124,18 +130,18 @@ export default function AboutPage() {
 
       {/* Divider */}
       <div style={{ maxWidth: 800, margin: "0 auto", padding: "0 32px" }}>
-        <div style={{ height: 1, background: "rgba(26,26,46,0.1)" }} />
+        <div style={{ height: 1, background: "var(--border-light)", transition: "background 0.3s" }} />
       </div>
 
       {/* The Story */}
       <section ref={addSectionRef} style={{ padding: "60px 32px", maxWidth: 800, margin: "0 auto" }}>
-        <div style={{ fontSize: 11, letterSpacing: 3, textTransform: "uppercase", fontWeight: 600, marginBottom: 12, color: "#1a1a2e" }}>
+        <div style={{ fontSize: 11, letterSpacing: 3, textTransform: "uppercase", fontWeight: 600, marginBottom: 12, color: "var(--text-muted)", transition: "color 0.3s" }}>
           The Story
         </div>
         <h2 style={{ fontSize: 28, fontWeight: "bold", marginBottom: 16, letterSpacing: -1 }}>
           The Last Paper Fold
         </h2>
-        <div style={{ fontSize: 15, lineHeight: 1.9, color: "#1a1a2e" }}>
+        <div style={{ fontSize: 15, lineHeight: 1.9, color: "var(--text-muted)", transition: "color 0.3s" }}>
           <p style={{ marginBottom: 16 }}>
             Milo is a paper crane with one wing bigger than the other. He cannot fly, but he never
             stops jumping. Along the way, he meets Lira the fox, Sage the ancient owl, and Pip the
@@ -157,7 +163,7 @@ export default function AboutPage() {
 
       {/* Tech Stack */}
       <section ref={addSectionRef} style={{ padding: "60px 32px", maxWidth: 800, margin: "0 auto" }}>
-        <div style={{ fontSize: 11, letterSpacing: 3, textTransform: "uppercase", fontWeight: 600, marginBottom: 12, color: "#1a1a2e" }}>
+        <div style={{ fontSize: 11, letterSpacing: 3, textTransform: "uppercase", fontWeight: 600, marginBottom: 12, color: "var(--text-muted)", transition: "color 0.3s" }}>
           Technology
         </div>
         <h2 style={{ fontSize: 28, fontWeight: "bold", marginBottom: 24, letterSpacing: -1 }}>
@@ -177,11 +183,10 @@ export default function AboutPage() {
             { name: "Conway's Game of Life", desc: "Cellular automata grid" },
           ].map((tech) => (
             <div key={tech.name} style={{
-              background: "#fff", border: "2px solid #1a1a2e", borderRadius: 12,
-              padding: "16px 20px", boxShadow: "2px 2px 0 #1a1a2e",
+              ...card, borderRadius: 12, padding: "16px 20px",
             }}>
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{tech.name}</div>
-              <div style={{ fontSize: 12, color: "#1a1a2e", opacity: 0.7 }}>{tech.desc}</div>
+              <div style={{ fontSize: 12, color: "var(--text-muted)", opacity: 0.7, transition: "color 0.3s" }}>{tech.desc}</div>
             </div>
           ))}
         </div>
@@ -189,7 +194,7 @@ export default function AboutPage() {
 
       {/* Features */}
       <section ref={addSectionRef} style={{ padding: "60px 32px", maxWidth: 800, margin: "0 auto" }}>
-        <div style={{ fontSize: 11, letterSpacing: 3, textTransform: "uppercase", fontWeight: 600, marginBottom: 12, color: "#1a1a2e" }}>
+        <div style={{ fontSize: 11, letterSpacing: 3, textTransform: "uppercase", fontWeight: 600, marginBottom: 12, color: "var(--text-muted)", transition: "color 0.3s" }}>
           Features
         </div>
         <h2 style={{ fontSize: 28, fontWeight: "bold", marginBottom: 24, letterSpacing: -1 }}>
@@ -234,12 +239,12 @@ export default function AboutPage() {
               display: "flex", gap: 16, alignItems: "flex-start",
             }}>
               <div style={{
-                width: 8, height: 8, borderRadius: "50%", background: "#1a1a2e",
-                marginTop: 7, flexShrink: 0,
+                width: 8, height: 8, borderRadius: "50%", background: "var(--text)",
+                marginTop: 7, flexShrink: 0, transition: "background 0.3s",
               }} />
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>{feature.title}</div>
-                <div style={{ fontSize: 13, lineHeight: 1.7, color: "#1a1a2e", opacity: 0.8 }}>{feature.desc}</div>
+                <div style={{ fontSize: 13, lineHeight: 1.7, color: "var(--text-muted)", opacity: 0.8, transition: "color 0.3s" }}>{feature.desc}</div>
               </div>
             </div>
           ))}
@@ -248,7 +253,7 @@ export default function AboutPage() {
 
       {/* Controls */}
       <section ref={addSectionRef} style={{ padding: "60px 32px", maxWidth: 800, margin: "0 auto" }}>
-        <div style={{ fontSize: 11, letterSpacing: 3, textTransform: "uppercase", fontWeight: 600, marginBottom: 12, color: "#1a1a2e" }}>
+        <div style={{ fontSize: 11, letterSpacing: 3, textTransform: "uppercase", fontWeight: 600, marginBottom: 12, color: "var(--text-muted)", transition: "color 0.3s" }}>
           Controls
         </div>
         <h2 style={{ fontSize: 28, fontWeight: "bold", marginBottom: 24, letterSpacing: -1 }}>
@@ -268,16 +273,17 @@ export default function AboutPage() {
           ].map((ctrl) => (
             <div key={ctrl.key} style={{
               display: "flex", justifyContent: "space-between", alignItems: "center",
-              padding: "10px 14px", background: "#fff", border: "1.5px solid rgba(26,26,46,0.15)",
-              borderRadius: 8,
+              padding: "10px 14px", background: "var(--bg-card)", border: "1.5px solid var(--border-light)",
+              borderRadius: 8, transition: "background 0.3s, border-color 0.3s",
             }}>
               <code style={{
                 fontSize: 12, fontFamily: "monospace", fontWeight: 700,
-                background: "#f3f4f6", padding: "2px 6px", borderRadius: 4,
+                background: "var(--bg-elevated)", padding: "2px 6px", borderRadius: 4,
+                transition: "background 0.3s",
               }}>
                 {ctrl.key}
               </code>
-              <span style={{ fontSize: 12, color: "#1a1a2e", opacity: 0.7 }}>{ctrl.action}</span>
+              <span style={{ fontSize: 12, color: "var(--text-muted)", opacity: 0.7, transition: "color 0.3s" }}>{ctrl.action}</span>
             </div>
           ))}
         </div>
@@ -285,13 +291,13 @@ export default function AboutPage() {
 
       {/* Developer */}
       <section ref={addSectionRef} style={{ padding: "60px 32px", maxWidth: 800, margin: "0 auto" }}>
-        <div style={{ fontSize: 11, letterSpacing: 3, textTransform: "uppercase", fontWeight: 600, marginBottom: 12, color: "#1a1a2e" }}>
+        <div style={{ fontSize: 11, letterSpacing: 3, textTransform: "uppercase", fontWeight: 600, marginBottom: 12, color: "var(--text-muted)", transition: "color 0.3s" }}>
           Developer
         </div>
         <h2 style={{ fontSize: 28, fontWeight: "bold", marginBottom: 16, letterSpacing: -1 }}>
           Built by Sachin
         </h2>
-        <p style={{ fontSize: 15, lineHeight: 1.8, color: "#1a1a2e", marginBottom: 24 }}>
+        <p style={{ fontSize: 15, lineHeight: 1.8, color: "var(--text-muted)", marginBottom: 24, transition: "color 0.3s" }}>
           This project was built as a submission for the Devpost 3D Websites Hackathon.
           It combines interactive 3D storytelling, procedural generation, and cinematic
           web experiences into a single cohesive narrative.
@@ -302,19 +308,19 @@ export default function AboutPage() {
           rel="noopener noreferrer"
           style={{
             display: "inline-flex", alignItems: "center", gap: 10,
-            background: "#1a1a2e", color: "#fff", border: "none", borderRadius: 12,
+            background: "var(--text)", color: "var(--bg)", border: "none", borderRadius: 12,
             padding: "14px 28px", fontSize: 14, fontFamily: "Georgia, serif",
             cursor: "pointer", fontWeight: 600, letterSpacing: 0.5,
-            boxShadow: "3px 3px 0 #6b7280", textDecoration: "none",
-            transition: "transform 0.15s, box-shadow 0.15s",
+            boxShadow: "3px 3px 0 var(--text-muted)", textDecoration: "none",
+            transition: "transform 0.15s, box-shadow 0.15s, background 0.3s, color 0.3s",
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = "translate(-1px, -1px)";
-            e.currentTarget.style.boxShadow = "4px 4px 0 #6b7280";
+            e.currentTarget.style.boxShadow = "4px 4px 0 var(--text-muted)";
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = "translate(0, 0)";
-            e.currentTarget.style.boxShadow = "3px 3px 0 #6b7280";
+            e.currentTarget.style.boxShadow = "3px 3px 0 var(--text-muted)";
           }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -326,10 +332,10 @@ export default function AboutPage() {
 
       {/* Footer */}
       <footer style={{
-        padding: "40px 32px", borderTop: "1px solid rgba(26,26,46,0.08)",
-        textAlign: "center",
+        padding: "40px 32px", borderTop: "1px solid var(--border-light)",
+        textAlign: "center", transition: "border-color 0.3s",
       }}>
-        <div style={{ fontSize: 13, color: "#1a1a2e", opacity: 0.5 }}>
+        <div style={{ fontSize: 13, color: "var(--text-muted)", opacity: 0.5, transition: "color 0.3s" }}>
           DRIFT — A Paper World — Built for the 3D Websites Hackathon
         </div>
       </footer>

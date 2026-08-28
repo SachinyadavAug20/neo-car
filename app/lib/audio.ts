@@ -3,6 +3,8 @@
 // ─── Procedural Audio Engine v4 ───────────────────────────────────────
 // 110 unique sounds, all generated via Web Audio API.
 
+import { type Mood } from "./narrative";
+
 let audioCtx: AudioContext | null = null;
 let masterGain: GainNode | null = null;
 let musicGain: GainNode | null = null;
@@ -1204,8 +1206,6 @@ export function playMarbleDrop() {
 }
 
 // ─── Background Music ─────────────────────────────────────────────────
-
-type Mood = "warm" | "storm" | "calm" | "secret" | "sorrow" | "hope" | "final";
 
 const MOOD_CONFIG: Record<Mood, { scale: number[]; type: OscillatorType; interval: number; ambientType: string }> = {
   warm:   { scale: [N.C4, N.E4, N.G4, N.A4, N.C5], type: "sine", interval: 1800, ambientType: "birds" },

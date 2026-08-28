@@ -51,34 +51,34 @@ export default function AudioController({ mood, visible = true }: AudioControlle
     <>
       {showPrompt && (
         <div style={{
-          position: "fixed", top: 60, left: "50%", transform: "translateX(-50%)",
-          background: "var(--text)", color: "var(--bg)",
-          borderRadius: 10, padding: "10px 20px", fontSize: 12, fontFamily: "Georgia, serif",
+          position: "fixed", top: 50, left: "50%", transform: "translateX(-50%)",
+          background: "var(--bg-card)", color: "var(--text)",
+          borderRadius: 8, padding: "8px 16px", fontSize: 12, fontFamily: "Georgia, serif",
           zIndex: 90, display: "flex", alignItems: "center", gap: 8,
-          boxShadow: "3px 3px 0 var(--shadow)", cursor: "pointer",
-          border: "2px solid var(--border)",
-          transition: "background 0.3s, color 0.3s",
+          boxShadow: "2px 2px 0 var(--shadow)", cursor: "pointer",
+          border: "1.5px solid var(--border)",
+          transition: "background 0.3s, color 0.3s, border-color 0.3s",
         }}
           onClick={() => { initAudio(); setStarted(true); setShowPrompt(false); window.dispatchEvent(new CustomEvent("power-up")); }}
         >
-          <span>Click anywhere to enable sound</span>
-          <span style={{ fontSize: 10, opacity: 0.5 }}>(optional)</span>
+          <span>Click to enable sound</span>
+          <span style={{ fontSize: 10, opacity: 0.4 }}>(optional)</span>
         </div>
       )}
 
       <button
         onClick={toggle}
         data-cursor="pointer"
-        onMouseEnter={(e) => { e.currentTarget.style.transform = "translate(-1px,-1px)"; e.currentTarget.style.boxShadow = "3px 3px 0 var(--shadow)"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.transform = "translate(0,0)"; e.currentTarget.style.boxShadow = "2px 2px 0 var(--shadow)"; }}
+        aria-label={muted ? "Unmute audio" : "Mute audio"}
+        aria-pressed={!muted}
         style={{
           position: "fixed", bottom: 14, left: 14, zIndex: 90,
-          background: "var(--bg-card)", border: "2px solid var(--border)", borderRadius: 8,
-          width: 28, height: 28, cursor: "pointer",
+          background: "var(--bg-card)", border: "1.5px solid var(--border)", borderRadius: 6,
+          width: 26, height: 26, cursor: "pointer",
           display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 12, fontWeight: 700, color: "var(--text)",
-          boxShadow: "2px 2px 0 var(--shadow)",
-          transition: "transform 0.15s, box-shadow 0.15s, background 0.3s, color 0.3s",
+          fontSize: 11, fontWeight: 700, color: "var(--text-muted)",
+          boxShadow: "1px 1px 0 var(--shadow)",
+          transition: "background 0.3s, color 0.3s, border-color 0.3s",
         }}
         title={muted ? "Unmute" : "Mute"}
       >

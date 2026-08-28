@@ -37,6 +37,8 @@ export default function Scene() {
   const [currentMood, setCurrentMood] = useState("warm");
   const [cameraPos, setCameraPos] = useState<[number, number, number]>([3, 2, 5]);
   const [isLoading, setIsLoading] = useState(true);
+  const secretTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const windForceRef = useRef(windForce);
 
   // Hide loading screen after mount
   useEffect(() => {
@@ -73,13 +75,13 @@ export default function Scene() {
 
   // Keyboard secrets (type "wind", "paper", "fold", etc.)
   const [secretNotification, setSecretNotification] = useState<string | null>(null);
+  useEffect(() => { windForceRef.current = windForce; }, [windForce]);
   useKeyboardSecrets(useCallback((word: string) => {
     trackEvent("secret-found", { word });
-    // Trigger hidden events based on typed word
     switch (word) {
       case "wind":
         setWindForce(prev => Math.min(10, prev + 2));
-        window.dispatchEvent(new CustomEvent("set-wind-force", { detail: { force: Math.min(10, windForce + 2) } }));
+        window.dispatchEvent(new CustomEvent("set-wind-force", { detail: { force: Math.min(10, windForceRef.current + 2) } }));
         trackEvent("wind-generated", { force: 2 });
         break;
       case "paper":
@@ -103,9 +105,10 @@ export default function Scene() {
         window.dispatchEvent(new CustomEvent("drift-mode"));
         break;
     }
+    if (secretTimeoutRef.current) clearTimeout(secretTimeoutRef.current);
     setSecretNotification(`"${word}" activated`);
-    setTimeout(() => setSecretNotification(null), 2000);
-  }, [windForce]));
+    secretTimeoutRef.current = setTimeout(() => setSecretNotification(null), 2000);
+  }, []));
 
   // Track mood from narrative state
   useEffect(() => {
@@ -446,7 +449,7 @@ export default function Scene() {
       {secretNotification && (
         <div style={{
           position: "fixed", top: 80, left: "50%", transform: "translateX(-50%)",
-          background: "rgba(26, 26, 46, 0.9)", color: "#fbbf24",
+          background: "rgba(26, 26, 46, 0.9)", color: "var(--accent)",
           borderRadius: 12, padding: "10px 24px",
           fontSize: 14, fontFamily: "monospace", fontWeight: 700,
           zIndex: 100, animation: "fadeSlideIn 0.3s ease-out",
@@ -678,21 +681,21 @@ function TitleScreen({ onStart, folds, resetFolds }: { onStart: () => void; fold
       <div ref={navRef} style={{
         position: "absolute", top: 0, left: 0, right: 0,
         display: "flex", justifyContent: "space-between", alignItems: "center",
-        padding: "18px 24px", opacity: 0,
+        padding: "14px 20px", opacity: 0,
       }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", letterSpacing: -0.5, transition: "color 0.3s", flexShrink: 0 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", letterSpacing: -0.5, transition: "color 0.3s" }}>
           DRIFT
         </div>
-        <div style={{ display: "flex", gap: 14, alignItems: "center", flexShrink: 0 }}>
+        <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
           <a href="/about" style={{
-            fontSize: 13, color: "var(--text)", textDecoration: "none", fontWeight: 600,
+            fontSize: 12, color: "var(--text)", textDecoration: "none", fontWeight: 600,
             opacity: 0.5, transition: "opacity 0.2s, color 0.3s",
           }}
             onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
             onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.5")}
           >About</a>
           <a href="https://github.com/SachinyadavAug20/neo-car" target="_blank" rel="noopener noreferrer" style={{
-            fontSize: 13, color: "var(--text)", textDecoration: "none", fontWeight: 600,
+            fontSize: 12, color: "var(--text)", textDecoration: "none", fontWeight: 600,
             opacity: 0.5, transition: "opacity 0.2s, color 0.3s",
           }}
             onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
