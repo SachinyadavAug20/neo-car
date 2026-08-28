@@ -161,20 +161,6 @@ export function formatTime(ms: number): string {
   return min > 0 ? `${min}m ${sec}s` : `${sec}s`;
 }
 
-// Helper to get most engaged act
-export function getMostEngagedAct(stats: JourneyStats): number {
-  let maxScore = 0;
-  let maxAct = 0;
-  for (let i = 0; i < 8; i++) {
-    const score = stats.actClicks[i] + stats.actInteractions[i] * 5 + stats.actBeatCount[i] * 2;
-    if (score > maxScore) {
-      maxScore = score;
-      maxAct = i;
-    }
-  }
-  return maxAct;
-}
-
 // Get act engagement label
 export function getActEngagementLabel(act: number): string {
   const labels = [

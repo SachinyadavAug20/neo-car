@@ -29,10 +29,20 @@ export default function NarrativeOverlay({
   const [flashOpacity, setFlashOpacity] = useState(0);
   const [floatTexts, setFloatTexts] = useState<Array<{ id: number; x: number; y: number }>>([]);
   const floatIdRef = useRef(0);
+  const startTimeRef = useRef(Date.now());
+  const [elapsed, setElapsed] = useState(0);
 
   const act = getCurrentAct(state);
   const beat = getCurrentBeat(state);
   const isInteraction = beat?.interaction && beat.interaction !== "none" && state.interactionState !== "complete";
+
+  useEffect(() => {
+    if (state.ended) return;
+    const interval = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [state.ended]);
 
   useEffect(() => {
     const handler = () => {
@@ -171,7 +181,7 @@ export default function NarrativeOverlay({
           opacity: 0, pointerEvents: "none",
         }}>
           <div style={{ fontSize: 11, color: "var(--text-muted)", letterSpacing: 3, textTransform: "uppercase", marginBottom: 8, fontWeight: 600, transition: "color 0.3s" }}>
-            Act {act.id}
+            Act {state.currentAct + 1}
           </div>
           <div style={{ fontSize: 28, fontWeight: "bold", color: "var(--text)", letterSpacing: -1, transition: "color 0.3s" }}>
             {act.title}
@@ -179,6 +189,21 @@ export default function NarrativeOverlay({
           <div style={{ fontSize: 14, color: "var(--text-muted)", fontStyle: "italic", marginTop: 8, opacity: 0.6, transition: "color 0.3s" }}>
             {act.subtitle}
           </div>
+        </div>
+      )}
+
+      {/* Story progress bar */}
+      {!state.ended && (
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0, height: 3,
+          background: "var(--border-light)", transition: "background 0.3s",
+        }}>
+          <div style={{
+            height: "100%",
+            width: `${((state.currentAct + (state.currentBeat / (act?.beats.length || 1))) / STORY_ACTS.length) * 100}%`,
+            background: "var(--accent)",
+            transition: "width 0.5s ease-out, background 0.3s",
+          }} />
         </div>
       )}
 
@@ -360,7 +385,13 @@ export default function NarrativeOverlay({
             ...card, borderRadius: 8, padding: "6px 12px", boxShadow: "2px 2px 0 var(--shadow)",
             fontSize: 12, fontWeight: 700,
           }}>
-            {act ? `${act.id} / ${STORY_ACTS.length}` : ""}
+            {act ? `${state.currentAct + 1} / ${STORY_ACTS.length}` : ""}
+          </div>
+          <div style={{
+            ...card, borderRadius: 8, padding: "6px 12px", boxShadow: "2px 2px 0 var(--shadow)",
+            fontSize: 11, fontWeight: 600, fontFamily: "monospace",
+          }}>
+            {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}
           </div>
         </div>
       </div>

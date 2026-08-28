@@ -10,6 +10,7 @@ export interface PersistentFolds {
   totalPlaythroughs: number;
   lastVisit: string;
   colorShifts: Record<string, string>;
+  totalPlayTimeMs: number;
 }
 
 const DEFAULT_FOLDS: PersistentFolds = {
@@ -18,6 +19,7 @@ const DEFAULT_FOLDS: PersistentFolds = {
   totalPlaythroughs: 0,
   lastVisit: "",
   colorShifts: {},
+  totalPlayTimeMs: 0,
 };
 
 function loadFolds(): PersistentFolds {
@@ -84,6 +86,14 @@ export function usePersistentFolds() {
     });
   }, []);
 
+  const addPlayTime = useCallback((ms: number) => {
+    setFolds(prev => {
+      const next = { ...prev, totalPlayTimeMs: prev.totalPlayTimeMs + ms };
+      saveFolds(next);
+      return next;
+    });
+  }, []);
+
   const setColorShift = useCallback((key: string, color: string) => {
     setFolds(prev => {
       const next = { ...prev, colorShifts: { ...prev.colorShifts, [key]: color } };
@@ -103,6 +113,7 @@ export function usePersistentFolds() {
     unlockSecretFold,
     completeAct,
     incrementPlaythrough,
+    addPlayTime,
     setColorShift,
     resetFolds,
   };

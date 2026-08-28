@@ -102,13 +102,6 @@ function playArp(ctx: AudioContext, freqs: number[], type: OscillatorType, gap: 
 
 // ─── 30+ Sound Effects ────────────────────────────────────────────────
 
-// 1. Click (generic tap)
-export function playClick() {
-  const ctx = getCtx();
-  const o = osc(ctx, "sine", 900, 0, 0.06);
-  gain(ctx, 0.25, 0, 0.06, o);
-}
-
 // 2. Jump (rising pop)
 export function playJump() {
   const ctx = getCtx();
@@ -203,13 +196,6 @@ export function playPendulum() {
   gain(ctx, 0.12, 0, 0.35, o);
 }
 
-// 10. Secret (mystical reveal)
-export function playSecret() {
-  const ctx = getCtx();
-  playChord(ctx, [N.E4, N.G4, N.B4], "sine", 0, 1.2, 0.2);
-  playArp(ctx, [N.E5, N.G5, N.B4, N.E5], "sine", 0.12, 0.12);
-}
-
 // 11. Butterfly (flutter)
 export function playButterfly() {
   const ctx = getCtx();
@@ -253,13 +239,6 @@ export function playCritterFind() {
   playArp(ctx, [N.E5, N.G5, N.E5, N.C5, N.E5], "sine", 0.06, 0.12);
 }
 
-// 16. Hover (subtle tone)
-export function playHover() {
-  const ctx = getCtx();
-  const o = osc(ctx, "sine", 600, 0, 0.08);
-  gain(ctx, 0.06, 0, 0.08, o);
-}
-
 // 17. Hover enter (rising chirp)
 export function playHoverIn() {
   const ctx = getCtx();
@@ -284,19 +263,6 @@ export function playPaperFold() {
   src.start(ctx.currentTime);
   const o = osc(ctx, "triangle", 500, 0, 0.06);
   gain(ctx, 0.08, 0, 0.06, o);
-}
-
-// 20. Paper unfold (spreading)
-export function playPaperUnfold() {
-  const ctx = getCtx();
-  const { src } = noise(ctx, 0.2, 1500);
-  const g = ctx.createGain();
-  g.gain.setValueAtTime(0, ctx.currentTime);
-  g.gain.linearRampToValueAtTime(0.1, ctx.currentTime + 0.08);
-  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
-  src.connect(g);
-  g.connect(sg());
-  src.start(ctx.currentTime);
 }
 
 // 21. Water splash
@@ -329,18 +295,6 @@ export function playThunder() {
   // Low rumble
   const o = osc(ctx, "sine", 60, 0, 1.5);
   gain(ctx, 0.1, 0, 1.5, o);
-}
-
-// 23. Rain
-export function playRain() {
-  const ctx = getCtx();
-  const { src } = noise(ctx, 0.8, 400);
-  const g = ctx.createGain();
-  g.gain.setValueAtTime(0.06, ctx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
-  src.connect(g);
-  g.connect(sg());
-  src.start(ctx.currentTime);
 }
 
 // 24. Bird chirp
@@ -398,13 +352,6 @@ export function playError() {
   const ctx = getCtx();
   const o = osc(ctx, "square", 150, 0, 0.15);
   gain(ctx, 0.1, 0, 0.15, o);
-}
-
-// 30. Key press (typewriter)
-export function playKeypress() {
-  const ctx = getCtx();
-  const o = osc(ctx, "square", 800 + Math.random() * 400, 0, 0.02);
-  gain(ctx, 0.05, 0, 0.02, o);
 }
 
 // 31. Secret word typed (triumphant)

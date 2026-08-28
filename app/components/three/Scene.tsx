@@ -47,7 +47,8 @@ export default function Scene() {
   // Journey tracker
   const { stats: journeyStats, setCurrentAct, visitBeat, completeInteraction, trackEvent } = useJourneyTracker();
 
-  const { folds, unlockSecretFold, completeAct, incrementPlaythrough, resetFolds } = usePersistentFolds();
+  const { folds, unlockSecretFold, completeAct, incrementPlaythrough, addPlayTime, resetFolds } = usePersistentFolds();
+  const storyStartTimeRef = useRef<number>(0);
 
   // Setup audio events on mount
   useEffect(() => {
@@ -124,6 +125,7 @@ export default function Scene() {
 
   const handleStart = useCallback(() => {
     setShowTitle(false);
+    storyStartTimeRef.current = Date.now();
     setNarrativeState({
       ...INITIAL_STATE,
       started: true,
@@ -334,7 +336,7 @@ export default function Scene() {
         position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
         zIndex: 50, fontFamily: "Georgia, serif", background: "#fdf6e3",
       }}>
-        <TitleScreen onStart={handleStart} folds={folds} />
+        <TitleScreen onStart={handleStart} folds={folds} resetFolds={resetFolds} />
       </div>
     );
   }
@@ -415,7 +417,12 @@ export default function Scene() {
         onInteractionProgress={handleInteractionProgress}
         onInteractionComplete={handleInteractionComplete}
         journeyStats={{ ...journeyStats, foldsUnlocked: folds.secretFoldUnlocked }}
-        onRestart={() => { window.location.reload(); }}
+        onRestart={() => {
+          if (storyStartTimeRef.current > 0) {
+            addPlayTime(Date.now() - storyStartTimeRef.current);
+          }
+          window.location.reload();
+        }}
       />
 
       {/* Persistent folds indicator */}
@@ -589,7 +596,7 @@ function LoreModal({ entry, onClose }: { entry: LoreEntry; onClose: () => void }
 
 // ─── Title Screen ─────────────────────────────────────────────────────
 
-function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnType<typeof usePersistentFolds>["folds"] }) {
+function TitleScreen({ onStart, folds, resetFolds }: { onStart: () => void; folds: ReturnType<typeof usePersistentFolds>["folds"]; resetFolds: () => void }) {
   const titleRef = useRef<HTMLDivElement>(null);
   const subRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
@@ -796,6 +803,16 @@ function TitleScreen({ onStart, folds }: { onStart: () => void; folds: ReturnTyp
           <kbd style={{ padding: "2px 8px", border: "1px solid var(--border-light)", borderRadius: 4, fontSize: 10, background: "var(--bg-elevated)", transition: "background 0.3s, border-color 0.3s" }}>Enter</kbd>
           <span>to start</span>
         </div>
+        {folds.totalPlaythroughs > 0 && (
+          <button onClick={() => { if (confirm("Reset all progress? This cannot be undone.")) resetFolds(); }} style={{
+            background: "none", border: "none", color: "var(--text-muted)", fontSize: 11,
+            cursor: "pointer", marginTop: 12, opacity: 0.3, textDecoration: "underline",
+            transition: "opacity 0.2s, color 0.3s",
+          }}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.7"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.3"; }}
+          >Reset all progress</button>
+        )}
       </div>
     </div>
   );

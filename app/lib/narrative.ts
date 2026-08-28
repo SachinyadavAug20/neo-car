@@ -397,7 +397,7 @@ export const STORY_ACTS: Act[] = [
 
 // ─── State Machine ────────────────────────────────────────────────────
 
-export type InteractionState = "idle" | "interacting" | "complete";
+type InteractionState = "idle" | "interacting" | "complete";
 
 export interface NarrativeState {
   currentAct: number;
