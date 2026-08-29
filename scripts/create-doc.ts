@@ -1,8 +1,6 @@
 import {
   Document, Packer, Paragraph, TextRun, HeadingLevel,
   AlignmentType, ExternalHyperlink, BorderStyle,
-  TableCell, TableRow, Table, WidthType, ShadingType,
-  TabStopPosition, TabStopType,
 } from "docx";
 import { writeFileSync } from "fs";
 

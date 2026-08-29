@@ -30,7 +30,7 @@ export interface JourneyStats {
 }
 
 const INITIAL_JOURNEY: JourneyStats = {
-  startTime: Date.now(),
+  startTime: 0,
   endTime: 0,
   totalClicks: 0,
   totalKeys: 0,
@@ -57,11 +57,20 @@ const INITIAL_JOURNEY: JourneyStats = {
 };
 
 export function useJourneyTracker() {
-  const statsRef = useRef<JourneyStats>({ ...INITIAL_JOURNEY, startTime: Date.now() });
+  const statsRef = useRef<JourneyStats>({ ...INITIAL_JOURNEY });
   const lastMousePos = useRef({ x: 0, y: 0 });
-  const lastActTime = useRef(Date.now());
+  const lastActTime = useRef(0);
   const updatePending = useRef(false);
-  const [stats, setStats] = useState<JourneyStats>({ ...INITIAL_JOURNEY, startTime: Date.now() });
+  const [stats, setStats] = useState<JourneyStats>(() => {
+    const start = typeof window !== "undefined" ? Date.now() : 0;
+    return { ...INITIAL_JOURNEY, startTime: start };
+  });
+
+  useEffect(() => {
+    const now = Date.now();
+    statsRef.current.startTime = now;
+    lastActTime.current = now;
+  }, []);
 
   const updateStats = useCallback(() => {
     if (updatePending.current) return;
@@ -133,7 +142,7 @@ export function useJourneyTracker() {
   }, [updateStats]);
 
   // Track specific events
-  const trackEvent = useCallback((event: string, detail?: any) => {
+  const trackEvent = useCallback((event: string, detail?: { force?: number; word?: string }) => {
     switch (event) {
       case "milo-jump": statsRef.current.jumpsMade++; break;
       case "wind-generated": statsRef.current.windGenerated += detail?.force || 1; break;

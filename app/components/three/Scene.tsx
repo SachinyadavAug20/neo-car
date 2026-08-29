@@ -11,9 +11,18 @@ import CommandPalette from "../ui/CommandPalette";
 import CustomCursor from "../ui/CustomCursor";
 import AudioController from "../ui/AudioController";
 import LoadingScreen from "../ui/LoadingScreen";
+import PhotoMode from "../ui/PhotoMode";
+import { SoundStudioModal } from "../ui/SoundStudioModal";
+import { CraftingWorkshop } from "../ui/CraftingWorkshop";
+import { PaperGrainOverlay } from "../ui/PaperGrainOverlay";
+import { ActTitleCard } from "../ui/ActTitleCard";
+import { AchievementToast } from "../ui/AchievementToast";
+import { useAchievements } from "@/app/lib/useAchievements";
 import { useKeyboardSecrets } from "../ui/useInteractions";
 import { useJourneyTracker } from "@/app/lib/useJourneyTracker";
 import { setupAudioEvents, playBeatAdvance, playActTransition } from "@/app/lib/audio";
+import { AtmosphereController, TimeOfDay } from "./AtmosphereController";
+import { MiloFlightController } from "./MiloFlightController";
 import Fog from "./Fog";
 import { NarrativeState, INITIAL_STATE, getCurrentBeat, getCurrentAct, nextBeat, STORY_ACTS } from "@/app/lib/narrative";
 import { usePersistentFolds } from "@/app/lib/usePersistentFolds";
@@ -32,13 +41,22 @@ export default function Scene() {
   const [isCinematic, setIsCinematic] = useState(false);
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [photoMode, setPhotoMode] = useState(false);
+  const [soundStudioOpen, setSoundStudioOpen] = useState(false);
+  const [workshopOpen, setWorkshopOpen] = useState(false);
+  const [flightMode, setFlightMode] = useState(false);
+  const [autoTour, setAutoTour] = useState(false);
+  const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>("day");
   const [loreModal, setLoreModal] = useState<LoreEntry | null>(null);
   const [windForce, setWindForce] = useState(0.3);
-  const [currentMood, setCurrentMood] = useState("warm");
+  const [overrideMood, setOverrideMood] = useState<string | null>(null);
   const [cameraPos, setCameraPos] = useState<[number, number, number]>([3, 2, 5]);
   const [isLoading, setIsLoading] = useState(true);
   const secretTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const windForceRef = useRef(windForce);
+
+  const currentBeat = getCurrentBeat(narrativeState);
+  const currentMood = overrideMood || currentBeat?.mood || "warm";
 
   // Hide loading screen after mount
   useEffect(() => {
@@ -52,22 +70,91 @@ export default function Scene() {
   const { folds, unlockSecretFold, completeAct, incrementPlaythrough, addPlayTime, resetFolds } = usePersistentFolds();
   const storyStartTimeRef = useRef<number>(0);
 
+  // Achievements tracker
+  const { unlockAchievement, recentUnlock, clearRecent } = useAchievements();
+
+  useEffect(() => {
+    if (photoMode) unlockAchievement("paparazzi");
+  }, [photoMode, unlockAchievement]);
+
+  useEffect(() => {
+    if (terminalOpen) unlockAchievement("hacker");
+  }, [terminalOpen, unlockAchievement]);
+
+  useEffect(() => {
+    if (autoTour) unlockAchievement("cinematic_gazer");
+  }, [autoTour, unlockAchievement]);
+
+  useEffect(() => {
+    const act = narrativeState.currentAct;
+    if (act === 0 && narrativeState.started) unlockAchievement("first_flight");
+    if (act === 1) unlockAchievement("storm_survivor");
+    if (act === 2) unlockAchievement("forest_friend");
+    if (act === 4) unlockAchievement("secret_folder");
+    if (act === 7) unlockAchievement("grand_voyage");
+  }, [narrativeState.currentAct, narrativeState.started, unlockAchievement]);
+
+  useEffect(() => {
+    const onFrog = () => unlockAchievement("frog_whisperer");
+    const onFlower = () => unlockAchievement("flora_touch");
+    window.addEventListener("bubble-pop", onFrog);
+    window.addEventListener("magic-sparkle", onFlower);
+    return () => {
+      window.removeEventListener("bubble-pop", onFrog);
+      window.removeEventListener("magic-sparkle", onFlower);
+    };
+  }, [unlockAchievement]);
+
+  // Auto-Tour interval progression
+  useEffect(() => {
+    if (!autoTour) return;
+    const interval = setInterval(() => {
+      setNarrativeState(prev => {
+        const next = nextBeat(prev);
+        if (next.ended) {
+          setAutoTour(false);
+        }
+        return next;
+      });
+    }, 7000);
+    return () => clearInterval(interval);
+  }, [autoTour]);
+
   // Setup audio events on mount
   useEffect(() => {
     const cleanup = setupAudioEvents();
-    return () => { if (cleanup) cleanup(); };
+    return cleanup;
   }, []);
 
-  // Toggle terminal with Ctrl+~
+  // Keyboard shortcut listeners (Ctrl+~ for terminal, Ctrl+K for palette, P for photo mode)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === "~") {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+
+      if ((e.ctrlKey || e.metaKey) && (e.key === "`" || e.key === "~")) {
         e.preventDefault();
         setTerminalOpen(prev => !prev);
       }
       if (e.ctrlKey && e.key === "k") {
         e.preventDefault();
         setPaletteOpen(prev => !prev);
+      }
+      if ((e.key === "p" || e.key === "P") && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        setPhotoMode(prev => !prev);
+      }
+      if ((e.key === "m" || e.key === "M") && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        setSoundStudioOpen(prev => !prev);
+      }
+      if ((e.key === "c" || e.key === "C") && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        setWorkshopOpen(prev => !prev);
+      }
+      if ((e.key === "f" || e.key === "F") && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        setFlightMode(prev => !prev);
       }
     };
     window.addEventListener("keydown", handler);
@@ -111,12 +198,6 @@ export default function Scene() {
     secretTimeoutRef.current = setTimeout(() => setSecretNotification(null), 2000);
   }, []));
 
-  // Track mood from narrative state
-  useEffect(() => {
-    const beat = getCurrentBeat(narrativeState);
-    if (beat?.mood) setCurrentMood(beat.mood);
-  }, [narrativeState.currentAct, narrativeState.currentBeat]);
-
   // Sync camera position from StoryCamera
   useEffect(() => {
     const handler = (e: Event) => {
@@ -129,6 +210,19 @@ export default function Scene() {
 
   const handleStart = useCallback(() => {
     setShowTitle(false);
+    storyStartTimeRef.current = Date.now();
+    setNarrativeState({
+      ...INITIAL_STATE,
+      started: true,
+      currentAct: 0,
+      currentBeat: 0,
+    });
+    incrementPlaythrough();
+  }, [incrementPlaythrough]);
+
+  const handleAutoTour = useCallback(() => {
+    setShowTitle(false);
+    setAutoTour(true);
     storyStartTimeRef.current = Date.now();
     setNarrativeState({
       ...INITIAL_STATE,
@@ -234,7 +328,7 @@ export default function Scene() {
         if (!mood || !validMoods.includes(mood)) {
           return [{ type: "error", text: `Usage: set_mood <${validMoods.join("|")}>` }];
         }
-        setCurrentMood(mood);
+        setOverrideMood(mood);
         window.dispatchEvent(new CustomEvent("set-mood", { detail: { mood } }));
         return [{ type: "output", text: `Mood set to "${mood}"` }];
       }
@@ -302,13 +396,54 @@ export default function Scene() {
         return [{ type: "output", text: "Persistent folds reset." }];
       }
 
+      case "photo": {
+        setPhotoMode(prev => !prev);
+        return [{ type: "output", text: "Photo Mode toggled. Press P or Esc to exit." }];
+      }
+
+      case "synth":
+      case "studio": {
+        setSoundStudioOpen(true);
+        return [{ type: "output", text: "Opened Origami Sound Studio. Press 1-8 or M to play." }];
+      }
+
+      case "craft":
+      case "workshop": {
+        setWorkshopOpen(true);
+        return [{ type: "output", text: "Opened Origami Crafting Workshop. Follow the crease steps." }];
+      }
+
+      case "fly":
+      case "flight": {
+        setFlightMode(prev => !prev);
+        return [{ type: "output", text: "Flight Mode toggled. Steer with WASD / Arrow Keys." }];
+      }
+
+      case "time":
+      case "tod": {
+        const val = args[0]?.toLowerCase() as TimeOfDay;
+        if (["dawn", "day", "dusk", "night"].includes(val)) {
+          setTimeOfDay(val);
+          return [{ type: "output", text: `Atmospheric lighting set to ${val.toUpperCase()}` }];
+        }
+        return [{ type: "error", text: "Usage: time <dawn|day|dusk|night>" }];
+      }
+
       default:
-        return [];
+        return [{ type: "error", text: `Unknown command: ${cmd}. Type 'help' for available commands.` }];
     }
-  }, [folds, resetFolds]);
+  }, [narrativeState, currentMood, cameraPos, windForce, unlockSecretFold, resetFolds, setPhotoMode, setSoundStudioOpen, setWorkshopOpen, setFlightMode, setTimeOfDay]);
 
   // Memoized command palette commands — stable reference
   const paletteCommands = useMemo(() => [
+    { id: "photo-mode", label: "Toggle Photo Mode", category: "Tools", shortcut: "P", action: () => setPhotoMode(prev => !prev) },
+    { id: "sound-studio", label: "Open Origami Sound Studio", category: "Tools", shortcut: "M", action: () => setSoundStudioOpen(true) },
+    { id: "origami-workshop", label: "Open Origami Workshop", category: "Tools", shortcut: "C", action: () => setWorkshopOpen(true) },
+    { id: "flight-mode", label: "Take Flight with Milo", category: "Tools", shortcut: "F", action: () => setFlightMode(prev => !prev) },
+    { id: "time-dawn", label: "Atmosphere: Dawn (Rose Gold)", category: "Atmosphere", action: () => setTimeOfDay("dawn") },
+    { id: "time-day", label: "Atmosphere: Daylight (Crisp Paper)", category: "Atmosphere", action: () => setTimeOfDay("day") },
+    { id: "time-dusk", label: "Atmosphere: Golden Hour / Dusk", category: "Atmosphere", action: () => setTimeOfDay("dusk") },
+    { id: "time-night", label: "Atmosphere: Starry Midnight", category: "Atmosphere", action: () => setTimeOfDay("night") },
     { id: "act-1", label: "Jump to Act 1: The Crane Who Couldn't Fly", category: "Chapters", shortcut: "1", action: () => setNarrativeState(prev => ({ ...prev, currentAct: 0, currentBeat: 0, interactionState: "idle" })) },
     { id: "act-2", label: "Jump to Act 2: The Storm", category: "Chapters", shortcut: "2", action: () => setNarrativeState(prev => ({ ...prev, currentAct: 1, currentBeat: 0, interactionState: "idle" })) },
     { id: "act-3", label: "Jump to Act 3: The Fox Who Was Hiding", category: "Chapters", shortcut: "3", action: () => setNarrativeState(prev => ({ ...prev, currentAct: 2, currentBeat: 0, interactionState: "idle" })) },
@@ -319,9 +454,9 @@ export default function Scene() {
     { id: "act-8", label: "Jump to Act 8: The Moral Fold", category: "Chapters", shortcut: "8", action: () => setNarrativeState(prev => ({ ...prev, currentAct: 7, currentBeat: 0, interactionState: "idle" })) },
     { id: "wind-up", label: "Increase Wind Force", category: "Scene", action: () => { setWindForce(prev => Math.min(10, prev + 1)); window.dispatchEvent(new CustomEvent("set-wind-force", { detail: { force: Math.min(10, windForce + 1) } })); } },
     { id: "wind-down", label: "Decrease Wind Force", category: "Scene", action: () => { setWindForce(prev => Math.max(0, prev - 1)); window.dispatchEvent(new CustomEvent("set-wind-force", { detail: { force: Math.max(0, windForce - 1) } })); } },
-    { id: "mood-storm", label: "Set Mood: Storm", category: "Scene", action: () => { setCurrentMood("storm"); window.dispatchEvent(new CustomEvent("set-mood", { detail: { mood: "storm" } })); } },
-    { id: "mood-calm", label: "Set Mood: Calm", category: "Scene", action: () => { setCurrentMood("calm"); window.dispatchEvent(new CustomEvent("set-mood", { detail: { mood: "calm" } })); } },
-    { id: "mood-hope", label: "Set Mood: Hope", category: "Scene", action: () => { setCurrentMood("hope"); window.dispatchEvent(new CustomEvent("set-mood", { detail: { mood: "hope" } })); } },
+    { id: "mood-storm", label: "Set Mood: Storm", category: "Scene", action: () => { setOverrideMood("storm"); window.dispatchEvent(new CustomEvent("set-mood", { detail: { mood: "storm" } })); } },
+    { id: "mood-calm", label: "Set Mood: Calm", category: "Scene", action: () => { setOverrideMood("calm"); window.dispatchEvent(new CustomEvent("set-mood", { detail: { mood: "calm" } })); } },
+    { id: "mood-hope", label: "Set Mood: Hope", category: "Scene", action: () => { setOverrideMood("hope"); window.dispatchEvent(new CustomEvent("set-mood", { detail: { mood: "hope" } })); } },
     { id: "terminal", label: "Open Drafting Terminal", category: "Tools", shortcut: "Ctrl + ~", action: () => setTerminalOpen(true) },
     { id: "reset", label: "Reset All Progress", category: "Tools", action: () => { resetFolds(); window.location.reload(); } },
   ], [windForce, resetFolds]);
@@ -338,50 +473,33 @@ export default function Scene() {
         position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
         zIndex: 50, fontFamily: "Georgia, serif", background: "var(--bg)",
       }}>
-        <TitleScreen onStart={handleStart} folds={folds} resetFolds={resetFolds} />
+        <TitleScreen onStart={handleStart} onAutoTour={handleAutoTour} folds={folds} resetFolds={resetFolds} />
       </div>
     );
   }
 
   return (
     <>
-      {/* Custom cursor */}
+      {/* Custom cursor & Paper Grain Overlay */}
       <CustomCursor />
+      <PaperGrainOverlay />
 
       {/* Audio controller */}
       <AudioController mood={currentMood as any} />
       <Canvas
         camera={{ position: [3, 2, 5], fov: 50 }}
-        gl={{ antialias: true, alpha: false, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.2 }}
-        dpr={[1, 1.5]}
+        gl={{
+          antialias: true,
+          alpha: false,
+          powerPreference: "high-performance",
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: 1.1,
+        }}
+        dpr={[1, 1.25]}
         shadows
         style={{ position: "absolute", inset: 0 }}
       >
-        <color attach="background" args={["#fdf6e3"]} />
-        <Fog />
-
-        {/* Improved lighting setup */}
-        <ambientLight intensity={0.6} color="#fdf6e3" />
-        <directionalLight
-          position={[8, 12, 8]}
-          intensity={1.5}
-          color="#fff8e7"
-          castShadow
-          shadow-mapSize-width={2048}
-          shadow-mapSize-height={2048}
-          shadow-camera-near={0.1}
-          shadow-camera-far={100}
-          shadow-camera-left={-30}
-          shadow-camera-right={30}
-          shadow-camera-top={30}
-          shadow-camera-bottom={-30}
-        />
-        <directionalLight position={[-5, 6, -3]} intensity={0.4} color="#e0e7ff" />
-        <pointLight position={[0, 5, 0]} intensity={0.3} color="#fbbf24" distance={20} />
-        <hemisphereLight args={["#fdf6e3", "#e8e0d4", 0.5]} />
-
-        {/* Rim light for depth */}
-        <directionalLight position={[0, 3, -10]} intensity={0.2} color="#c4b5fd" />
+        <AtmosphereController timeOfDay={timeOfDay} />
 
         <Suspense fallback={null}>
           <PaperWorld
@@ -390,6 +508,7 @@ export default function Scene() {
             windForce={windForce}
             onLoreCollect={handleLoreCollect}
           />
+          <MiloFlightController active={flightMode} onExit={() => setFlightMode(false)} />
           <StoryCamera
             narrativeState={narrativeState}
             onInteractionProgress={handleInteractionProgress}
@@ -397,6 +516,30 @@ export default function Scene() {
           />
         </Suspense>
       </Canvas>
+
+      {/* Flight Mode HUD Banner */}
+      {flightMode && (
+        <div style={{
+          position: "fixed", bottom: 32, left: "50%", transform: "translateX(-50%)",
+          zIndex: 100, display: "flex", alignItems: "center", gap: 16,
+          background: "#ffffff",
+          border: "2px solid #09090b", borderRadius: 30,
+          padding: "10px 24px", color: "#09090b", fontSize: 12, fontFamily: "monospace",
+          boxShadow: "4px 4px 0 #09090b",
+        }}>
+          <span style={{ color: "#d97706", fontWeight: 800 }}>🦅 FLIGHT:</span>
+          <span style={{ fontWeight: 600 }}>W/S Pitch &middot; A/D Bank &middot; ESC Land</span>
+          <button
+            onClick={() => setFlightMode(false)}
+            style={{
+              background: "#09090b", color: "#ffffff", border: "none", borderRadius: 12,
+              padding: "4px 12px", cursor: "pointer", fontSize: 11, fontWeight: 800,
+            }}
+          >
+            LAND (F)
+          </button>
+        </div>
+      )}
 
       {/* Cinematic overlay */}
       {isCinematic && (
@@ -413,19 +556,54 @@ export default function Scene() {
         </div>
       )}
 
-      <NarrativeOverlay
-        state={narrativeState}
-        onAdvance={handleAdvance}
-        onInteractionProgress={handleInteractionProgress}
-        onInteractionComplete={handleInteractionComplete}
-        journeyStats={{ ...journeyStats, foldsUnlocked: folds.secretFoldUnlocked }}
-        onRestart={() => {
-          if (storyStartTimeRef.current > 0) {
-            addPlayTime(Date.now() - storyStartTimeRef.current);
-          }
-          window.location.reload();
-        }}
-      />
+      {/* Kinetic Act Title Card */}
+      <ActTitleCard actIndex={narrativeState.currentAct} />
+
+      {!photoMode && (
+        <NarrativeOverlay
+          state={narrativeState}
+          onAdvance={handleAdvance}
+          onInteractionProgress={handleInteractionProgress}
+          onInteractionComplete={handleInteractionComplete}
+          journeyStats={{ ...journeyStats, foldsUnlocked: folds.secretFoldUnlocked }}
+          onRestart={() => {
+            if (storyStartTimeRef.current > 0) {
+              addPlayTime(Date.now() - storyStartTimeRef.current);
+            }
+            window.location.reload();
+          }}
+        />
+      )}
+
+      {/* Auto-Tour Indicator Pill */}
+      {autoTour && (
+        <div style={{
+          position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)",
+          zIndex: 100, display: "flex", alignItems: "center", gap: 12,
+          background: "#ffffff",
+          border: "2px solid #09090b", borderRadius: 24,
+          padding: "8px 20px", color: "#09090b", fontSize: 12, fontFamily: "monospace",
+          boxShadow: "3px 3px 0 #09090b",
+        }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ef4444", display: "inline-block" }} />
+          <span style={{ fontWeight: 700 }}>CINEMATIC TOUR &middot; ACT {narrativeState.currentAct + 1} OF 8</span>
+          <button
+            onClick={() => setAutoTour(false)}
+            style={{
+              background: "#09090b", border: "none", borderRadius: 12,
+              padding: "4px 12px", color: "#ffffff", cursor: "pointer", fontSize: 11, fontWeight: 700,
+            }}
+          >
+            EXIT
+          </button>
+        </div>
+      )}
+
+      {/* Photo Mode Overlay */}
+      <PhotoMode active={photoMode} onClose={() => setPhotoMode(false)} />
+
+      {/* Achievement Toast */}
+      <AchievementToast achievement={recentUnlock} onClose={clearRecent} />
 
       {/* Persistent folds indicator */}
       {folds.secretFoldUnlocked && (
@@ -476,6 +654,18 @@ export default function Scene() {
       {loreModal && (
         <LoreModal entry={loreModal} onClose={() => setLoreModal(null)} />
       )}
+
+      {/* Sound Studio Modal */}
+      <SoundStudioModal
+        visible={soundStudioOpen}
+        onClose={() => setSoundStudioOpen(false)}
+      />
+
+      {/* Crafting Workshop Modal */}
+      <CraftingWorkshop
+        visible={workshopOpen}
+        onClose={() => setWorkshopOpen(false)}
+      />
 
       {/* Command Palette (Ctrl+K) */}
       <CommandPalette
@@ -600,7 +790,7 @@ function LoreModal({ entry, onClose }: { entry: LoreEntry; onClose: () => void }
 
 // ─── Title Screen ─────────────────────────────────────────────────────
 
-function TitleScreen({ onStart, folds, resetFolds }: { onStart: () => void; folds: ReturnType<typeof usePersistentFolds>["folds"]; resetFolds: () => void }) {
+function TitleScreen({ onStart, onAutoTour, folds, resetFolds }: { onStart: () => void; onAutoTour: () => void; folds: ReturnType<typeof usePersistentFolds>["folds"]; resetFolds: () => void }) {
   const titleRef = useRef<HTMLDivElement>(null);
   const subRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
@@ -622,14 +812,16 @@ function TitleScreen({ onStart, folds, resetFolds }: { onStart: () => void; fold
   })));
 
   useEffect(() => {
+    const targets = [titleRef.current, subRef.current, textRef.current, btnRef.current, navRef.current, featuresRef.current].filter(Boolean);
+    if (targets.length === 0) return;
     const tl = gsap.timeline();
-    gsap.set([titleRef.current, subRef.current, textRef.current, btnRef.current, navRef.current, featuresRef.current], { opacity: 0, y: 16 });
-    tl.to(navRef.current, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", delay: 0.2 })
-      .to(titleRef.current, { opacity: 1, y: 0, duration: 1, ease: "power3.out" }, "-=0.3")
-      .to(subRef.current, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, "-=0.5")
-      .to(textRef.current, { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" }, "-=0.3")
-      .to(featuresRef.current, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "-=0.2")
-      .to(btnRef.current, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "-=0.2");
+    gsap.set(targets, { opacity: 0, y: 16 });
+    if (navRef.current) tl.to(navRef.current, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", delay: 0.2 });
+    if (titleRef.current) tl.to(titleRef.current, { opacity: 1, y: 0, duration: 1, ease: "power3.out" }, "-=0.3");
+    if (subRef.current) tl.to(subRef.current, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, "-=0.5");
+    if (textRef.current) tl.to(textRef.current, { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" }, "-=0.3");
+    if (featuresRef.current) tl.to(featuresRef.current, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "-=0.2");
+    if (btnRef.current) tl.to(btnRef.current, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "-=0.2");
     return () => { tl.kill(); };
   }, []);
 
@@ -725,21 +917,21 @@ function TitleScreen({ onStart, folds, resetFolds }: { onStart: () => void; fold
         </div>
 
         <div ref={titleRef} style={{
-          fontSize: 56, fontWeight: "bold", color: "var(--text)", letterSpacing: -3,
-          marginBottom: 6, opacity: 0, lineHeight: 1, transition: "color 0.3s",
+          fontSize: 56, fontWeight: 800, color: "#09090b", letterSpacing: -3,
+          marginBottom: 6, opacity: 0, lineHeight: 1,
         }}>
           DRIFT
         </div>
         <div ref={subRef} style={{
-          fontSize: 17, color: "var(--text)", marginBottom: 20, fontStyle: "italic",
-          opacity: 0, letterSpacing: 1.5, transition: "color 0.3s",
+          fontSize: 18, color: "#09090b", marginBottom: 20, fontStyle: "italic",
+          opacity: 0, letterSpacing: 1.5, fontWeight: 600,
         }}>
           A Paper World
         </div>
-        <div style={{ width: 48, height: 2, background: "var(--text)", margin: "0 auto 20px", opacity: 0.2, transition: "background 0.3s" }} />
+        <div style={{ width: 48, height: 2, background: "#09090b", margin: "0 auto 20px" }} />
         <div ref={textRef} style={{
-          fontSize: 15, color: "var(--text-muted)", lineHeight: 1.8, marginBottom: 28,
-          opacity: 0, maxWidth: 380, margin: "0 auto 28px", transition: "color 0.3s",
+          fontSize: 16, color: "#09090b", lineHeight: 1.8, marginBottom: 28,
+          opacity: 0, maxWidth: 380, margin: "0 auto 28px", fontWeight: 500,
         }}>
           There was a paper crane named Milo who could not fly.
           One wing was bigger than the other. But he never stopped jumping.
@@ -751,16 +943,15 @@ function TitleScreen({ onStart, folds, resetFolds }: { onStart: () => void; fold
           opacity: 0, flexWrap: "wrap",
         }}>
           {[
-            { dot: "#1a1a2e", label: "8 Acts" },
-            { dot: "#fbbf24", label: "110 Sounds" },
-            { dot: "#a78bfa", label: "Secrets" },
+            { dot: "#09090b", label: "8 Acts" },
+            { dot: "#d97706", label: "110 Sounds" },
+            { dot: "#7c3aed", label: "Secrets" },
           ].map((f, i) => (
             <div key={i} style={{
               display: "flex", alignItems: "center", gap: 6,
-              fontSize: 12, color: "var(--text-muted)", fontWeight: 600, opacity: 0.55,
-              transition: "color 0.3s",
+              fontSize: 13, color: "#09090b", fontWeight: 700,
             }}>
-              <div style={{ width: 5, height: 5, borderRadius: "50%", background: f.dot }} />
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: f.dot }} />
               {f.label}
             </div>
           ))}
@@ -768,35 +959,56 @@ function TitleScreen({ onStart, folds, resetFolds }: { onStart: () => void; fold
 
         {folds.totalPlaythroughs > 0 && (
           <div style={{
-            fontSize: 12, color: "var(--text-muted)", marginBottom: 20,
-            fontStyle: "italic", opacity: 0.4, transition: "color 0.3s",
+            fontSize: 13, color: "#09090b", marginBottom: 20,
+            fontStyle: "italic", fontWeight: 600,
           }}>
             The world remembers {folds.totalPlaythroughs} previous {folds.totalPlaythroughs === 1 ? "visit" : "visits"}.
             {folds.secretFoldUnlocked && " The secret fold was unlocked."}
           </div>
         )}
 
-        <button ref={btnRef} onClick={onStart} style={{
-          background: "var(--text)", color: "var(--bg)", border: "none", borderRadius: 10,
-          padding: "15px 44px", fontSize: 15, fontFamily: "Georgia, serif", cursor: "pointer",
-          fontWeight: 600, boxShadow: "3px 3px 0 var(--shadow)",
-          transition: "transform 0.15s, box-shadow 0.15s, background 0.3s, color 0.3s", opacity: 0,
-        }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translate(-1px, -1px)";
-            e.currentTarget.style.boxShadow = "4px 4px 0 var(--shadow)";
-            window.dispatchEvent(new CustomEvent("button-hover"));
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+          <button ref={btnRef} onClick={onStart} style={{
+            background: "#09090b", color: "#ffffff", border: "none", borderRadius: 10,
+            padding: "14px 36px", fontSize: 15, fontFamily: "Georgia, serif", cursor: "pointer",
+            fontWeight: 700, boxShadow: "3px 3px 0 #09090b",
+            transition: "transform 0.15s, box-shadow 0.15s", opacity: 0,
           }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "translate(0, 0)";
-            e.currentTarget.style.boxShadow = "3px 3px 0 var(--shadow)";
-            window.dispatchEvent(new CustomEvent("hover-out"));
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translate(-1px, -1px)";
+              e.currentTarget.style.boxShadow = "4px 4px 0 #09090b";
+              window.dispatchEvent(new CustomEvent("button-hover"));
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translate(0, 0)";
+              e.currentTarget.style.boxShadow = "3px 3px 0 #09090b";
+              window.dispatchEvent(new CustomEvent("hover-out"));
+            }}
+          >
+            {folds.totalPlaythroughs > 0 ? "Enter Again" : "Begin the Story"}
+          </button>
+          <button onClick={onAutoTour} style={{
+            background: "#ffffff", color: "#09090b", border: "2px solid #09090b", borderRadius: 10,
+            padding: "14px 24px", fontSize: 14, fontFamily: "Georgia, serif", cursor: "pointer",
+            fontWeight: 700, boxShadow: "2px 2px 0 #09090b",
+            transition: "transform 0.15s, box-shadow 0.15s",
           }}
-        >
-          {folds.totalPlaythroughs > 0 ? "Enter Again" : "Begin the Story"}
-        </button>
-        <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 14, fontWeight: 600, opacity: 0.35, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "color 0.3s" }}>
-          <kbd style={{ padding: "2px 8px", border: "1px solid var(--border-light)", borderRadius: 4, fontSize: 10, background: "var(--bg-elevated)", transition: "background 0.3s, border-color 0.3s" }}>Enter</kbd>
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translate(-1px, -1px)";
+              e.currentTarget.style.boxShadow = "3px 3px 0 #09090b";
+              window.dispatchEvent(new CustomEvent("button-hover"));
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translate(0, 0)";
+              e.currentTarget.style.boxShadow = "2px 2px 0 #09090b";
+              window.dispatchEvent(new CustomEvent("hover-out"));
+            }}
+          >
+            Cinematic Tour
+          </button>
+        </div>
+        <div style={{ fontSize: 12, color: "#09090b", marginTop: 14, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+          <kbd style={{ padding: "3px 8px", border: "1.5px solid #09090b", borderRadius: 4, fontSize: 11, background: "#f4efe4", fontWeight: 800 }}>Enter</kbd>
           <span>to start</span>
         </div>
         {folds.totalPlaythroughs > 0 && (

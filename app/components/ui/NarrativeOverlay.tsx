@@ -5,6 +5,7 @@ import gsap from "gsap";
 import { NarrativeState, getCurrentAct, getCurrentBeat, nextBeat, STORY_ACTS } from "@/app/lib/narrative";
 import EndScreen from "./EndScreen";
 import HowToPlay from "./HowToPlay";
+import { AudioVisualizer } from "./AudioVisualizer";
 import { JourneyStats } from "@/app/lib/useJourneyTracker";
 
 interface NarrativeOverlayProps {
@@ -17,7 +18,7 @@ interface NarrativeOverlayProps {
 }
 
 export default function NarrativeOverlay({
-  state, onAdvance, onInteractionProgress, onInteractionComplete,
+  state, onAdvance, onInteractionProgress: _onInteractionProgress, onInteractionComplete: _onInteractionComplete,
   journeyStats, onRestart = () => window.location.reload(),
 }: NarrativeOverlayProps) {
   const textRef = useRef<HTMLDivElement>(null);
@@ -29,12 +30,17 @@ export default function NarrativeOverlay({
   const [flashOpacity, setFlashOpacity] = useState(0);
   const [floatTexts, setFloatTexts] = useState<Array<{ id: number; x: number; y: number }>>([]);
   const floatIdRef = useRef(0);
-  const startTimeRef = useRef(Date.now());
+  const [timeDisplay, setTimeDisplay] = useState("0:00");
+  const startTimeRef = useRef<number>(0);
+  useEffect(() => {
+    startTimeRef.current = Date.now();
+  }, []);
   const stateRef = useRef(state);
-  stateRef.current = state;
   const onAdvanceRef = useRef(onAdvance);
-  onAdvanceRef.current = onAdvance;
-  const timerRef = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    stateRef.current = state;
+    onAdvanceRef.current = onAdvance;
+  }, [state, onAdvance]);
 
   const act = getCurrentAct(state);
   const beat = getCurrentBeat(state);
@@ -43,9 +49,9 @@ export default function NarrativeOverlay({
   useEffect(() => {
     if (state.ended) return;
     const interval = setInterval(() => {
-      if (!timerRef.current) return;
-      const secs = Math.floor((Date.now() - startTimeRef.current) / 1000);
-      timerRef.current.textContent = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
+      const start = startTimeRef.current || Date.now();
+      const secs = Math.floor((Date.now() - start) / 1000);
+      setTimeDisplay(`${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`);
     }, 1000);
     return () => clearInterval(interval);
   }, [state.ended]);
@@ -125,18 +131,19 @@ export default function NarrativeOverlay({
   }, [state.ended]);
 
   if (showEnd) {
+    const fallbackStats: JourneyStats = {
+      startTime: 0, endTime: 0,
+      totalClicks: 0, totalKeys: 0, totalMouseMoveDistance: 0,
+      actTimes: [0, 0, 0, 0, 0, 0, 0, 0], actClicks: [0, 0, 0, 0, 0, 0, 0, 0],
+      actInteractions: [0, 0, 0, 0, 0, 0, 0, 0], actBeatCount: [0, 0, 0, 0, 0, 0, 0, 0],
+      secretsFound: [], currentAct: 7, loreCollected: 0, charactersMet: [],
+      jumpsMade: 0, windGenerated: 0, leavesCollected: 0, cellsToggled: 0,
+      boatStrokes: 0, butterfliesFollowed: 0, cranesReleased: 0,
+      shattersTriggered: 0, pendulumsPushed: 0, crittersFound: 0, foldsUnlocked: false,
+    };
     return (
       <EndScreen
-        stats={journeyStats || {
-          startTime: Date.now() - 1000, endTime: Date.now(),
-          totalClicks: 0, totalKeys: 0, totalMouseMoveDistance: 0,
-          actTimes: [0, 0, 0, 0, 0, 0, 0, 0], actClicks: [0, 0, 0, 0, 0, 0, 0, 0],
-          actInteractions: [0, 0, 0, 0, 0, 0, 0, 0], actBeatCount: [0, 0, 0, 0, 0, 0, 0, 0],
-          secretsFound: [], currentAct: 7, loreCollected: 0, charactersMet: [],
-          jumpsMade: 0, windGenerated: 0, leavesCollected: 0, cellsToggled: 0,
-          boatStrokes: 0, butterfliesFollowed: 0, cranesReleased: 0,
-          shattersTriggered: 0, pendulumsPushed: 0, crittersFound: 0, foldsUnlocked: false,
-        }}
+        stats={journeyStats || fallbackStats}
         onRestart={onRestart}
       />
     );
@@ -272,15 +279,15 @@ export default function NarrativeOverlay({
           {/* Story text card */}
           <div style={{
             ...card, maxWidth: 480, width: "100%", textAlign: "center",
-            borderRadius: 12, padding: "16px 24px", boxShadow: "3px 3px 0 var(--shadow)",
+            borderRadius: 12, padding: "18px 24px", boxShadow: "3px 3px 0 var(--shadow)",
             marginBottom: 12,
           }}>
-            <div ref={textRef} style={{ fontSize: 15, lineHeight: 1.7, opacity: 0 }}>
+            <div ref={textRef} style={{ fontSize: 16, lineHeight: 1.75, fontWeight: 600, color: "#09090b", opacity: 0 }}>
               {beat.text}
             </div>
             <div ref={charRef} style={{
-              fontSize: 11, marginTop: 8, fontStyle: "italic", opacity: 0,
-              fontWeight: 700, textTransform: "lowercase", letterSpacing: 0.5, color: "var(--text-muted)",
+              fontSize: 12, marginTop: 8, fontStyle: "italic", opacity: 0,
+              fontWeight: 800, textTransform: "lowercase", letterSpacing: 0.5, color: "#09090b",
             }}>
               {beat.character && beat.character !== "narrator" && beat.character !== "prompt"
                 ? `-- ${beat.character}` : ""}
@@ -293,7 +300,8 @@ export default function NarrativeOverlay({
               onMouseEnter={() => window.dispatchEvent(new CustomEvent("button-hover"))}
               onMouseLeave={() => window.dispatchEvent(new CustomEvent("hover-out"))}
               style={{
-                ...card, borderRadius: 10, padding: "10px 24px", fontSize: 14,
+                background: "#09090b", color: "#ffffff", border: "none",
+                borderRadius: 10, padding: "12px 28px", fontSize: 14,
                 fontFamily: "Georgia, serif", cursor: "pointer", fontWeight: 700,
                 boxShadow: "3px 3px 0 var(--shadow)", marginBottom: 12, pointerEvents: "auto",
               }}>
@@ -325,22 +333,24 @@ export default function NarrativeOverlay({
         padding: "12px 16px",
       }}>
         <div style={{
-          fontSize: 14, fontWeight: 700, color: "var(--text)", letterSpacing: -0.5,
-          background: "var(--bg-card)", border: "2px solid var(--border)", borderRadius: 8,
-          padding: "5px 12px", boxShadow: "2px 2px 0 var(--shadow)",
-          transition: "background 0.3s, color 0.3s, border-color 0.3s",
+          fontSize: 14, fontWeight: 800, color: "#09090b", letterSpacing: -0.5,
+          background: "#ffffff", border: "2px solid #09090b", borderRadius: 8,
+          padding: "5px 12px", boxShadow: "2px 2px 0 #09090b",
         }}>
           DRIFT
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {/* Live Audio Visualizer */}
+          <AudioVisualizer />
+
           {/* Act / Timer combined */}
           <div style={{
-            fontSize: 11, fontWeight: 600, color: "var(--text-muted)",
-            background: "var(--bg-card)", border: "1.5px solid var(--border)", borderRadius: 6,
+            fontSize: 11, fontWeight: 700, color: "#09090b",
+            background: "#ffffff", border: "2px solid #09090b", borderRadius: 6,
             padding: "4px 10px", fontFamily: "monospace", whiteSpace: "nowrap",
-            transition: "background 0.3s, color 0.3s, border-color 0.3s",
+            boxShadow: "2px 2px 0 #09090b",
           }}>
-            {act ? `${state.currentAct + 1}/${STORY_ACTS.length}` : ""} &middot; <span ref={timerRef}>{Math.floor((Date.now() - startTimeRef.current) / 1000 / 60)}:{String(Math.floor((Date.now() - startTimeRef.current) / 1000) % 60).padStart(2, "0")}</span>
+            {act ? `${state.currentAct + 1}/${STORY_ACTS.length}` : ""} &middot; <span>{timeDisplay}</span>
           </div>
           {/* Help */}
           <button
@@ -348,12 +358,11 @@ export default function NarrativeOverlay({
             onMouseEnter={() => window.dispatchEvent(new CustomEvent("button-hover"))}
             onMouseLeave={() => window.dispatchEvent(new CustomEvent("hover-out"))}
             style={{
-              background: "var(--bg-card)", border: "1.5px solid var(--border)", borderRadius: 6,
-              width: 26, height: 26, cursor: "pointer",
-              fontSize: 12, fontWeight: 700, color: "var(--text-muted)",
+              background: "#ffffff", border: "2px solid #09090b", borderRadius: 6,
+              width: 28, height: 28, cursor: "pointer",
+              fontSize: 12, fontWeight: 800, color: "#09090b",
               display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "1px 1px 0 var(--shadow)", flexShrink: 0,
-              transition: "background 0.3s, color 0.3s, border-color 0.3s",
+              boxShadow: "2px 2px 0 #09090b", flexShrink: 0,
             }}
             title="How to play"
           >?</button>

@@ -8,9 +8,12 @@ import { NarrativeState, getCurrentAct, getCurrentBeat } from "@/app/lib/narrati
 import { ConeTree, BonsaiTree } from "./LSystemTree";
 import FluidWater from "./FluidWater";
 import GLTFModel from "./GLTFModel";
-import { MouseParallaxEffect, PushPendulum, HiddenCritter, AmbientDust, PaperShatter, RippleEffect } from "./Interactions";
+import { MouseParallaxEffect, PushPendulum, HiddenCritter, AmbientDust, PaperShatter, RippleEffect, PaperRain, ForestSpores, OrigamiEmbers, CraneFlock } from "./Interactions";
 import { ProceduralCrystal, MengerSponge, MobiusStrip, KleinBottle, SpiralTower, VoronoiTerrain, PaperWindmill, LissajousCurve, GeodesicDome, DNAHelix, FractalIcosahedron } from "./ProceduralShapes";
 import { InstancedParticles, PhysicsPendulum, OrigamiCrane, TetrahedronChain, WaveSurface } from "./InteractiveElements";
+import { PaperClouds } from "./PaperClouds";
+import { LightShafts } from "./LightShafts";
+import { BloomingPaperFlower, LeapingPaperFrog } from "./InteractiveFloraFauna";
 
 // ─── External Models Config ───────────────────────────────────────────
 // Polyfork models (CC0, no attribution required).
@@ -1552,11 +1555,10 @@ interface PaperWorldProps {
 
 export default function PaperWorld({ narrativeState, onSecretFoldInteract, windForce = 0.3, onLoreCollect }: PaperWorldProps) {
   const { scene, camera, gl } = useThree();
-  if (!narrativeState) return <group><Terrain /></group>;
-  const act = getCurrentAct(narrativeState);
-  const beat = getCurrentBeat(narrativeState);
-  const currentAct = (narrativeState.currentAct ?? 0) + 1;
-  const windActive = currentAct === 2 && beat?.interaction === "drag-wind" && narrativeState.interactionState !== "complete";
+  const act = narrativeState ? getCurrentAct(narrativeState) : null;
+  const beat = narrativeState ? getCurrentBeat(narrativeState) : null;
+  const currentAct = (narrativeState?.currentAct ?? 0) + 1;
+  const windActive = currentAct === 2 && beat?.interaction === "drag-wind" && narrativeState?.interactionState !== "complete";
 
   // DOM-level click fallback for SecretFold
   const secretFoldInteracted = useRef(false);
@@ -1611,8 +1613,10 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
         case "final": bgColor = "#fefce8"; fogNear = 40; fogFar = 120; break;
       }
       const targetColor = new THREE.Color(bgColor);
-      gsap.to(scene.background as THREE.Color, { r: targetColor.r, g: targetColor.g, b: targetColor.b, duration: 1.5, ease: "power2.inOut" });
-      if (scene.fog instanceof THREE.Fog) {
+      if (scene.background && scene.background instanceof THREE.Color) {
+        gsap.to(scene.background, { r: targetColor.r, g: targetColor.g, b: targetColor.b, duration: 1.5, ease: "power2.inOut" });
+      }
+      if (scene.fog && scene.fog instanceof THREE.Fog) {
         gsap.to(scene.fog, { near: fogNear, far: fogFar, duration: 1.5, ease: "power2.inOut" });
         gsap.to(scene.fog.color, { r: targetColor.r, g: targetColor.g, b: targetColor.b, duration: 1.5, ease: "power2.inOut" });
       }
@@ -1645,12 +1649,14 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
     }
 
     const targetColor = new THREE.Color(bgColor);
-    gsap.to(scene.background as THREE.Color, { r: targetColor.r, g: targetColor.g, b: targetColor.b, duration: 2, ease: "power2.inOut" });
-    if (scene.fog instanceof THREE.Fog) {
+    if (scene.background && scene.background instanceof THREE.Color) {
+      gsap.to(scene.background, { r: targetColor.r, g: targetColor.g, b: targetColor.b, duration: 2, ease: "power2.inOut" });
+    }
+    if (scene.fog && scene.fog instanceof THREE.Fog) {
       gsap.to(scene.fog, { near: fogNear, far: fogFar, duration: 2, ease: "power2.inOut" });
       gsap.to(scene.fog.color, { r: targetColor.r, g: targetColor.g, b: targetColor.b, duration: 2, ease: "power2.inOut" });
     }
-  }, [currentAct, beat?.mood, beat?.envChange]);
+  }, [currentAct, beat?.mood, beat?.envChange, scene.background, scene.fog]);
 
   // ─── Collect Leaves interaction (Act 3) ────────────────────────────
   const [collectedLeaves, setCollectedLeaves] = useState<Array<{ id: number; x: number; y: number; z: number; color: string }>>([]);
@@ -1732,18 +1738,20 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
       <Terrain />
       <WindParticles />
       <WindVisualizer active={windActive} />
+      <PaperClouds count={10} area={[140, 25, 140]} />
+      {currentAct !== 2 && <LightShafts count={5} position={[15, 22, -10]} intensity={0.18} />}
 
       {/* ═══ ACT 1: Cliff Edge [0, 0, 0] ═══ */}
       <CliffEdge position={ACT_POSITIONS.cliff} />
       <PaperRockStack position={[3, -0.3, -2]} count={4} />
       <PaperRockStack position={[-2, -0.3, 3]} count={3} />
-      <PaperFlower position={[2, 0, 2]} color="#f472b6" />
-      <PaperFlower position={[-3, 0, 1]} color="#fb923c" petalCount={6} />
+      <BloomingPaperFlower position={[2, 0, 2]} color="#f472b6" petalCount={6} />
+      <BloomingPaperFlower position={[-3, 0, 1]} color="#fb923c" petalCount={8} />
       <PaperMushroom position={[1.5, 0, -1.5]} capColor="#ef4444" />
       <PaperButterfly position={[3, 3, 0]} color="#a78bfa" />
       <PaperStar position={[4, 3, 2]} color="#fbbf24" radius={0.25} />
       <PaperHouse position={[-5, 0, -3]} />
-      <PaperFrog position={[2, 0, -2]} color="#22c55e" />
+      <LeapingPaperFrog position={[2, 0, -2]} color="#22c55e" />
       {currentAct === 1 && (
         <>
           <MiloCrane position={[0, 0.5, 0]} act={currentAct} />
@@ -1761,7 +1769,12 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
           <PaperRockStack position={[3, -0.3, -2]} count={3} />
           <PaperArrow position={[42, 2, 0]} direction={[0, 0, -1]} color="#94a3b8" />
           <PaperArrow position={[38, 2, 0]} direction={[0, 0, 1]} color="#94a3b8" />
-          {currentAct === 2 && <StormDebris />}
+          {currentAct === 2 && (
+            <>
+              <StormDebris />
+              <PaperRain count={140} area={[25, 18, 25]} />
+            </>
+          )}
         </group>
       )}
       {currentAct === 2 && <MiloCrane position={[40, 0.5, 0]} act={currentAct} />}
@@ -1770,16 +1783,17 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
       {currentAct >= 3 && <Forest position={ACT_POSITIONS.forest} />}
       {currentAct >= 3 && (
         <>
-          <PaperFlower position={[-38, 0, 2]} color="#f472b6" />
-          <PaperFlower position={[-42, 0, -1]} color="#c084fc" petalCount={7} />
-          <PaperFlower position={[-37, 0, -3]} color="#fb923c" />
+          <ForestSpores count={70} center={[-40, 2, 0]} />
+          <BloomingPaperFlower position={[-38, 0, 2]} color="#f472b6" petalCount={6} />
+          <BloomingPaperFlower position={[-42, 0, -1]} color="#c084fc" petalCount={7} />
+          <BloomingPaperFlower position={[-37, 0, -3]} color="#fb923c" petalCount={6} />
           <PaperButterfly position={[-39, 3, 1]} color="#f472b6" />
           <PaperButterfly position={[-41, 2.5, -2]} color="#67e8f9" />
           <PaperMushroom position={[-38.5, 0, 3]} capColor="#a78bfa" />
           <PaperMushroom position={[-41.5, 0, -2.5]} capColor="#f472b6" />
           <PaperLantern position={[-40, 2, 0]} color="#fbbf24" />
           <PaperSwan position={[-38, 0.1, -1]} color="#ffffff" scale={0.7} />
-          <PaperFrog position={[-41, 0, 2]} color="#16a34a" />
+          <LeapingPaperFrog position={[-41, 0, 2]} color="#16a34a" />
           <PaperGem position={[-39, 1.5, -2]} color="#a78bfa" scale={0.8} />
           <PaperLotus position={[-42, 0, 1]} color="#f472b6" />
           <PaperWindChime position={[-40, 2.5, -3]} />
@@ -1814,6 +1828,7 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
         </group>
       )}
       {currentAct >= 4 && currentAct <= 5 && <MiloCrane position={[0, 0.5, -37]} act={currentAct} />}
+      {currentAct === 5 && <OrigamiEmbers count={60} center={[0, 1, -40]} />}
       <SecretFold position={[0, 1.5, -40]} visible={currentAct === 5} onInteract={onSecretFoldInteract} />
 
       {/* ═══ ACT 6/7: Water / Pip [0, 0, 40] ═══ */}
@@ -1842,6 +1857,7 @@ export default function PaperWorld({ narrativeState, onSecretFoldInteract, windF
       {currentAct === 8 && (
         <>
           <MiloCrane position={[0, 15, 0]} act={currentAct} />
+          <CraneFlock count={18} />
           <OrigamiCrane position={[5, 13, 3]} color="#fbbf24" size={0.7} />
           <OrigamiCrane position={[-4, 14, -2]} color="#f97316" size={0.6} />
           <PaperButterfly position={[3, 16, -4]} color="#a78bfa" />

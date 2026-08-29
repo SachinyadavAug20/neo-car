@@ -14,26 +14,22 @@ export function useTheme() {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
-  const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window === "undefined") return "light";
+    const saved = localStorage.getItem("drift-theme") as Theme | null;
+    if (saved === "light" || saved === "dark") return saved;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  });
 
   useEffect(() => {
-    setMounted(true);
-    const saved = localStorage.getItem("drift-theme") as Theme | null;
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const initial = saved || (prefersDark ? "dark" : "light");
-    setTheme(initial);
-    document.documentElement.setAttribute("data-theme", initial);
-  }, []);
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
 
   const toggle = () => {
     const next = theme === "light" ? "dark" : "light";
     setTheme(next);
     localStorage.setItem("drift-theme", next);
-    document.documentElement.setAttribute("data-theme", next);
   };
-
-  if (!mounted) return <>{children}</>;
 
   return (
     <ThemeContext.Provider value={{ theme, toggle }}>

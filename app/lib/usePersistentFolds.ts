@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 
 const STORAGE_KEY = "drift-persistent-folds";
 
@@ -46,24 +46,16 @@ function saveFolds(folds: PersistentFolds) {
 }
 
 export function usePersistentFolds() {
-  const [folds, setFolds] = useState<PersistentFolds>(DEFAULT_FOLDS);
-  const [loaded, setLoaded] = useState(false);
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    setFolds(loadFolds());
-    setLoaded(true);
-  }, []);
-
-  // Update last visit timestamp
-  useEffect(() => {
-    if (!loaded) return;
-    setFolds(prev => {
-      const next = { ...prev, lastVisit: new Date().toISOString() };
-      saveFolds(next);
-      return next;
-    });
-  }, [loaded]);
+  const [folds, setFolds] = useState<PersistentFolds>(() => {
+    const initial = loadFolds();
+    if (typeof window !== "undefined") {
+      const withVisit = { ...initial, lastVisit: new Date().toISOString() };
+      saveFolds(withVisit);
+      return withVisit;
+    }
+    return initial;
+  });
+  const [loaded] = useState(true);
 
   const unlockSecretFold = useCallback(() => {
     setFolds(prev => {
