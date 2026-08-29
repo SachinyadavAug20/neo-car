@@ -94,7 +94,7 @@ export function ActTitleCard({ actIndex }: ActTitleCardProps) {
           fontSize: "14rem",
           fontWeight: 900,
           fontFamily: "Georgia, serif",
-          color: "#09090b",
+          color: "var(--text)",
           lineHeight: 1,
           userSelect: "none",
           zIndex: -1,
@@ -111,7 +111,7 @@ export function ActTitleCard({ actIndex }: ActTitleCardProps) {
           fontFamily: "monospace",
           letterSpacing: 4,
           textTransform: "uppercase",
-          color: "#09090b",
+          color: "var(--text-muted)",
           marginBottom: 8,
           fontWeight: 800,
         }}
@@ -126,11 +126,11 @@ export function ActTitleCard({ actIndex }: ActTitleCardProps) {
           fontSize: "clamp(30px, 5vw, 52px)",
           fontWeight: 800,
           fontFamily: "Georgia, serif",
-          color: "#09090b",
+          color: "var(--text)",
           margin: 0,
           letterSpacing: -1.5,
           lineHeight: 1.15,
-          textShadow: "0 1px 12px rgba(255,255,255,0.9)",
+          textShadow: "0 2px 24px var(--shadow-color)",
         }}
       >
         {act.title}
@@ -142,7 +142,7 @@ export function ActTitleCard({ actIndex }: ActTitleCardProps) {
         style={{
           width: 80,
           height: 3,
-          background: "#09090b",
+          background: "var(--accent)",
           margin: "16px auto 0",
           borderRadius: 2,
         }}

@@ -63,8 +63,8 @@ export default function HowToPlay({ onClose }: HowToPlayProps) {
           onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
         >x</button>
 
-        <div style={{ fontSize: 22, fontWeight: "bold", letterSpacing: -1, marginBottom: 4 }}>How to Play</div>
-        <div style={{ fontSize: 13, color: "var(--text-muted)", opacity: 0.45, marginBottom: 24 }}>DRIFT is an interactive story. Here&apos;s how to explore it.</div>
+        <div style={{ fontSize: 22, fontWeight: "bold", letterSpacing: -1, marginBottom: 4, color: "var(--text)" }}>How to Play</div>
+        <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 24 }}>DRIFT is an interactive story. Here&apos;s how to explore it.</div>
 
         <div style={{ display: "grid", gap: 8 }}>
           {CONTROLS.map((ctrl, i) => (
@@ -81,7 +81,7 @@ export default function HowToPlay({ onClose }: HowToPlayProps) {
                 flexShrink: 0, minWidth: 90, textAlign: "center",
                 transition: "background 0.3s, color 0.3s, border-color 0.3s",
               }}>{ctrl.key}</kbd>
-              <span style={{ fontSize: 13, color: "var(--text-muted)", transition: "color 0.3s" }}>{ctrl.action}</span>
+              <span style={{ fontSize: 13, color: "var(--text)", fontWeight: 500, transition: "color 0.3s" }}>{ctrl.action}</span>
             </div>
           ))}
         </div>
@@ -89,7 +89,7 @@ export default function HowToPlay({ onClose }: HowToPlayProps) {
         <div style={{
           marginTop: 20, padding: "12px 16px", borderRadius: 10,
           background: "var(--bg-elevated)", border: "1px dashed var(--border-light)",
-          fontSize: 12, color: "var(--text-muted)", opacity: 0.5, textAlign: "center",
+          fontSize: 12, color: "var(--text-muted)", textAlign: "center", fontWeight: 600,
           transition: "background 0.3s, color 0.3s, border-color 0.3s",
         }}>
           Type secret words like &ldquo;wind&rdquo;, &ldquo;fold&rdquo;, or &ldquo;milo&rdquo; for hidden surprises

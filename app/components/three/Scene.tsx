@@ -522,18 +522,20 @@ export default function Scene() {
         <div style={{
           position: "fixed", bottom: 32, left: "50%", transform: "translateX(-50%)",
           zIndex: 100, display: "flex", alignItems: "center", gap: 16,
-          background: "#ffffff",
-          border: "2px solid #09090b", borderRadius: 30,
-          padding: "10px 24px", color: "#09090b", fontSize: 12, fontFamily: "monospace",
-          boxShadow: "4px 4px 0 #09090b",
+          background: "var(--bg-card)",
+          border: "2px solid var(--border)", borderRadius: 30,
+          padding: "10px 24px", color: "var(--text)", fontSize: 12, fontFamily: "monospace",
+          boxShadow: "4px 4px 0 var(--shadow)",
+          transition: "background 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s",
         }}>
-          <span style={{ color: "#d97706", fontWeight: 800 }}>🦅 FLIGHT:</span>
+          <span style={{ color: "var(--accent)", fontWeight: 800 }}>🦅 FLIGHT:</span>
           <span style={{ fontWeight: 600 }}>W/S Pitch &middot; A/D Bank &middot; ESC Land</span>
           <button
             onClick={() => setFlightMode(false)}
             style={{
-              background: "#09090b", color: "#ffffff", border: "none", borderRadius: 12,
+              background: "var(--text)", color: "var(--bg)", border: "none", borderRadius: 12,
               padding: "4px 12px", cursor: "pointer", fontSize: 11, fontWeight: 800,
+              transition: "background 0.3s, color 0.3s",
             }}
           >
             LAND (F)
@@ -549,7 +551,7 @@ export default function Scene() {
           zIndex: 40, pointerEvents: "none",
         }}>
           <div style={{
-            width: 30, height: 30, border: "3px solid #1a1a2e", borderRadius: "50%",
+            width: 30, height: 30, border: "3px solid var(--text)", borderRadius: "50%",
             borderTopColor: "transparent", animation: "spin 1s linear infinite",
           }} />
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -580,18 +582,20 @@ export default function Scene() {
         <div style={{
           position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)",
           zIndex: 100, display: "flex", alignItems: "center", gap: 12,
-          background: "#ffffff",
-          border: "2px solid #09090b", borderRadius: 24,
-          padding: "8px 20px", color: "#09090b", fontSize: 12, fontFamily: "monospace",
-          boxShadow: "3px 3px 0 #09090b",
+          background: "var(--bg-card)",
+          border: "2px solid var(--border)", borderRadius: 24,
+          padding: "8px 20px", color: "var(--text)", fontSize: 12, fontFamily: "monospace",
+          boxShadow: "3px 3px 0 var(--shadow)",
+          transition: "background 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s",
         }}>
           <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ef4444", display: "inline-block" }} />
           <span style={{ fontWeight: 700 }}>CINEMATIC TOUR &middot; ACT {narrativeState.currentAct + 1} OF 8</span>
           <button
             onClick={() => setAutoTour(false)}
             style={{
-              background: "#09090b", border: "none", borderRadius: 12,
-              padding: "4px 12px", color: "#ffffff", cursor: "pointer", fontSize: 11, fontWeight: 700,
+              background: "var(--text)", border: "none", borderRadius: 12,
+              padding: "4px 12px", color: "var(--bg)", cursor: "pointer", fontSize: 11, fontWeight: 700,
+              transition: "background 0.3s, color 0.3s",
             }}
           >
             EXIT
@@ -917,21 +921,21 @@ function TitleScreen({ onStart, onAutoTour, folds, resetFolds }: { onStart: () =
         </div>
 
         <div ref={titleRef} style={{
-          fontSize: 56, fontWeight: 800, color: "#09090b", letterSpacing: -3,
-          marginBottom: 6, opacity: 0, lineHeight: 1,
+          fontSize: 56, fontWeight: 800, color: "var(--text)", letterSpacing: -3,
+          marginBottom: 6, opacity: 0, lineHeight: 1, transition: "color 0.3s",
         }}>
           DRIFT
         </div>
         <div ref={subRef} style={{
-          fontSize: 18, color: "#09090b", marginBottom: 20, fontStyle: "italic",
-          opacity: 0, letterSpacing: 1.5, fontWeight: 600,
+          fontSize: 18, color: "var(--text)", marginBottom: 20, fontStyle: "italic",
+          opacity: 0, letterSpacing: 1.5, fontWeight: 600, transition: "color 0.3s",
         }}>
           A Paper World
         </div>
-        <div style={{ width: 48, height: 2, background: "#09090b", margin: "0 auto 20px" }} />
+        <div style={{ width: 48, height: 2, background: "var(--text)", margin: "0 auto 20px", transition: "background 0.3s" }} />
         <div ref={textRef} style={{
-          fontSize: 16, color: "#09090b", lineHeight: 1.8, marginBottom: 28,
-          opacity: 0, maxWidth: 380, margin: "0 auto 28px", fontWeight: 500,
+          fontSize: 16, color: "var(--text)", lineHeight: 1.8, marginBottom: 28,
+          opacity: 0, maxWidth: 380, margin: "0 auto 28px", fontWeight: 500, transition: "color 0.3s",
         }}>
           There was a paper crane named Milo who could not fly.
           One wing was bigger than the other. But he never stopped jumping.
@@ -943,13 +947,13 @@ function TitleScreen({ onStart, onAutoTour, folds, resetFolds }: { onStart: () =
           opacity: 0, flexWrap: "wrap",
         }}>
           {[
-            { dot: "#09090b", label: "8 Acts" },
+            { dot: "var(--text)", label: "8 Acts" },
             { dot: "#d97706", label: "110 Sounds" },
             { dot: "#7c3aed", label: "Secrets" },
           ].map((f, i) => (
             <div key={i} style={{
               display: "flex", alignItems: "center", gap: 6,
-              fontSize: 13, color: "#09090b", fontWeight: 700,
+              fontSize: 13, color: "var(--text)", fontWeight: 700, transition: "color 0.3s",
             }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: f.dot }} />
               {f.label}
@@ -959,8 +963,8 @@ function TitleScreen({ onStart, onAutoTour, folds, resetFolds }: { onStart: () =
 
         {folds.totalPlaythroughs > 0 && (
           <div style={{
-            fontSize: 13, color: "#09090b", marginBottom: 20,
-            fontStyle: "italic", fontWeight: 600,
+            fontSize: 13, color: "var(--text)", marginBottom: 20,
+            fontStyle: "italic", fontWeight: 600, transition: "color 0.3s",
           }}>
             The world remembers {folds.totalPlaythroughs} previous {folds.totalPlaythroughs === 1 ? "visit" : "visits"}.
             {folds.secretFoldUnlocked && " The secret fold was unlocked."}
@@ -969,46 +973,46 @@ function TitleScreen({ onStart, onAutoTour, folds, resetFolds }: { onStart: () =
 
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
           <button ref={btnRef} onClick={onStart} style={{
-            background: "#09090b", color: "#ffffff", border: "none", borderRadius: 10,
+            background: "var(--text)", color: "var(--bg)", border: "none", borderRadius: 10,
             padding: "14px 36px", fontSize: 15, fontFamily: "Georgia, serif", cursor: "pointer",
-            fontWeight: 700, boxShadow: "3px 3px 0 #09090b",
-            transition: "transform 0.15s, box-shadow 0.15s", opacity: 0,
+            fontWeight: 700, boxShadow: "3px 3px 0 var(--shadow)",
+            transition: "transform 0.15s, box-shadow 0.15s, background 0.3s, color 0.3s", opacity: 0,
           }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "translate(-1px, -1px)";
-              e.currentTarget.style.boxShadow = "4px 4px 0 #09090b";
+              e.currentTarget.style.boxShadow = "4px 4px 0 var(--shadow)";
               window.dispatchEvent(new CustomEvent("button-hover"));
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = "translate(0, 0)";
-              e.currentTarget.style.boxShadow = "3px 3px 0 #09090b";
+              e.currentTarget.style.boxShadow = "3px 3px 0 var(--shadow)";
               window.dispatchEvent(new CustomEvent("hover-out"));
             }}
           >
             {folds.totalPlaythroughs > 0 ? "Enter Again" : "Begin the Story"}
           </button>
           <button onClick={onAutoTour} style={{
-            background: "#ffffff", color: "#09090b", border: "2px solid #09090b", borderRadius: 10,
+            background: "var(--bg-elevated)", color: "var(--text)", border: "2px solid var(--border)", borderRadius: 10,
             padding: "14px 24px", fontSize: 14, fontFamily: "Georgia, serif", cursor: "pointer",
-            fontWeight: 700, boxShadow: "2px 2px 0 #09090b",
-            transition: "transform 0.15s, box-shadow 0.15s",
+            fontWeight: 700, boxShadow: "2px 2px 0 var(--shadow)",
+            transition: "transform 0.15s, box-shadow 0.15s, background 0.3s, color 0.3s, border-color 0.3s",
           }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "translate(-1px, -1px)";
-              e.currentTarget.style.boxShadow = "3px 3px 0 #09090b";
+              e.currentTarget.style.boxShadow = "3px 3px 0 var(--shadow)";
               window.dispatchEvent(new CustomEvent("button-hover"));
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = "translate(0, 0)";
-              e.currentTarget.style.boxShadow = "2px 2px 0 #09090b";
+              e.currentTarget.style.boxShadow = "2px 2px 0 var(--shadow)";
               window.dispatchEvent(new CustomEvent("hover-out"));
             }}
           >
             Cinematic Tour
           </button>
         </div>
-        <div style={{ fontSize: 12, color: "#09090b", marginTop: 14, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-          <kbd style={{ padding: "3px 8px", border: "1.5px solid #09090b", borderRadius: 4, fontSize: 11, background: "#f4efe4", fontWeight: 800 }}>Enter</kbd>
+        <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 14, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "color 0.3s" }}>
+          <kbd style={{ padding: "3px 8px", border: "1.5px solid var(--border)", borderRadius: 4, fontSize: 11, background: "var(--bg-elevated)", color: "var(--text)", fontWeight: 800, transition: "background 0.3s, color 0.3s, border-color 0.3s" }}>Enter</kbd>
           <span>to start</span>
         </div>
         {folds.totalPlaythroughs > 0 && (

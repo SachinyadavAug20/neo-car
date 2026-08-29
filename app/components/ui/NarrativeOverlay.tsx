@@ -282,12 +282,13 @@ export default function NarrativeOverlay({
             borderRadius: 12, padding: "18px 24px", boxShadow: "3px 3px 0 var(--shadow)",
             marginBottom: 12,
           }}>
-            <div ref={textRef} style={{ fontSize: 16, lineHeight: 1.75, fontWeight: 600, color: "#09090b", opacity: 0 }}>
+            <div ref={textRef} style={{ fontSize: 16, lineHeight: 1.75, fontWeight: 600, color: "var(--text)", opacity: 0, transition: "color 0.3s" }}>
               {beat.text}
             </div>
             <div ref={charRef} style={{
               fontSize: 12, marginTop: 8, fontStyle: "italic", opacity: 0,
-              fontWeight: 800, textTransform: "lowercase", letterSpacing: 0.5, color: "#09090b",
+              fontWeight: 800, textTransform: "lowercase", letterSpacing: 0.5, color: "var(--text-muted)",
+              transition: "color 0.3s",
             }}>
               {beat.character && beat.character !== "narrator" && beat.character !== "prompt"
                 ? `-- ${beat.character}` : ""}
@@ -300,10 +301,11 @@ export default function NarrativeOverlay({
               onMouseEnter={() => window.dispatchEvent(new CustomEvent("button-hover"))}
               onMouseLeave={() => window.dispatchEvent(new CustomEvent("hover-out"))}
               style={{
-                background: "#09090b", color: "#ffffff", border: "none",
+                background: "var(--text)", color: "var(--bg)", border: "none",
                 borderRadius: 10, padding: "12px 28px", fontSize: 14,
                 fontFamily: "Georgia, serif", cursor: "pointer", fontWeight: 700,
                 boxShadow: "3px 3px 0 var(--shadow)", marginBottom: 12, pointerEvents: "auto",
+                transition: "background 0.3s, color 0.3s, transform 0.15s, box-shadow 0.15s",
               }}>
               Continue
             </button>
@@ -333,9 +335,10 @@ export default function NarrativeOverlay({
         padding: "12px 16px",
       }}>
         <div style={{
-          fontSize: 14, fontWeight: 800, color: "#09090b", letterSpacing: -0.5,
-          background: "#ffffff", border: "2px solid #09090b", borderRadius: 8,
-          padding: "5px 12px", boxShadow: "2px 2px 0 #09090b",
+          fontSize: 14, fontWeight: 800, color: "var(--text)", letterSpacing: -0.5,
+          background: "var(--bg-card)", border: "2px solid var(--border)", borderRadius: 8,
+          padding: "5px 12px", boxShadow: "2px 2px 0 var(--shadow)",
+          transition: "background 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s",
         }}>
           DRIFT
         </div>
@@ -345,10 +348,11 @@ export default function NarrativeOverlay({
 
           {/* Act / Timer combined */}
           <div style={{
-            fontSize: 11, fontWeight: 700, color: "#09090b",
-            background: "#ffffff", border: "2px solid #09090b", borderRadius: 6,
+            fontSize: 11, fontWeight: 700, color: "var(--text)",
+            background: "var(--bg-card)", border: "2px solid var(--border)", borderRadius: 6,
             padding: "4px 10px", fontFamily: "monospace", whiteSpace: "nowrap",
-            boxShadow: "2px 2px 0 #09090b",
+            boxShadow: "2px 2px 0 var(--shadow)",
+            transition: "background 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s",
           }}>
             {act ? `${state.currentAct + 1}/${STORY_ACTS.length}` : ""} &middot; <span>{timeDisplay}</span>
           </div>
@@ -358,11 +362,12 @@ export default function NarrativeOverlay({
             onMouseEnter={() => window.dispatchEvent(new CustomEvent("button-hover"))}
             onMouseLeave={() => window.dispatchEvent(new CustomEvent("hover-out"))}
             style={{
-              background: "#ffffff", border: "2px solid #09090b", borderRadius: 6,
+              background: "var(--bg-card)", border: "2px solid var(--border)", borderRadius: 6,
               width: 28, height: 28, cursor: "pointer",
-              fontSize: 12, fontWeight: 800, color: "#09090b",
+              fontSize: 12, fontWeight: 800, color: "var(--text)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "2px 2px 0 #09090b", flexShrink: 0,
+              boxShadow: "2px 2px 0 var(--shadow)", flexShrink: 0,
+              transition: "background 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s",
             }}
             title="How to play"
           >?</button>

@@ -22,18 +22,18 @@
 
 [data-theme="dark"] {
   --bg: #0f0f1a;
-  --bg-card: #1a1a2e;
-  --bg-elevated: #252540;
-  --text: #e8e6e3;
-  --text-muted: #9ca3af;
-  --text-faint: #6b7280;
-  --border: #e8e6e3;
-  --border-light: #2d2d4a;
+  --bg-card: #18182b;
+  --bg-elevated: #23233c;
+  --text: #f8fafc;
+  --text-muted: #e2e8f0;
+  --text-faint: #94a3b8;
+  --border: #f8fafc;
+  --border-light: #334155;
   --shadow: #000000;
-  --shadow-color: rgba(0,0,0,0.6);
+  --shadow-color: rgba(0,0,0,0.8);
   --accent: #fbbf24;
   --accent-hover: #fcd34d;
-  --link: #e8e6e3;
+  --link: #f8fafc;
 }
 
 html, body {

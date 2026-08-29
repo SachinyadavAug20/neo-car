@@ -56,8 +56,8 @@ export default function AudioController({ mood, visible = true }: AudioControlle
             top: 50,
             left: "50%",
             transform: "translateX(-50%)",
-            background: "#ffffff",
-            color: "#09090b",
+            background: "var(--bg-card)",
+            color: "var(--text)",
             borderRadius: 8,
             padding: "8px 18px",
             fontSize: 13,
@@ -67,9 +67,10 @@ export default function AudioController({ mood, visible = true }: AudioControlle
             display: "flex",
             alignItems: "center",
             gap: 8,
-            boxShadow: "3px 3px 0 #09090b",
+            boxShadow: "3px 3px 0 var(--shadow)",
             cursor: "pointer",
-            border: "2px solid #09090b",
+            border: "2px solid var(--border)",
+            transition: "background 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s",
           }}
           onClick={() => {
             initAudio();
@@ -79,7 +80,7 @@ export default function AudioController({ mood, visible = true }: AudioControlle
           }}
         >
           <span>🔊 Click anywhere to enable sound</span>
-          <span style={{ fontSize: 11, color: "#52525b", fontWeight: 600 }}>(optional)</span>
+          <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600 }}>(optional)</span>
         </div>
       )}
 
@@ -92,8 +93,8 @@ export default function AudioController({ mood, visible = true }: AudioControlle
           bottom: 14,
           left: 14,
           zIndex: 90,
-          background: "#ffffff",
-          border: "2px solid #09090b",
+          background: "var(--bg-card)",
+          border: "2px solid var(--border)",
           borderRadius: 8,
           width: 32,
           height: 32,
@@ -103,8 +104,9 @@ export default function AudioController({ mood, visible = true }: AudioControlle
           justifyContent: "center",
           fontSize: 14,
           fontWeight: 800,
-          color: "#09090b",
-          boxShadow: "2px 2px 0 #09090b",
+          color: "var(--text)",
+          boxShadow: "2px 2px 0 var(--shadow)",
+          transition: "background 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s",
         }}
         title={muted ? "Unmute" : "Mute"}
       >
