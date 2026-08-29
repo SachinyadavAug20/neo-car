@@ -50,39 +50,65 @@ export default function AudioController({ mood, visible = true }: AudioControlle
   return (
     <>
       {showPrompt && (
-        <div style={{
-          position: "fixed", top: 50, left: "50%", transform: "translateX(-50%)",
-          background: "var(--bg-card)", color: "var(--text)",
-          borderRadius: 8, padding: "8px 16px", fontSize: 12, fontFamily: "Georgia, serif",
-          zIndex: 90, display: "flex", alignItems: "center", gap: 8,
-          boxShadow: "2px 2px 0 var(--shadow)", cursor: "pointer",
-          border: "1.5px solid var(--border)",
-          transition: "background 0.3s, color 0.3s, border-color 0.3s",
-        }}
-          onClick={() => { initAudio(); setStarted(true); setShowPrompt(false); window.dispatchEvent(new CustomEvent("power-up")); }}
+        <div
+          style={{
+            position: "fixed",
+            top: 50,
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "#ffffff",
+            color: "#09090b",
+            borderRadius: 8,
+            padding: "8px 18px",
+            fontSize: 13,
+            fontFamily: "Georgia, serif",
+            fontWeight: 700,
+            zIndex: 90,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            boxShadow: "3px 3px 0 #09090b",
+            cursor: "pointer",
+            border: "2px solid #09090b",
+          }}
+          onClick={() => {
+            initAudio();
+            setStarted(true);
+            setShowPrompt(false);
+            window.dispatchEvent(new CustomEvent("power-up"));
+          }}
         >
-          <span>Click to enable sound</span>
-          <span style={{ fontSize: 10, opacity: 0.4 }}>(optional)</span>
+          <span>🔊 Click anywhere to enable sound</span>
+          <span style={{ fontSize: 11, color: "#52525b", fontWeight: 600 }}>(optional)</span>
         </div>
       )}
 
       <button
         onClick={toggle}
-        data-cursor="pointer"
         aria-label={muted ? "Unmute audio" : "Mute audio"}
         aria-pressed={!muted}
         style={{
-          position: "fixed", bottom: 14, left: 14, zIndex: 90,
-          background: "var(--bg-card)", border: "1.5px solid var(--border)", borderRadius: 6,
-          width: 26, height: 26, cursor: "pointer",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 11, fontWeight: 700, color: "var(--text-muted)",
-          boxShadow: "1px 1px 0 var(--shadow)",
-          transition: "background 0.3s, color 0.3s, border-color 0.3s",
+          position: "fixed",
+          bottom: 14,
+          left: 14,
+          zIndex: 90,
+          background: "#ffffff",
+          border: "2px solid #09090b",
+          borderRadius: 8,
+          width: 32,
+          height: 32,
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 14,
+          fontWeight: 800,
+          color: "#09090b",
+          boxShadow: "2px 2px 0 #09090b",
         }}
         title={muted ? "Unmute" : "Mute"}
       >
-        {muted ? "x" : "~"}
+        {muted ? "🔇" : "🔊"}
       </button>
     </>
   );

@@ -10,14 +10,25 @@ let masterGain: GainNode | null = null;
 let musicGain: GainNode | null = null;
 let sfxGain: GainNode | null = null;
 let ambientGain: GainNode | null = null;
+let analyserNode: AnalyserNode | null = null;
+let freqDataArray: Uint8Array | null = null;
 let isMuted = false;
 
 function getCtx(): AudioContext {
   if (!audioCtx) {
-    audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    audioCtx = new AudioCtxClass();
     masterGain = audioCtx.createGain();
     masterGain.gain.value = 0.35;
-    masterGain.connect(audioCtx.destination);
+
+    analyserNode = audioCtx.createAnalyser();
+    analyserNode.fftSize = 64;
+    analyserNode.smoothingTimeConstant = 0.8;
+    freqDataArray = new Uint8Array(analyserNode.frequencyBinCount);
+
+    masterGain.connect(analyserNode);
+    analyserNode.connect(audioCtx.destination);
+
     musicGain = audioCtx.createGain();
     musicGain.gain.value = 0.12;
     musicGain.connect(masterGain);
@@ -30,6 +41,12 @@ function getCtx(): AudioContext {
   }
   if (audioCtx.state === "suspended") audioCtx.resume();
   return audioCtx;
+}
+
+export function getAudioFrequencyData(): Uint8Array | null {
+  if (!analyserNode || !freqDataArray) return null;
+  analyserNode.getByteFrequencyData(freqDataArray as unknown as Uint8Array<ArrayBuffer>);
+  return freqDataArray;
 }
 
 function sg() { getCtx(); return sfxGain!; }
@@ -1369,6 +1386,38 @@ export function stopAmbient() { clearAmbient(); }
 
 // ─── Controls ─────────────────────────────────────────────────────────
 
+export function playCameraShutter() {
+  const ctx = getCtx();
+  const t = ctx.currentTime;
+  const n1 = noise(ctx, 0.04);
+  const filter = ctx.createBiquadFilter();
+  filter.type = "bandpass";
+  filter.frequency.setValueAtTime(2400, t);
+  filter.Q.setValueAtTime(4, t);
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.5, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+  n1.src.connect(filter); filter.connect(gain); gain.connect(sg());
+  n1.src.start(t);
+
+  const n2 = noise(ctx, 0.04);
+  const gain2 = ctx.createGain();
+  gain2.gain.setValueAtTime(0.4, t + 0.08);
+  gain2.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+  n2.src.connect(filter); filter.connect(gain2); gain2.connect(sg());
+  n2.src.start(t + 0.08);
+}
+
+export function playCameraFocus() {
+  const ctx = getCtx();
+  const t = ctx.currentTime;
+  const o = osc(ctx, "sine", 1800, 0, 0.06);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.12, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+  o.connect(g); g.connect(sg());
+}
+
 export function setMuted(muted: boolean) {
   isMuted = muted;
   if (masterGain) masterGain.gain.value = muted ? 0 : 0.35;
@@ -1504,5 +1553,8 @@ export function setupAudioEvents() {
   // Paper variants
   on("crumple-intense", playCrumpleIntense);
   on("unfold-dramatic", playUnfoldDramatic);
+  // Camera & Photo Mode
+  on("camera-shutter", playCameraShutter);
+  on("camera-focus", playCameraFocus);
   return () => cleanups.forEach(fn => fn());
 }
