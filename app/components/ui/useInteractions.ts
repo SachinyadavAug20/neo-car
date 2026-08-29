@@ -4,13 +4,12 @@ import { useRef, useEffect, useCallback } from "react";
 
 /**
  * Keyboard secrets — type specific words to trigger hidden events.
- * Words: "wind", "paper", "fold", "pip", "milo", "crane", "sage", "sudo", "help"
  */
+const SECRET_WORDS = ["wind", "paper", "fold", "pip", "milo", "crane", "sage", "sudo", "help", "drift", "lira", "matrix", "rainbow", "fly"];
+
 export function useKeyboardSecrets(onSecret: (word: string) => void) {
   const bufferRef = useRef<string[]>([]);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const SECRET_WORDS = ["wind", "paper", "fold", "pip", "milo", "crane", "sage", "sudo", "help", "drift"];
 
   const checkBuffer = useCallback(() => {
     const word = bufferRef.current.join("").toLowerCase();
