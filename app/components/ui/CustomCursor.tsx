@@ -17,11 +17,14 @@ const CURSOR_SVGS: Record<CursorState, string> = {
 export default function CustomCursor() {
   const cursorRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
+  const labelRef = useRef<HTMLDivElement>(null);
   const pos = useRef({ x: 0, y: 0 });
   const [cursorState, setCursorState] = useState<CursorState>("default");
+  const [cursorLabel, setCursorLabel] = useState<string | null>(null);
 
-  const updateCursorState = useCallback((state: CursorState) => {
+  const updateCursorState = useCallback((state: CursorState, label?: string) => {
     setCursorState(state);
+    setCursorLabel(label || null);
     document.body.style.cursor = "none";
   }, []);
 
@@ -34,7 +37,10 @@ export default function CustomCursor() {
         gsap.set(cursorRef.current, { x: e.clientX, y: e.clientY, xPercent: -50, yPercent: -50 });
       }
       if (ringRef.current) {
-        gsap.to(ringRef.current, { x: e.clientX, y: e.clientY, xPercent: -50, yPercent: -50, duration: 0.3, ease: "power2.out" });
+        gsap.to(ringRef.current, { x: e.clientX, y: e.clientY, xPercent: -50, yPercent: -50, duration: 0.2, ease: "power2.out" });
+      }
+      if (labelRef.current) {
+        gsap.to(labelRef.current, { x: e.clientX + 16, y: e.clientY + 12, duration: 0.15, ease: "power2.out" });
       }
     };
 
@@ -45,7 +51,7 @@ export default function CustomCursor() {
       // Check data-cursor attribute on elements
       const cursorEl = target.closest("[data-cursor]") as HTMLElement;
       if (cursorEl) {
-        updateCursorState(cursorEl.dataset.cursor as CursorState);
+        updateCursorState(cursorEl.dataset.cursor as CursorState, cursorEl.dataset.cursorLabel);
         return;
       }
 
@@ -64,8 +70,10 @@ export default function CustomCursor() {
 
     // Listen for cursor state events from 3D scene
     const onCursorChange = (e: Event) => {
-      const state = (e as CustomEvent).detail?.cursor as CursorState;
-      if (state) updateCursorState(state);
+      const detail = (e as CustomEvent).detail;
+      const state = detail?.cursor as CursorState;
+      const label = detail?.label as string | undefined;
+      if (state) updateCursorState(state, label);
     };
     window.addEventListener("cursor-change", onCursorChange);
 
@@ -93,14 +101,30 @@ export default function CustomCursor() {
         style={{
           position: "fixed", top: 0, left: 0, zIndex: 9998,
           pointerEvents: "none",
-          width: cursorState === "magnify" ? 40 : 32,
-          height: cursorState === "magnify" ? 40 : 32,
+          width: cursorState === "magnify" ? 44 : cursorState === "interact" ? 38 : 32,
+          height: cursorState === "magnify" ? 44 : cursorState === "interact" ? 38 : 32,
           border: `2px solid ${cursorState === "interact" ? "#fbbf24" : "white"}`,
           borderRadius: "50%",
-          opacity: 0.4,
+          opacity: 0.5,
           transition: "width 0.2s, height 0.2s, border-color 0.2s",
         }}
       />
+      {cursorLabel && (
+        <div
+          ref={labelRef}
+          style={{
+            position: "fixed", top: 0, left: 0, zIndex: 9997,
+            pointerEvents: "none",
+            background: "rgba(26, 26, 46, 0.85)", backdropFilter: "blur(4px)",
+            border: "1px solid rgba(255, 255, 255, 0.3)", borderRadius: 6,
+            padding: "2px 8px", fontSize: 10, fontFamily: "monospace",
+            color: "#fbbf24", fontWeight: 700, letterSpacing: 1,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+          }}
+        >
+          {cursorLabel}
+        </div>
+      )}
     </>
   );
 }

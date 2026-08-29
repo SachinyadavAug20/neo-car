@@ -54,11 +54,6 @@ export default function CommandPalette({ visible, onClose, commands }: CommandPa
   // Flat list of all visible items for index tracking
   const flatItems = useMemo(() => filtered.flatMap((g) => g.items), [filtered]);
 
-  // Reset selection when query or visible changes
-  useEffect(() => {
-    setActiveIndex(0);
-  }, [query, visible]);
-
   // Focus input when palette opens
   useEffect(() => {
     if (!visible) return;
@@ -190,7 +185,10 @@ export default function CommandPalette({ visible, onClose, commands }: CommandPa
             ref={inputRef}
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setActiveIndex(0);
+            }}
             placeholder="Type a command or search..."
             aria-autocomplete="list"
             style={{
@@ -206,7 +204,10 @@ export default function CommandPalette({ visible, onClose, commands }: CommandPa
           />
           {query && (
             <button
-              onClick={() => setQuery("")}
+              onClick={() => {
+                setQuery("");
+                setActiveIndex(0);
+              }}
               style={{
                 background: "rgba(255,255,255,0.06)",
                 border: "none",

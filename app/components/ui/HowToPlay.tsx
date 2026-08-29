@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import gsap from "gsap";
 
 interface HowToPlayProps {
@@ -22,6 +22,11 @@ export default function HowToPlay({ onClose }: HowToPlayProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
 
+  const handleClose = useCallback(() => {
+    if (containerRef.current) gsap.to(containerRef.current, { opacity: 0, duration: 0.15, onComplete: onClose });
+    else onClose();
+  }, [onClose]);
+
   useEffect(() => {
     if (containerRef.current) gsap.fromTo(containerRef.current, { opacity: 0 }, { opacity: 1, duration: 0.25 });
     cardsRef.current.forEach((card, i) => {
@@ -33,11 +38,7 @@ export default function HowToPlay({ onClose }: HowToPlayProps) {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") handleClose(); };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, []);
-
-  const handleClose = () => {
-    if (containerRef.current) gsap.to(containerRef.current, { opacity: 0, duration: 0.15, onComplete: onClose });
-  };
+  }, [handleClose]);
 
   const card = {
     background: "var(--bg-card)", border: "2px solid var(--border)", color: "var(--text)",

@@ -55,7 +55,6 @@ const COW_TEMPLATE = (text: string) => {
     lines.push(text.slice(i, i + maxLen));
   }
   const border = " " + "_".repeat(maxLen + 2);
-  const top = " " + " ".repeat(maxLen + 2);
   const body = lines.map((l, i) => {
     const padded = l.padEnd(maxLen);
     if (lines.length === 1) return `< ${padded} >`;
@@ -125,48 +124,46 @@ const COLORS = {
   bgWhite: "\x1b[47m",
 };
 
+const BOOT_LINES: TerminalLine[] = [
+  { type: "system", text: "" },
+  { type: "ascii", text: "  ██████╗ ███████╗████████╗██████╗ ██╗███████╗" },
+  { type: "ascii", text: "  ██╔══██╗██╔════╝╚══██╔══╝██╔══██╗██║██╔════╝" },
+  { type: "ascii", text: "  ██████╔╝█████╗     ██║   ██████╔╝██║███████╗" },
+  { type: "ascii", text: "  ██╔══██╗██╔══╝     ██║   ██╔══██╗██║╚════██║" },
+  { type: "ascii", text: "  ██████╔╝███████╗   ██║   ██║  ██║██║███████║" },
+  { type: "ascii", text: "  ╚═════╝ ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝╚══════╝" },
+  { type: "system", text: "" },
+  { type: "output", text: "  A Paper World — Interactive 3D Storytelling" },
+  { type: "system", text: "  ─────────────────────────────────────────────" },
+  { type: "output", text: "  Type 'help' for available commands." },
+  { type: "output", text: "  Try 'neofetch', 'cowsay', or 'fortune'." },
+  { type: "output", text: "  Press Ctrl+~ or Esc to close." },
+  { type: "system", text: "" },
+];
+
 export default function DraftingTerminal({ visible, onClose, sceneState, onCommand }: DraftingTerminalProps) {
-  const [history, setHistory] = useState<TerminalLine[]>([]);
+  const [history, setHistory] = useState<TerminalLine[]>(BOOT_LINES);
   const [input, setInput] = useState("");
   const [cmdHistory, setCmdHistory] = useState<string[]>([]);
   const [historyIdx, setHistoryIdx] = useState(-1);
-  const [tabPressed, setTabPressed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const AVAILABLE_COMMANDS = useMemo(() => [
     "help", "clear", "get_state", "set_wind_force", "set_mood", "set_camera",
-    "jump_to", "spawn_entity", "list_acts", "get_folds", "reset_folds",
+    "jump_to", "teleport", "spawn_entity", "list_acts", "get_folds", "reset_folds",
     "neofetch", "cowsay", "fortune", "whoami", "date", "echo", "history",
     "uptime", "uname", "matrix", "colors", "palette", "ascii", "tree",
     "about", "secret", "sudo", "man", "ls", "pwd", "cat", "grep",
-    "drift", "milo", "wind", "paper", "craft", "fly",
+    "drift", "milo", "wind", "paper", "craft", "fly", "photo",
+    "soundboard", "sfx", "play", "party", "dance",
   ], []);
 
   // Focus input when opened
   useEffect(() => {
     if (visible) {
       setTimeout(() => inputRef.current?.focus(), 50);
-      if (history.length === 0) {
-        const bootLines: TerminalLine[] = [
-          { type: "system", text: "" },
-          { type: "ascii", text: "  ██████╗ ███████╗████████╗██████╗ ██╗███████╗" },
-          { type: "ascii", text: "  ██╔══██╗██╔════╝╚══██╔══╝██╔══██╗██║██╔════╝" },
-          { type: "ascii", text: "  ██████╔╝█████╗     ██║   ██████╔╝██║███████╗" },
-          { type: "ascii", text: "  ██╔══██╗██╔══╝     ██║   ██╔══██╗██║╚════██║" },
-          { type: "ascii", text: "  ██████╔╝███████╗   ██║   ██║  ██║██║███████║" },
-          { type: "ascii", text: "  ╚═════╝ ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝╚══════╝" },
-          { type: "system", text: "" },
-          { type: "output", text: "  A Paper World — Interactive 3D Storytelling" },
-          { type: "system", text: "  ─────────────────────────────────────────────" },
-          { type: "output", text: "  Type 'help' for available commands." },
-          { type: "output", text: "  Try 'neofetch', 'cowsay', or 'fortune'." },
-          { type: "output", text: "  Press Ctrl+~ or Esc to close." },
-          { type: "system", text: "" },
-        ];
-        setHistory(bootLines);
-      }
     }
   }, [visible]);
 
@@ -586,6 +583,48 @@ export default function DraftingTerminal({ visible, onClose, sceneState, onComma
         const msgs = responses[cmd] || ["..."];
         const msg = msgs[Math.floor(Math.random() * msgs.length)];
         newLines.push({ type: "success", text: `  🦢 ${msg}` });
+        break;
+      }
+
+      case "soundboard":
+      case "sfx":
+      case "play": {
+        const soundName = args[0]?.toLowerCase();
+        if (!soundName) {
+          newLines.push({ type: "output", text: "" });
+          newLines.push({ type: "output", text: "  === DRIFT Procedural Soundboard (110 Sounds) ===" });
+          newLines.push({ type: "output", text: "  Usage: play <sound_name>" });
+          newLines.push({ type: "output", text: "  • Core: milo-jump, paper-shower, fold-crease, splash, success" });
+          newLines.push({ type: "output", text: "  • Chimes: chime, crystal-resonance, bell, gong, magic-sparkle" });
+          newLines.push({ type: "output", text: "  • Nature: leaf-rustle, water-drop, wind-chime, pop, bubble-pop" });
+          newLines.push({ type: "output", text: "  • Paper: crumple, tear, slide, crumple-intense, unfold-dramatic" });
+          newLines.push({ type: "output", text: "  • Camera: camera-shutter, camera-focus, zoom-in, zoom-out" });
+          newLines.push({ type: "output", text: "  • Emotion: wonder, discovery, joy, sorrow, victory" });
+          newLines.push({ type: "output", text: "" });
+        } else {
+          window.dispatchEvent(new CustomEvent(soundName));
+          newLines.push({ type: "success", text: `  Playing procedural sound: "${soundName}"` });
+        }
+        break;
+      }
+
+      case "party":
+      case "dance": {
+        window.dispatchEvent(new CustomEvent("celebrate", { detail: { count: 10 } }));
+        window.dispatchEvent(new CustomEvent("magic-sparkle"));
+        window.dispatchEvent(new CustomEvent("paper-shower"));
+        newLines.push({ type: "success", text: "  Confetti shower and celebration triggered!" });
+        break;
+      }
+
+      case "teleport": {
+        const act = parseInt(args[0]);
+        if (isNaN(act) || act < 1 || act > 8) {
+          newLines.push({ type: "error", text: "Usage: teleport <1-8>" });
+        } else {
+          const res = onCommand("jump_to", [String(act), "1"]);
+          res.forEach(l => newLines.push(l));
+        }
         break;
       }
 
