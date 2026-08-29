@@ -168,6 +168,8 @@ export function LSystemTree({
   const [grown, setGrown] = useState(false);
   const [growthProgress, setGrowthProgress] = useState(0);
 
+  const rulesKey = Object.entries(rules).map(([k, v]) => `${k}:${v}`).join(";");
+
   const { segments, leafPositions } = useMemo(() => {
     const instructions = deriveLSystem(axiom, rules, iterations);
     const segs = interpretLSystem(instructions, angle, length, lengthDecay, thicknessDecay, maxDepth);
@@ -175,7 +177,8 @@ export function LSystemTree({
       .filter(s => s.depth >= maxDepth - 1)
       .map(s => s.end.clone());
     return { segments: segs, leafPositions: leaves };
-  }, [axiom, JSON.stringify(rules), iterations, angle, length, lengthDecay, thicknessDecay, maxDepth]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [axiom, rulesKey, iterations, angle, length, lengthDecay, thicknessDecay, maxDepth]);
 
   // Group segments by thickness for instanced rendering
   const { trunkSegments, branchSegments } = useMemo(() => {

@@ -421,7 +421,7 @@ export function WaveSurface({
     return g;
   }, [width, depth, resolution]);
 
-  const _waveEdgeGeo = useMemo(() => new THREE.EdgesGeometry(geo, 20), [geo]);
+  const waveEdgeGeo = useMemo(() => new THREE.EdgesGeometry(geo, 20), [geo]);
 
   useFrame((state) => {
     if (!meshRef.current || !basePositions.current || !autoAnimate) return;
@@ -447,7 +447,7 @@ export function WaveSurface({
       <mesh ref={meshRef} geometry={geo} receiveShadow castShadow>
         <meshToonMaterial color={color} side={THREE.DoubleSide} />
       </mesh>
-      <lineSegments geometry={_waveEdgeGeo}>
+      <lineSegments geometry={waveEdgeGeo}>
         <lineBasicMaterial color="#1a1a2e" transparent opacity={0.15} />
       </lineSegments>
     </group>

@@ -382,3 +382,176 @@ export function RippleEffect({ position, color = "#fbbf24", onComplete }: Ripple
     </group>
   );
 }
+
+// ─── Paper Rain Ribbons (Act 2 Storm) ──────────────────────────────────
+export function PaperRain({ count = 120, area = [30, 20, 30] }: { count?: number; area?: [number, number, number] }) {
+  const meshRef = useRef<THREE.InstancedMesh>(null);
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  const geo = useMemo(() => new THREE.PlaneGeometry(0.04, 0.4), []);
+  const mat = useMemo(() => new THREE.MeshBasicMaterial({ color: "#93c5fd", transparent: true, opacity: 0.55, side: THREE.DoubleSide }), []);
+
+  const particles = useMemo(() => {
+    return Array.from({ length: count }, () => ({
+      x: (Math.random() - 0.5) * area[0],
+      y: Math.random() * area[1] + 2,
+      z: (Math.random() - 0.5) * area[2],
+      speed: 12 + Math.random() * 10,
+      sway: (Math.random() - 0.5) * 1.5,
+    }));
+  }, [count, area]);
+
+  useFrame((_, delta) => {
+    if (!meshRef.current) return;
+    const dt = Math.min(delta, 0.05);
+
+    for (let i = 0; i < count; i++) {
+      const p = particles[i];
+      p.y -= p.speed * dt;
+      p.x += p.sway * dt - 0.8 * dt; // slant in wind direction
+      if (p.y < 0) {
+        p.y = area[1] + Math.random() * 2;
+        p.x = (Math.random() - 0.5) * area[0];
+        p.z = (Math.random() - 0.5) * area[2];
+      }
+      dummy.position.set(p.x, p.y, p.z);
+      dummy.rotation.set(0, 0, -0.35); // angle in wind
+      dummy.updateMatrix();
+      meshRef.current.setMatrixAt(i, dummy.matrix);
+    }
+    meshRef.current.instanceMatrix.needsUpdate = true;
+  });
+
+  return <instancedMesh ref={meshRef} args={[geo, mat, count]} frustumCulled={false} />;
+}
+
+// ─── Forest Spores / Fireflies (Act 3 Forest) ──────────────────────────
+export function ForestSpores({ count = 60, center = [-12, 2, -10] }: { count?: number; center?: [number, number, number] }) {
+  const meshRef = useRef<THREE.InstancedMesh>(null);
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  const geo = useMemo(() => new THREE.SphereGeometry(0.06, 6, 6), []);
+  const mat = useMemo(() => new THREE.MeshBasicMaterial({ color: "#86efac", transparent: true, opacity: 0.75 }), []);
+
+  const spores = useMemo(() => {
+    return Array.from({ length: count }, () => ({
+      x: center[0] + (Math.random() - 0.5) * 16,
+      y: center[1] + Math.random() * 6,
+      z: center[2] + (Math.random() - 0.5) * 16,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.4 + Math.random() * 0.6,
+      radius: 0.5 + Math.random() * 1.2,
+    }));
+  }, [count, center]);
+
+  useFrame((state) => {
+    if (!meshRef.current) return;
+    const t = state.clock.elapsedTime;
+
+    for (let i = 0; i < count; i++) {
+      const s = spores[i];
+      const px = s.x + Math.sin(t * s.speed + s.phase) * s.radius;
+      const py = s.y + Math.cos(t * 0.7 + s.phase) * 0.4;
+      const pz = s.z + Math.cos(t * s.speed + s.phase) * s.radius;
+
+      dummy.position.set(px, py, pz);
+      const scale = 0.8 + Math.sin(t * 3 + s.phase) * 0.3;
+      dummy.scale.setScalar(scale);
+      dummy.updateMatrix();
+      meshRef.current.setMatrixAt(i, dummy.matrix);
+    }
+    meshRef.current.instanceMatrix.needsUpdate = true;
+  });
+
+  return <instancedMesh ref={meshRef} args={[geo, mat, count]} frustumCulled={false} />;
+}
+
+// ─── Origami Embers (Act 5 Secret Fold) ─────────────────────────────────
+export function OrigamiEmbers({ count = 50, center = [0, 1, -25] }: { count?: number; center?: [number, number, number] }) {
+  const meshRef = useRef<THREE.InstancedMesh>(null);
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  const geo = useMemo(() => new THREE.ConeGeometry(0.08, 0.14, 3), []);
+  const mat = useMemo(() => new THREE.MeshToonMaterial({ color: "#fbbf24", emissive: "#f59e0b", emissiveIntensity: 0.5 }), []);
+
+  const embers = useMemo(() => {
+    return Array.from({ length: count }, () => ({
+      x: center[0] + (Math.random() - 0.5) * 12,
+      y: center[1] + Math.random() * 8,
+      z: center[2] + (Math.random() - 0.5) * 12,
+      vy: 0.6 + Math.random() * 0.8,
+      rotSpeed: (Math.random() - 0.5) * 3,
+      phase: Math.random() * Math.PI * 2,
+    }));
+  }, [count, center]);
+
+  useFrame((state, delta) => {
+    if (!meshRef.current) return;
+    const t = state.clock.elapsedTime;
+    const dt = Math.min(delta, 0.05);
+
+    for (let i = 0; i < count; i++) {
+      const e = embers[i];
+      e.y += e.vy * dt;
+      if (e.y > center[1] + 9) {
+        e.y = center[1];
+        e.x = center[0] + (Math.random() - 0.5) * 12;
+        e.z = center[2] + (Math.random() - 0.5) * 12;
+      }
+      const px = e.x + Math.sin(t * 2 + e.phase) * 0.3;
+      const pz = e.z + Math.cos(t * 1.5 + e.phase) * 0.3;
+
+      dummy.position.set(px, e.y, pz);
+      dummy.rotation.set(t * e.rotSpeed, t * e.rotSpeed * 0.8, t * e.rotSpeed * 0.5);
+      dummy.updateMatrix();
+      meshRef.current.setMatrixAt(i, dummy.matrix);
+    }
+    meshRef.current.instanceMatrix.needsUpdate = true;
+  });
+
+  return <instancedMesh ref={meshRef} args={[geo, mat, count]} frustumCulled={false} />;
+}
+
+// ─── Crane Flock (Act 8 Finale) ────────────────────────────────────────
+export function CraneFlock({ count = 16 }: { count?: number }) {
+  const flockRef = useRef<THREE.Group>(null);
+  const cranes = useMemo(() => {
+    return Array.from({ length: count }, (_, i) => {
+      const angle = (i / count) * Math.PI * 2;
+      const radius = 10 + (i % 3) * 4;
+      const y = 8 + (i % 4) * 2;
+      return { angle, radius, y, speed: 0.4 + (i % 3) * 0.1, flapOffset: i * 0.7 };
+    });
+  }, [count]);
+
+  const wingEdgeGeo = useMemo(() => new THREE.EdgesGeometry(new THREE.ConeGeometry(0.3, 0.8, 3)), []);
+
+  useFrame((state) => {
+    if (!flockRef.current) return;
+    const t = state.clock.elapsedTime;
+    flockRef.current.children.forEach((child, i) => {
+      const c = cranes[i];
+      if (!c) return;
+      const curAngle = c.angle + t * c.speed * 0.3;
+      const x = Math.cos(curAngle) * c.radius;
+      const z = Math.sin(curAngle) * c.radius;
+      child.position.set(x, c.y + Math.sin(t * 2 + c.flapOffset) * 0.5, z);
+      child.rotation.y = -curAngle + Math.PI / 2;
+      child.rotation.z = Math.sin(t * 4 + c.flapOffset) * 0.15;
+    });
+  });
+
+  return (
+    <group ref={flockRef}>
+      {cranes.map((_, i) => (
+        <group key={i}>
+          {/* Mini Crane Body */}
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <coneGeometry args={[0.25, 0.7, 4]} />
+            <meshToonMaterial color="#fff" />
+          </mesh>
+          <lineSegments geometry={wingEdgeGeo}>
+            <lineBasicMaterial color="#1a1a2e" transparent opacity={0.35} />
+          </lineSegments>
+        </group>
+      ))}
+    </group>
+  );
+}
